@@ -22,7 +22,8 @@ const Login = () => {
 
   // Redirect if already logged in
   if (!authLoading && user) {
-    return <Navigate to={user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today'} replace />;
+    const dest = user.role === 'admin' ? '/admin/dashboard' : user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today';
+    return <Navigate to={dest} replace />;
   }
 
   const handleLogin = async (e: React.FormEvent) => {
