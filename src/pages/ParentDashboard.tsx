@@ -134,12 +134,21 @@ const ParentDashboard = () => {
           </CardContent></Card>
         ) : (
           <>
-            <Select value={activeChildId} onValueChange={setSelectedChild}>
-              <SelectTrigger className="h-11 bg-card"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
-              <SelectContent>
-                {children.map(c => <SelectItem key={c.id} value={c.id}>{c.avatar_emoji} {c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-3">
+              {child && (
+                (child as any).photo_url ? (
+                  <img src={(child as any).photo_url} alt={child.name} className="h-11 w-11 rounded-xl object-cover shrink-0" />
+                ) : (
+                  <div className="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0">{child.avatar_emoji || '👶'}</div>
+                )
+              )}
+              <Select value={activeChildId} onValueChange={setSelectedChild}>
+                <SelectTrigger className="h-11 bg-card flex-1"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
+                <SelectContent>
+                  {children.map(c => <SelectItem key={c.id} value={c.id}>{c.avatar_emoji} {c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="flex items-center justify-between bg-card rounded-lg px-3 py-2">
               <Button variant="ghost" size="icon" onClick={() => changeDate(-1)}><ChevronLeft className="h-5 w-5" /></Button>
