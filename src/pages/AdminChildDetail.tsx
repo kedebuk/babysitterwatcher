@@ -100,7 +100,13 @@ const AdminChildDetail = () => {
           </Button>
           <div>
             <h1 className="text-lg font-bold flex items-center gap-2">
-              <Shield className="h-5 w-5" /> {child?.avatar_emoji} {child?.name || 'Loading...'}
+              <Shield className="h-5 w-5" />
+              {child?.photo_url ? (
+                <img src={child.photo_url} alt={child.name} className="h-7 w-7 rounded-lg object-cover" />
+              ) : (
+                <span>{child?.avatar_emoji}</span>
+              )}
+              {child?.name || 'Loading...'}
             </h1>
             <p className="text-xs opacity-80">Parent: {parentProfile?.name || parentProfile?.email || '...'}</p>
           </div>
