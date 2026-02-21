@@ -299,8 +299,10 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           avatar_url: string | null
           created_at: string
+          dob: string | null
           email: string
           id: string
           is_disabled: boolean
@@ -308,8 +310,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
           created_at?: string
+          dob?: string | null
           email: string
           id: string
           is_disabled?: boolean
@@ -317,8 +321,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
           created_at?: string
+          dob?: string | null
           email?: string
           id?: string
           is_disabled?: boolean
