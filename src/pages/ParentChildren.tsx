@@ -95,7 +95,8 @@ const ParentChildren = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('pending_invites')
-        .select('*');
+        .select('*')
+        .eq('status', 'pending');
       if (error) throw error;
       return data || [];
     },
