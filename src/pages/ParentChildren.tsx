@@ -4,11 +4,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogOut, BarChart3, UserPlus, Trash2, Mail, Eye, Pencil, Camera } from 'lucide-react';
+import { Plus, LogOut, BarChart3, UserPlus, Trash2, Mail, Eye, Pencil, Camera, Archive, ArchiveRestore } from 'lucide-react';
 import { format, parseISO, differenceInMonths } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -47,6 +48,15 @@ const ParentChildren = () => {
   const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
   const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
+
+  // Delete child dialog
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteChild, setDeleteChild] = useState<any>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Show archived toggle
+  const [showArchived, setShowArchived] = useState(false);
   const editFileRef = useRef<HTMLInputElement>(null);
 
   // Get assignments for all children
@@ -248,7 +258,6 @@ const ParentChildren = () => {
     setEditPhotoFile(file);
     setEditPhotoPreview(URL.createObjectURL(file));
   };
-
   const handleEditSave = async () => {
     if (!editChild || !editName.trim() || !user) return;
     setEditSaving(true);
@@ -279,7 +288,59 @@ const ParentChildren = () => {
     setEditSaving(false);
   };
 
+  const handleDeleteChild = async () => {
+    if (!deleteChild || deleteConfirmName !== deleteChild.name) return;
+    setDeleteLoading(true);
+    try {
+      // Delete related data first
+      const { error: assignErr } = await supabase.from('assignments').delete().eq('child_id', deleteChild.id);
+      if (assignErr) throw assignErr;
+      const { error: viewerErr } = await supabase.from('child_viewers').delete().eq('child_id', deleteChild.id);
+      if (viewerErr) throw viewerErr;
+      const { error: inviteErr } = await supabase.from('pending_invites').delete().eq('child_id', deleteChild.id);
+      if (inviteErr) throw inviteErr;
+      // Delete daily logs & events
+      const { data: logs } = await supabase.from('daily_logs').select('id').eq('child_id', deleteChild.id);
+      if (logs && logs.length > 0) {
+        const logIds = logs.map(l => l.id);
+        await supabase.from('events').delete().in('daily_log_id', logIds);
+      }
+      await supabase.from('daily_logs').delete().eq('child_id', deleteChild.id);
+      await supabase.from('location_pings').delete().eq('child_id', deleteChild.id);
+      await supabase.from('messages').delete().eq('child_id', deleteChild.id);
+      // Finally delete the child
+      const { error } = await supabase.from('children').delete().eq('id', deleteChild.id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ['children'] });
+      qc.invalidateQueries({ queryKey: ['all_assignments'] });
+      qc.invalidateQueries({ queryKey: ['child_viewers'] });
+      qc.invalidateQueries({ queryKey: ['pending_invites'] });
+      toast({ title: '🗑️ Dihapus', description: `${deleteChild.name} telah dihapus permanen` });
+      setDeleteOpen(false);
+      setDeleteChild(null);
+      setDeleteConfirmName('');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setDeleteLoading(false);
+  };
+
+  const handleArchiveChild = async (child: any) => {
+    const isArchived = !!(child as any).is_archived;
+    try {
+      const { error } = await supabase.from('children').update({ is_archived: !isArchived } as any).eq('id', child.id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ['children'] });
+      toast({ title: isArchived ? '📂 Diaktifkan kembali' : '📦 Diarsipkan', description: `${child.name} telah ${isArchived ? 'diaktifkan kembali' : 'diarsipkan'}` });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
   if (isLoading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Memuat...</div>;
+
+  const activeChildren = children.filter((c: any) => !c.is_archived);
+  const archivedChildren = children.filter((c: any) => c.is_archived);
 
   return (
     <div className="min-h-screen pb-6">
@@ -301,7 +362,7 @@ const ParentChildren = () => {
       </div>
 
       <div className="px-4 py-4 space-y-4 max-w-2xl mx-auto">
-        {children.map(child => {
+        {activeChildren.map(child => {
           const age = child.dob ? differenceInMonths(new Date(), parseISO(child.dob)) : null;
           const childAssignments = allAssignments.filter((a: any) => a.child_id === child.id);
           const childViewers = allViewers.filter((v: any) => v.child_id === child.id);
@@ -329,9 +390,17 @@ const ParentChildren = () => {
                     </p>
                     {child.notes && <p className="text-xs text-accent mt-0.5">⚠️ {child.notes}</p>}
                   </div>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground shrink-0" onClick={(e) => { e.stopPropagation(); openEditDialog(child); }}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground" onClick={(e) => { e.stopPropagation(); openEditDialog(child); }}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground" onClick={(e) => { e.stopPropagation(); handleArchiveChild(child); }}>
+                      <Archive className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteChild(child); setDeleteConfirmName(''); setDeleteOpen(true); }}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Connected people section */}
@@ -548,6 +617,74 @@ const ParentChildren = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Archived children section */}
+        {archivedChildren.length > 0 && (
+          <div className="space-y-3">
+            <button
+              onClick={() => setShowArchived(!showArchived)}
+              className="w-full text-left text-sm font-semibold text-muted-foreground flex items-center gap-2"
+            >
+              <Archive className="h-4 w-4" />
+              Arsip ({archivedChildren.length})
+              <span className="text-xs">{showArchived ? '▲' : '▼'}</span>
+            </button>
+            {showArchived && archivedChildren.map(child => (
+              <Card key={child.id} className="border-0 shadow-sm opacity-60">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-2xl">
+                      {child.avatar_emoji || '👶'}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-base">{child.name}</h3>
+                      <p className="text-xs text-muted-foreground">📦 Diarsipkan</p>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-primary" onClick={() => handleArchiveChild(child)}>
+                        <ArchiveRestore className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive" onClick={() => { setDeleteChild(child); setDeleteConfirmName(''); setDeleteOpen(true); }}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Delete confirmation dialog */}
+        <AlertDialog open={deleteOpen} onOpenChange={(o) => { setDeleteOpen(o); if (!o) { setDeleteChild(null); setDeleteConfirmName(''); } }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Hapus {deleteChild?.name}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tindakan ini tidak dapat dibatalkan. Semua data termasuk log harian, event, dan penugasan akan dihapus permanen.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-2 py-2">
+              <Label>Ketik <span className="font-bold text-destructive">{deleteChild?.name}</span> untuk konfirmasi:</Label>
+              <Input
+                placeholder="Ketik nama anak"
+                value={deleteConfirmName}
+                onChange={e => setDeleteConfirmName(e.target.value)}
+                className="h-11"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Batal</AlertDialogCancel>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteChild}
+                disabled={deleteConfirmName !== deleteChild?.name || deleteLoading}
+              >
+                {deleteLoading ? 'Menghapus...' : '🗑️ Hapus Permanen'}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

@@ -111,6 +111,7 @@ export type Database = {
           created_at: string
           dob: string | null
           id: string
+          is_archived: boolean
           name: string
           notes: string | null
           parent_id: string
@@ -122,6 +123,7 @@ export type Database = {
           created_at?: string
           dob?: string | null
           id?: string
+          is_archived?: boolean
           name: string
           notes?: string | null
           parent_id: string
@@ -133,6 +135,7 @@ export type Database = {
           created_at?: string
           dob?: string | null
           id?: string
+          is_archived?: boolean
           name?: string
           notes?: string | null
           parent_id?: string
