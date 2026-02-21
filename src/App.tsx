@@ -17,6 +17,7 @@ import AdminChildren from "./pages/AdminChildren";
 import AdminChildDetail from "./pages/AdminChildDetail";
 import AdminLogs from "./pages/AdminLogs";
 import SelectRole from "./pages/SelectRole";
+import CompleteProfile from "./pages/CompleteProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,10 @@ function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; 
   if (user.role !== allowedRole) {
     if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
     return <Navigate to={user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today'} replace />;
+  }
+  // Babysitter must complete profile first
+  if (user.role === 'babysitter' && !user.profileComplete) {
+    return <Navigate to="/complete-profile" replace />;
   }
   return <>{children}</>;
 }
@@ -53,6 +58,7 @@ const App = () => (
             <Route path="/" element={<RootRedirect />} />
             <Route path="/login" element={<Login />} />
             <Route path="/select-role" element={<SelectRole />} />
+            <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/admin-setup" element={<AdminSetup />} />
             <Route path="/parent/dashboard" element={<ProtectedRoute allowedRole="parent"><ParentDashboard /></ProtectedRoute>} />
             <Route path="/parent/children" element={<ProtectedRoute allowedRole="parent"><ParentChildren /></ProtectedRoute>} />

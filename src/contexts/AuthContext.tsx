@@ -9,6 +9,7 @@ interface AppUser {
   email: string;
   name: string;
   role: UserRole | null;
+  profileComplete: boolean;
 }
 
 interface AuthContextType {
@@ -17,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (email: string, password: string, name: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -29,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get profile
     const { data: profile } = await supabase
       .from('profiles')
-      .select('name, is_disabled')
+      .select('name, is_disabled, dob, address, avatar_url')
       .eq('id', supaUser.id)
       .single();
 
@@ -46,11 +48,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .eq('user_id', supaUser.id)
       .single();
 
+    const role = (roleData?.role as UserRole) || null;
+    
+    // For babysitter, check if profile is complete (name, dob, address filled)
+    const profileComplete = role !== 'babysitter' || !!(
+      profile?.name && profile.name.trim() !== '' &&
+      (profile as any)?.dob &&
+      (profile as any)?.address && (profile as any).address.trim() !== ''
+    );
+
     return {
       id: supaUser.id,
       email: supaUser.email || '',
       name: profile?.name || supaUser.email?.split('@')[0] || '',
-      role: (roleData?.role as UserRole) || null,
+      role,
+      profileComplete,
     };
   }, []);
 
@@ -110,13 +122,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const appUser = await fetchUserProfile(session.user);
+      setUser(appUser);
+    }
+  }, [fetchUserProfile]);
+
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
