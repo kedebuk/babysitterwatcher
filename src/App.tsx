@@ -32,25 +32,24 @@ function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; 
   if (!user) return <Navigate to="/login" replace />;
   if (!user.role) return <Navigate to="/select-role" replace />;
 
-  // Admin with activeRole choice
-  if (user.role === 'admin') {
-    if (!activeRole) return <Navigate to="/choose-role" replace />;
-    // Admin acting as parent can access parent routes
-    if (activeRole === 'parent' && allowedRole === 'parent') return <>{children}</>;
-    // Admin acting as admin can access admin routes
-    if (activeRole === 'admin' && allowedRole === 'admin') return <>{children}</>;
-    // Mismatch - redirect based on activeRole
-    return <Navigate to={activeRole === 'admin' ? '/admin/dashboard' : '/parent/dashboard'} replace />;
-  }
+  const roles = user.roles || [];
+  const hasMultipleRoles = roles.length > 1;
 
-  if (user.role !== allowedRole) {
-    return <Navigate to={user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today'} replace />;
-  }
+  // Multi-role user needs to choose
+  if (hasMultipleRoles && !activeRole) return <Navigate to="/choose-role" replace />;
+
+  const effectiveRole = hasMultipleRoles ? activeRole : user.role;
+
+  if (effectiveRole === allowedRole) return <>{children}</>;
+
   // Babysitter must complete profile first
-  if (user.role === 'babysitter' && !user.profileComplete) {
+  if (effectiveRole === 'babysitter' && !user.profileComplete) {
     return <Navigate to="/complete-profile" replace />;
   }
-  return <>{children}</>;
+
+  // Redirect to correct dashboard
+  const redirectMap = { parent: '/parent/dashboard', babysitter: '/babysitter/today', admin: '/admin/dashboard' };
+  return <Navigate to={redirectMap[effectiveRole || user.role!]} replace />;
 }
 
 function RootRedirect() {
@@ -58,11 +57,13 @@ function RootRedirect() {
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="animate-pulse text-muted-foreground">Memuat...</div></div>;
   if (!user) return <Navigate to="/login" replace />;
   if (!user.role) return <Navigate to="/select-role" replace />;
-  if (user.role === 'admin') {
-    if (!activeRole) return <Navigate to="/choose-role" replace />;
-    return <Navigate to={activeRole === 'admin' ? '/admin/dashboard' : '/parent/dashboard'} replace />;
-  }
-  return <Navigate to={user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today'} replace />;
+  
+  const roles = user.roles || [];
+  if (roles.length > 1 && !activeRole) return <Navigate to="/choose-role" replace />;
+  
+  const effectiveRole = roles.length > 1 ? activeRole : user.role;
+  const redirectMap = { parent: '/parent/dashboard', babysitter: '/babysitter/today', admin: '/admin/dashboard' };
+  return <Navigate to={redirectMap[effectiveRole || user.role!]} replace />;
 }
 
 const App = () => (

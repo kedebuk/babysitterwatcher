@@ -9,6 +9,7 @@ interface AppUser {
   email: string;
   name: string;
   role: UserRole | null;
+  roles: UserRole[];
   profileComplete: boolean;
 }
 
@@ -16,7 +17,7 @@ interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
   activeRole: UserRole | null;
-  setActiveRole: (role: UserRole) => void;
+  setActiveRole: (role: UserRole | null) => void;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (email: string, password: string, name: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
@@ -33,9 +34,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return stored as UserRole | null;
   });
 
-  const setActiveRole = useCallback((role: UserRole) => {
+  const setActiveRole = useCallback((role: UserRole | null) => {
     setActiveRoleState(role);
-    sessionStorage.setItem('activeRole', role);
+    if (role) {
+      sessionStorage.setItem('activeRole', role);
+    } else {
+      sessionStorage.removeItem('activeRole');
+    }
   }, []);
 
   const fetchUserProfile = useCallback(async (supaUser: SupabaseUser): Promise<AppUser | null> => {
@@ -52,14 +57,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
 
-    // Get role
-    const { data: roleData } = await supabase
+    // Get all roles
+    const { data: rolesData } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', supaUser.id)
-      .single();
+      .eq('user_id', supaUser.id);
 
-    const role = (roleData?.role as UserRole) || null;
+    const roles = (rolesData || []).map(r => r.role as UserRole);
+    const role = roles[0] || null;
     
     // For babysitter, check if profile is complete (name, dob, address filled)
     const profileComplete = role !== 'babysitter' || !!(
@@ -73,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email: supaUser.email || '',
       name: profile?.name || supaUser.email?.split('@')[0] || '',
       role,
+      roles,
       profileComplete,
     };
   }, []);

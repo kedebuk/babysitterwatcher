@@ -4,7 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Baby, Calendar, ScrollText, Shield } from 'lucide-react';
+import { LogOut, Users, Baby, Calendar, ScrollText, Shield, RefreshCw } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 
 const AdminDashboard = () => {
@@ -58,9 +60,29 @@ const AdminDashboard = () => {
             <h1 className="text-lg font-bold flex items-center gap-2"><Shield className="h-5 w-5" /> Admin Panel</h1>
             <p className="text-xs opacity-80">Halo, {user?.name}</p>
           </div>
-          <Button variant="ghost" size="icon" className="text-destructive-foreground hover:bg-destructive-foreground/20" onClick={logout}>
-            <LogOut className="h-5 w-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-destructive-foreground hover:bg-destructive-foreground/20">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {(user?.roles?.length ?? 0) > 1 && (
+                <>
+                  <DropdownMenuItem onClick={() => { 
+                    sessionStorage.removeItem('activeRole'); 
+                    navigate('/choose-role'); 
+                  }}>
+                    <RefreshCw className="mr-2 h-4 w-4" /> Ganti Role
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem onClick={logout} className="text-destructive">
+                <LogOut className="mr-2 h-4 w-4" /> Keluar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
