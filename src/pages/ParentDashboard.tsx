@@ -3,12 +3,13 @@ import { useChildren, useDailyLog, useEvents, useChildLogs, useProfileNames } fr
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, subDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin } from 'lucide-react';
+import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin, MoreVertical } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -113,24 +114,34 @@ const ParentDashboard = () => {
             <p className="text-xs opacity-80">Halo, {user?.name} 👋</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/parent/input')}>
-              <PenLine className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/parent/children')}>
-              <Users className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/chat')}>
-              <MessageCircle className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/insights')}>
-              <Brain className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/location')}>
-              <MapPin className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={logout}>
-              <LogOut className="h-5 w-5" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20">
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => navigate('/parent/input')}>
+                  <PenLine className="mr-2 h-4 w-4" /> Input Harian
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/parent/children')}>
+                  <Users className="mr-2 h-4 w-4" /> Kelola Anak
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/chat')}>
+                  <MessageCircle className="mr-2 h-4 w-4" /> Pesan
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/location')}>
+                  <MapPin className="mr-2 h-4 w-4" /> Lokasi GPS
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/insights')}>
+                  <Brain className="mr-2 h-4 w-4" /> Insight Cerdas
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" /> Keluar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
