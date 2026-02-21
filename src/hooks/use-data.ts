@@ -9,12 +9,44 @@ export function useChildren() {
   return useQuery({
     queryKey: ['children', user?.id, effectiveRole],
     queryFn: async () => {
-      let query = supabase.from('children').select('*').order('created_at');
-      // When acting as parent, only show own children
       if (effectiveRole === 'parent') {
-        query = query.eq('parent_id', user!.id);
+        // Get own children
+        const { data: ownChildren, error: ownErr } = await supabase
+          .from('children')
+          .select('*')
+          .eq('parent_id', user!.id)
+          .order('created_at');
+        if (ownErr) throw ownErr;
+
+        // Get children where user is a viewer
+        const { data: viewerRecords } = await supabase
+          .from('child_viewers')
+          .select('child_id')
+          .eq('viewer_user_id', user!.id);
+        
+        let viewerChildren: any[] = [];
+        if (viewerRecords && viewerRecords.length > 0) {
+          const viewerChildIds = viewerRecords.map(v => v.child_id);
+          const { data: vChildren } = await supabase
+            .from('children')
+            .select('*')
+            .in('id', viewerChildIds)
+            .order('created_at');
+          viewerChildren = vChildren || [];
+        }
+
+        // Merge and deduplicate
+        const allChildren = [...(ownChildren || [])];
+        for (const vc of viewerChildren) {
+          if (!allChildren.find(c => c.id === vc.id)) {
+            allChildren.push(vc);
+          }
+        }
+        return allChildren;
       }
-      const { data, error } = await query;
+
+      // For other roles, use default query
+      const { data, error } = await supabase.from('children').select('*').order('created_at');
       if (error) throw error;
       return data;
     },
