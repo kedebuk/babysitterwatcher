@@ -53,11 +53,14 @@ const ParentChildren = () => {
   const { data: allAssignments = [] } = useQuery({
     queryKey: ['all_assignments'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('assignments')
-        .select('*, profiles:babysitter_user_id(name, email)');
+      const { data, error } = await supabase.from('assignments').select('*');
       if (error) throw error;
-      return data || [];
+      if (!data || data.length === 0) return [];
+      const userIds = [...new Set(data.map(a => a.babysitter_user_id))];
+      const { data: profiles } = await supabase.from('profiles').select('id, name, email').in('id', userIds);
+      const profileMap: Record<string, any> = {};
+      (profiles || []).forEach(p => { profileMap[p.id] = p; });
+      return data.map(a => ({ ...a, profiles: profileMap[a.babysitter_user_id] || null }));
     },
   });
 
@@ -65,11 +68,14 @@ const ParentChildren = () => {
   const { data: allViewers = [] } = useQuery({
     queryKey: ['child_viewers'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('child_viewers')
-        .select('*, profiles:viewer_user_id(name, email)');
+      const { data, error } = await supabase.from('child_viewers').select('*');
       if (error) throw error;
-      return data || [];
+      if (!data || data.length === 0) return [];
+      const userIds = [...new Set(data.map(v => v.viewer_user_id))];
+      const { data: profiles } = await supabase.from('profiles').select('id, name, email').in('id', userIds);
+      const profileMap: Record<string, any> = {};
+      (profiles || []).forEach(p => { profileMap[p.id] = p; });
+      return data.map(v => ({ ...v, profiles: profileMap[v.viewer_user_id] || null }));
     },
   });
 
