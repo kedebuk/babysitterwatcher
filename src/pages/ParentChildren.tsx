@@ -391,17 +391,19 @@ const ParentChildren = () => {
                     </p>
                     {child.notes && <p className="text-xs text-accent mt-0.5">⚠️ {child.notes}</p>}
                   </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground" onClick={(e) => { e.stopPropagation(); openEditDialog(child); }}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground" onClick={(e) => { e.stopPropagation(); handleArchiveChild(child); }}>
-                      <Archive className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteChild(child); setDeleteConfirmName(''); setDeleteOpen(true); }}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {child.parent_id === user?.id && (
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground" onClick={(e) => { e.stopPropagation(); openEditDialog(child); }}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground" onClick={(e) => { e.stopPropagation(); handleArchiveChild(child); }}>
+                        <Archive className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteChild(child); setDeleteConfirmName(''); setDeleteOpen(true); }}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Connected people section */}
@@ -410,14 +412,16 @@ const ParentChildren = () => {
                     <p className="text-xs font-semibold text-muted-foreground">
                       👥 Terhubung ({totalConnected} orang)
                     </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs text-primary"
-                      onClick={(e) => { e.stopPropagation(); setInviteChildId(child.id); setInviteOpen(true); }}
-                    >
-                      <UserPlus className="h-3.5 w-3.5 mr-1" /> Undang
-                    </Button>
+                    {child.parent_id === user?.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-primary"
+                        onClick={(e) => { e.stopPropagation(); setInviteChildId(child.id); setInviteOpen(true); }}
+                      >
+                        <UserPlus className="h-3.5 w-3.5 mr-1" /> Undang
+                      </Button>
+                    )}
                   </div>
 
                   {totalConnected === 0 && (
@@ -641,14 +645,16 @@ const ParentChildren = () => {
                       <h3 className="font-bold text-base">{child.name}</h3>
                       <p className="text-xs text-muted-foreground">📦 Diarsipkan</p>
                     </div>
-                    <div className="flex gap-1 shrink-0">
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-primary" onClick={() => handleArchiveChild(child)}>
-                        <ArchiveRestore className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive" onClick={() => { setDeleteChild(child); setDeleteConfirmName(''); setDeleteOpen(true); }}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {child.parent_id === user?.id && (
+                      <div className="flex gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-primary" onClick={() => handleArchiveChild(child)}>
+                          <ArchiveRestore className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive" onClick={() => { setDeleteChild(child); setDeleteConfirmName(''); setDeleteOpen(true); }}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
