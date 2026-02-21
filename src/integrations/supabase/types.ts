@@ -43,6 +43,35 @@ export type Database = {
           },
         ]
       }
+      child_viewers: {
+        Row: {
+          child_id: string
+          created_at: string
+          id: string
+          viewer_user_id: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          id?: string
+          viewer_user_id: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          id?: string
+          viewer_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "child_viewers_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       children: {
         Row: {
           avatar_emoji: string | null
@@ -121,6 +150,7 @@ export type Database = {
           daily_log_id: string
           detail: string | null
           id: string
+          photo_url: string | null
           status: Database["public"]["Enums"]["event_status"] | null
           time: string
           type: Database["public"]["Enums"]["activity_type"]
@@ -133,6 +163,7 @@ export type Database = {
           daily_log_id: string
           detail?: string | null
           id?: string
+          photo_url?: string | null
           status?: Database["public"]["Enums"]["event_status"] | null
           time: string
           type: Database["public"]["Enums"]["activity_type"]
@@ -145,6 +176,7 @@ export type Database = {
           daily_log_id?: string
           detail?: string | null
           id?: string
+          photo_url?: string | null
           status?: Database["public"]["Enums"]["event_status"] | null
           time?: string
           type?: Database["public"]["Enums"]["activity_type"]
@@ -166,6 +198,7 @@ export type Database = {
           child_id: string
           created_at: string
           id: string
+          invite_role: string
           invited_by: string
           invited_email: string
         }
@@ -173,6 +206,7 @@ export type Database = {
           child_id: string
           created_at?: string
           id?: string
+          invite_role?: string
           invited_by: string
           invited_email: string
         }
@@ -180,6 +214,7 @@ export type Database = {
           child_id?: string
           created_at?: string
           id?: string
+          invite_role?: string
           invited_by?: string
           invited_email?: string
         }
@@ -262,6 +297,10 @@ export type Database = {
         Returns: boolean
       }
       is_parent_of_child: {
+        Args: { _child_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_viewer_of_child: {
         Args: { _child_id: string; _user_id: string }
         Returns: boolean
       }

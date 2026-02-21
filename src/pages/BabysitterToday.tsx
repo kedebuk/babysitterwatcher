@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useChildren, useDailyLog, useEvents, useCreateOrGetDailyLog, useCreateEvent, useDeleteEvent } from '@/hooks/use-data';
 import { ActivityType, ACTIVITY_LABELS, ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS, EventUnit, EventStatus } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Plus, Trash2, LogOut, Clock, History } from 'lucide-react';
+import { Plus, Trash2, LogOut, Clock, History, Camera, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -25,6 +25,8 @@ interface EventRow {
   amount: string;
   unit: EventUnit;
   status: EventStatus;
+  photoFile: File | null;
+  photoPreview: string | null;
 }
 
 const createEmptyRow = (): EventRow => ({
@@ -35,6 +37,8 @@ const createEmptyRow = (): EventRow => ({
   amount: '',
   unit: 'ml',
   status: null,
+  photoFile: null,
+  photoPreview: null,
 });
 
 const BabysitterToday = () => {
@@ -44,7 +48,6 @@ const BabysitterToday = () => {
 
   const [selectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
-  // Get assigned children for this babysitter
   const { data: assignedChildren = [] } = useQuery({
     queryKey: ['assigned_children', user?.id],
     queryFn: async () => {
@@ -72,10 +75,46 @@ const BabysitterToday = () => {
   const totalSusu = events.filter(e => e.type === 'susu' && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
 
   const addRow = () => setNewRows(prev => [...prev, createEmptyRow()]);
-  const updateRow = (tempId: string, field: keyof EventRow, value: string) => {
+  const updateRow = (tempId: string, field: keyof EventRow, value: any) => {
     setNewRows(prev => prev.map(r => r.tempId === tempId ? { ...r, [field]: value } : r));
   };
-  const removeRow = (tempId: string) => setNewRows(prev => prev.filter(r => r.tempId !== tempId));
+  const removeRow = (tempId: string) => {
+    setNewRows(prev => {
+      const row = prev.find(r => r.tempId === tempId);
+      if (row?.photoPreview) URL.revokeObjectURL(row.photoPreview);
+      return prev.filter(r => r.tempId !== tempId);
+    });
+  };
+
+  const handlePhotoSelect = (tempId: string, file: File) => {
+    const preview = URL.createObjectURL(file);
+    setNewRows(prev => prev.map(r => {
+      if (r.tempId === tempId) {
+        if (r.photoPreview) URL.revokeObjectURL(r.photoPreview);
+        return { ...r, photoFile: file, photoPreview: preview };
+      }
+      return r;
+    }));
+  };
+
+  const handleRemovePhoto = (tempId: string) => {
+    setNewRows(prev => prev.map(r => {
+      if (r.tempId === tempId) {
+        if (r.photoPreview) URL.revokeObjectURL(r.photoPreview);
+        return { ...r, photoFile: null, photoPreview: null };
+      }
+      return r;
+    }));
+  };
+
+  const uploadPhoto = async (file: File): Promise<string | null> => {
+    const ext = file.name.split('.').pop();
+    const path = `${user!.id}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from('event-photos').upload(path, file);
+    if (error) throw error;
+    const { data } = supabase.storage.from('event-photos').getPublicUrl(path);
+    return data.publicUrl;
+  };
 
   const handleSave = async () => {
     if (!activeChildId || !user) return;
@@ -89,6 +128,10 @@ const BabysitterToday = () => {
 
       for (const row of newRows) {
         if (!row.time) continue;
+        let photoUrl: string | undefined;
+        if (row.photoFile) {
+          photoUrl = (await uploadPhoto(row.photoFile)) || undefined;
+        }
         await createEvent.mutateAsync({
           daily_log_id: dailyLog.id,
           time: row.time + ':00',
@@ -97,6 +140,7 @@ const BabysitterToday = () => {
           amount: row.amount ? Number(row.amount) : undefined,
           unit: row.unit || undefined,
           status: row.status || undefined,
+          photo_url: photoUrl,
         });
       }
 
@@ -168,16 +212,21 @@ const BabysitterToday = () => {
                 <div className="space-y-1.5">
                   {events.map(event => (
                     <Card key={event.id} className="border-0 shadow-sm">
-                      <CardContent className="p-2.5 flex items-center gap-2.5">
-                        <span className="text-xs font-bold text-muted-foreground min-w-[36px]">{event.time?.substring(0, 5)}</span>
-                        <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                          {ACTIVITY_ICONS[event.type as ActivityType] || '📝'}
-                        </span>
-                        <span className="text-xs flex-1 truncate">{event.detail || ACTIVITY_LABELS[event.type as ActivityType] || event.type}</span>
-                        {event.amount && <span className="text-xs font-bold">{event.amount} {event.unit}</span>}
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteEvent(event.id, event.daily_log_id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                      <CardContent className="p-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-xs font-bold text-muted-foreground min-w-[36px]">{event.time?.substring(0, 5)}</span>
+                          <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
+                            {ACTIVITY_ICONS[event.type as ActivityType] || '📝'}
+                          </span>
+                          <span className="text-xs flex-1 truncate">{event.detail || ACTIVITY_LABELS[event.type as ActivityType] || event.type}</span>
+                          {event.amount && <span className="text-xs font-bold">{event.amount} {event.unit}</span>}
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteEvent(event.id, event.daily_log_id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                        {(event as any).photo_url && (
+                          <img src={(event as any).photo_url} alt="Foto event" className="mt-2 rounded-lg w-20 h-20 object-cover" />
+                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -189,48 +238,7 @@ const BabysitterToday = () => {
               <h2 className="text-sm font-bold mb-2">➕ Tambah Event</h2>
               <div className="space-y-3">
                 {newRows.map(row => (
-                  <Card key={row.tempId} className="border-0 shadow-sm animate-slide-up">
-                    <CardContent className="p-3 space-y-2">
-                      <div className="flex gap-2 items-center">
-                        <div className="relative flex-shrink-0">
-                          <Clock className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                          <Input type="time" value={row.time} onChange={e => updateRow(row.tempId, 'time', e.target.value)} className="w-[100px] h-10 pl-7 text-sm" />
-                        </div>
-                        <Select value={row.type} onValueChange={v => updateRow(row.tempId, 'type', v)}>
-                          <SelectTrigger className="flex-1 h-10"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {ACTIVITY_OPTIONS.map(act => <SelectItem key={act} value={act}>{ACTIVITY_ICONS[act]} {ACTIVITY_LABELS[act]}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive shrink-0" onClick={() => removeRow(row.tempId)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <Input placeholder="Detail (mis: susu 30 ml habis)" value={row.detail} onChange={e => updateRow(row.tempId, 'detail', e.target.value)} className="h-10 text-sm" />
-                      {(row.type === 'susu' || row.type === 'mpasi' || row.type === 'vitamin') && (
-                        <div className="flex gap-2">
-                          <Input type="number" placeholder="Jumlah" value={row.amount} onChange={e => updateRow(row.tempId, 'amount', e.target.value)} className="flex-1 h-10 text-sm" />
-                          <Select value={row.unit || 'ml'} onValueChange={v => updateRow(row.tempId, 'unit', v)}>
-                            <SelectTrigger className="w-[80px] h-10"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="ml">ml</SelectItem>
-                              <SelectItem value="pcs">pcs</SelectItem>
-                              <SelectItem value="dosis">dosis</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {row.type === 'susu' && (
-                            <Select value={row.status || ''} onValueChange={v => updateRow(row.tempId, 'status', v as EventStatus)}>
-                              <SelectTrigger className="w-[90px] h-10"><SelectValue placeholder="Status" /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="habis">Habis</SelectItem>
-                                <SelectItem value="sisa">Sisa</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                  <EventRowCard key={row.tempId} row={row} updateRow={updateRow} removeRow={removeRow} onPhotoSelect={handlePhotoSelect} onRemovePhoto={handleRemovePhoto} />
                 ))}
               </div>
               <Button variant="outline" className="w-full h-12 mt-3 border-dashed" onClick={addRow}>
@@ -256,5 +264,74 @@ const BabysitterToday = () => {
     </div>
   );
 };
+
+// Extracted event row component
+function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto }: {
+  row: EventRow;
+  updateRow: (tempId: string, field: keyof EventRow, value: any) => void;
+  removeRow: (tempId: string) => void;
+  onPhotoSelect: (tempId: string, file: File) => void;
+  onRemovePhoto: (tempId: string) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <Card className="border-0 shadow-sm animate-slide-up">
+      <CardContent className="p-3 space-y-2">
+        <div className="flex gap-2 items-center">
+          <div className="relative flex-shrink-0">
+            <Clock className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input type="time" value={row.time} onChange={e => updateRow(row.tempId, 'time', e.target.value)} className="w-[100px] h-10 pl-7 text-sm" />
+          </div>
+          <Select value={row.type} onValueChange={v => updateRow(row.tempId, 'type', v)}>
+            <SelectTrigger className="flex-1 h-10"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ACTIVITY_OPTIONS.map(act => <SelectItem key={act} value={act}>{ACTIVITY_ICONS[act]} {ACTIVITY_LABELS[act]}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground shrink-0" onClick={() => fileRef.current?.click()}>
+            <Camera className="h-4 w-4" />
+          </Button>
+          <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { if (e.target.files?.[0]) onPhotoSelect(row.tempId, e.target.files[0]); e.target.value = ''; }} />
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive shrink-0" onClick={() => removeRow(row.tempId)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+        <Input placeholder="Detail (mis: susu 30 ml habis)" value={row.detail} onChange={e => updateRow(row.tempId, 'detail', e.target.value)} className="h-10 text-sm" />
+        {(row.type === 'susu' || row.type === 'mpasi' || row.type === 'vitamin') && (
+          <div className="flex gap-2">
+            <Input type="number" placeholder="Jumlah" value={row.amount} onChange={e => updateRow(row.tempId, 'amount', e.target.value)} className="flex-1 h-10 text-sm" />
+            <Select value={row.unit || 'ml'} onValueChange={v => updateRow(row.tempId, 'unit', v)}>
+              <SelectTrigger className="w-[80px] h-10"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ml">ml</SelectItem>
+                <SelectItem value="pcs">pcs</SelectItem>
+                <SelectItem value="dosis">dosis</SelectItem>
+              </SelectContent>
+            </Select>
+            {row.type === 'susu' && (
+              <Select value={row.status || ''} onValueChange={v => updateRow(row.tempId, 'status', v as EventStatus)}>
+                <SelectTrigger className="w-[90px] h-10"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="habis">Habis</SelectItem>
+                  <SelectItem value="sisa">Sisa</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
+        {row.photoPreview && (
+          <div className="relative inline-block">
+            <img src={row.photoPreview} alt="Preview" className="rounded-lg w-20 h-20 object-cover" />
+            <button onClick={() => onRemovePhoto(row.tempId)} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center">
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 
 export default BabysitterToday;
