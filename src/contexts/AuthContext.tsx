@@ -15,6 +15,8 @@ interface AppUser {
 interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
+  activeRole: UserRole | null;
+  setActiveRole: (role: UserRole) => void;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (email: string, password: string, name: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
@@ -26,6 +28,15 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeRole, setActiveRoleState] = useState<UserRole | null>(() => {
+    const stored = sessionStorage.getItem('activeRole');
+    return stored as UserRole | null;
+  });
+
+  const setActiveRole = useCallback((role: UserRole) => {
+    setActiveRoleState(role);
+    sessionStorage.setItem('activeRole', role);
+  }, []);
 
   const fetchUserProfile = useCallback(async (supaUser: SupabaseUser): Promise<AppUser | null> => {
     // Get profile
@@ -133,10 +144,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setActiveRoleState(null);
+    sessionStorage.removeItem('activeRole');
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, activeRole, setActiveRole, login, signup, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -18,6 +18,7 @@ import AdminChildDetail from "./pages/AdminChildDetail";
 import AdminLogs from "./pages/AdminLogs";
 import SelectRole from "./pages/SelectRole";
 import CompleteProfile from "./pages/CompleteProfile";
+import ChooseRole from "./pages/ChooseRole";
 import Chat from "./pages/Chat";
 import Insights from "./pages/Insights";
 import LocationPage from "./pages/LocationPage";
@@ -26,12 +27,23 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; allowedRole: 'parent' | 'babysitter' | 'admin' }) {
-  const { user, loading } = useAuth();
+  const { user, loading, activeRole } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="animate-pulse text-muted-foreground">Memuat...</div></div>;
   if (!user) return <Navigate to="/login" replace />;
   if (!user.role) return <Navigate to="/select-role" replace />;
+
+  // Admin with activeRole choice
+  if (user.role === 'admin') {
+    if (!activeRole) return <Navigate to="/choose-role" replace />;
+    // Admin acting as parent can access parent routes
+    if (activeRole === 'parent' && allowedRole === 'parent') return <>{children}</>;
+    // Admin acting as admin can access admin routes
+    if (activeRole === 'admin' && allowedRole === 'admin') return <>{children}</>;
+    // Mismatch - redirect based on activeRole
+    return <Navigate to={activeRole === 'admin' ? '/admin/dashboard' : '/parent/dashboard'} replace />;
+  }
+
   if (user.role !== allowedRole) {
-    if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
     return <Navigate to={user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today'} replace />;
   }
   // Babysitter must complete profile first
@@ -42,11 +54,14 @@ function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; 
 }
 
 function RootRedirect() {
-  const { user, loading } = useAuth();
+  const { user, loading, activeRole } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="animate-pulse text-muted-foreground">Memuat...</div></div>;
   if (!user) return <Navigate to="/login" replace />;
   if (!user.role) return <Navigate to="/select-role" replace />;
-  if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+  if (user.role === 'admin') {
+    if (!activeRole) return <Navigate to="/choose-role" replace />;
+    return <Navigate to={activeRole === 'admin' ? '/admin/dashboard' : '/parent/dashboard'} replace />;
+  }
   return <Navigate to={user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today'} replace />;
 }
 
@@ -62,6 +77,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/select-role" element={<SelectRole />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
+            <Route path="/choose-role" element={<ChooseRole />} />
             <Route path="/admin-setup" element={<AdminSetup />} />
             <Route path="/parent/dashboard" element={<ProtectedRoute allowedRole="parent"><ParentDashboard /></ProtectedRoute>} />
             <Route path="/parent/children" element={<ProtectedRoute allowedRole="parent"><ParentChildren /></ProtectedRoute>} />
