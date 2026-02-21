@@ -5,19 +5,28 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Login from "./pages/Login";
+import AdminSetup from "./pages/AdminSetup";
 import ParentDashboard from "./pages/ParentDashboard";
 import ParentChildren from "./pages/ParentChildren";
 import BabysitterToday from "./pages/BabysitterToday";
 import BabysitterHistory from "./pages/BabysitterHistory";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminChildren from "./pages/AdminChildren";
+import AdminChildDetail from "./pages/AdminChildDetail";
+import AdminLogs from "./pages/AdminLogs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; allowedRole: 'parent' | 'babysitter' }) {
+function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; allowedRole: 'parent' | 'babysitter' | 'admin' }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="animate-pulse text-muted-foreground">Memuat...</div></div>;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== allowedRole) return <Navigate to={user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today'} replace />;
+  if (user.role !== allowedRole) {
+    if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to={user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today'} replace />;
+  }
   return <>{children}</>;
 }
 
@@ -25,6 +34,7 @@ function RootRedirect() {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="animate-pulse text-muted-foreground">Memuat...</div></div>;
   if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
   return <Navigate to={user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today'} replace />;
 }
 
@@ -38,10 +48,16 @@ const App = () => (
           <Routes>
             <Route path="/" element={<RootRedirect />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/admin-setup" element={<AdminSetup />} />
             <Route path="/parent/dashboard" element={<ProtectedRoute allowedRole="parent"><ParentDashboard /></ProtectedRoute>} />
             <Route path="/parent/children" element={<ProtectedRoute allowedRole="parent"><ParentChildren /></ProtectedRoute>} />
             <Route path="/babysitter/today" element={<ProtectedRoute allowedRole="babysitter"><BabysitterToday /></ProtectedRoute>} />
             <Route path="/babysitter/history" element={<ProtectedRoute allowedRole="babysitter"><BabysitterHistory /></ProtectedRoute>} />
+            <Route path="/admin/dashboard" element={<ProtectedRoute allowedRole="admin"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute allowedRole="admin"><AdminUsers /></ProtectedRoute>} />
+            <Route path="/admin/children" element={<ProtectedRoute allowedRole="admin"><AdminChildren /></ProtectedRoute>} />
+            <Route path="/admin/children/:childId" element={<ProtectedRoute allowedRole="admin"><AdminChildDetail /></ProtectedRoute>} />
+            <Route path="/admin/logs" element={<ProtectedRoute allowedRole="admin"><AdminLogs /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
