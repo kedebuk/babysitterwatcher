@@ -83,6 +83,13 @@ const AdminUsers = () => {
           return (
             <Card key={profile.id} className={`border-0 shadow-sm ${isDisabled ? 'opacity-60' : ''}`}>
               <CardContent className="p-3 flex items-center justify-between gap-3">
+                {profile.avatar_url ? (
+                  <img src={profile.avatar_url} alt={profile.name} className="h-10 w-10 rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-bold shrink-0">
+                    {profile.name?.charAt(0)?.toUpperCase() || '?'}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm">{profile.name} {isDisabled && <span className="text-xs text-destructive">(nonaktif)</span>}</p>
                   <p className="text-xs text-muted-foreground">{profile.email}</p>

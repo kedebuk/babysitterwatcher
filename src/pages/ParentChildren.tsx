@@ -57,7 +57,7 @@ const ParentChildren = () => {
       if (error) throw error;
       if (!data || data.length === 0) return [];
       const userIds = [...new Set(data.map(a => a.babysitter_user_id))];
-      const { data: profiles } = await supabase.from('profiles').select('id, name, email').in('id', userIds);
+      const { data: profiles } = await supabase.from('profiles').select('id, name, email, avatar_url').in('id', userIds);
       const profileMap: Record<string, any> = {};
       (profiles || []).forEach(p => { profileMap[p.id] = p; });
       return data.map(a => ({ ...a, profiles: profileMap[a.babysitter_user_id] || null }));
@@ -72,7 +72,7 @@ const ParentChildren = () => {
       if (error) throw error;
       if (!data || data.length === 0) return [];
       const userIds = [...new Set(data.map(v => v.viewer_user_id))];
-      const { data: profiles } = await supabase.from('profiles').select('id, name, email').in('id', userIds);
+      const { data: profiles } = await supabase.from('profiles').select('id, name, email, avatar_url').in('id', userIds);
       const profileMap: Record<string, any> = {};
       (profiles || []).forEach(p => { profileMap[p.id] = p; });
       return data.map(v => ({ ...v, profiles: profileMap[v.viewer_user_id] || null }));
@@ -358,7 +358,11 @@ const ParentChildren = () => {
                   {childAssignments.map((assignment: any) => (
                     <div key={assignment.id} className="flex items-center justify-between py-1.5">
                       <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-xs">👩‍🍼</div>
+                        {assignment.profiles?.avatar_url ? (
+                          <img src={assignment.profiles.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+                        ) : (
+                          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-xs">👩‍🍼</div>
+                        )}
                         <div>
                           <p className="text-sm font-medium">{assignment.profiles?.name || 'Babysitter'}</p>
                           <p className="text-xs text-muted-foreground">{assignment.profiles?.email} • Babysitter</p>
@@ -374,9 +378,13 @@ const ParentChildren = () => {
                   {childViewers.map((viewer: any) => (
                     <div key={viewer.id} className="flex items-center justify-between py-1.5">
                       <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-full bg-accent/10 flex items-center justify-center text-xs">
-                          <Eye className="h-3.5 w-3.5 text-accent-foreground" />
-                        </div>
+                        {viewer.profiles?.avatar_url ? (
+                          <img src={viewer.profiles.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+                        ) : (
+                          <div className="h-7 w-7 rounded-full bg-accent/10 flex items-center justify-center text-xs">
+                            <Eye className="h-3.5 w-3.5 text-accent-foreground" />
+                          </div>
+                        )}
                         <div>
                           <p className="text-sm font-medium">{viewer.profiles?.name || 'Keluarga'}</p>
                           <p className="text-xs text-muted-foreground">{viewer.profiles?.email} • Keluarga</p>
