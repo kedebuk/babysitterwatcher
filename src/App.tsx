@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import AdminSetup from "./pages/AdminSetup";
 import ParentDashboard from "./pages/ParentDashboard";
 import ParentChildren from "./pages/ParentChildren";
+import ParentInput from "./pages/ParentInput";
 import BabysitterToday from "./pages/BabysitterToday";
 import BabysitterHistory from "./pages/BabysitterHistory";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/admin-setup" element={<AdminSetup />} />
             <Route path="/parent/dashboard" element={<ProtectedRoute allowedRole="parent"><ParentDashboard /></ProtectedRoute>} />
             <Route path="/parent/children" element={<ProtectedRoute allowedRole="parent"><ParentChildren /></ProtectedRoute>} />
+            <Route path="/parent/input" element={<ProtectedRoute allowedRole="parent"><ParentInput /></ProtectedRoute>} />
             <Route path="/babysitter/today" element={<ProtectedRoute allowedRole="babysitter"><BabysitterToday /></ProtectedRoute>} />
             <Route path="/babysitter/history" element={<ProtectedRoute allowedRole="babysitter"><BabysitterHistory /></ProtectedRoute>} />
             <Route path="/admin/dashboard" element={<ProtectedRoute allowedRole="admin"><AdminDashboard /></ProtectedRoute>} />

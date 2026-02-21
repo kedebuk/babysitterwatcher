@@ -10,11 +10,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Plus, Trash2, LogOut, Clock, History, Camera, X } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft, Clock, Camera, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
-import PendingInvites from '@/components/PendingInvites';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
@@ -42,27 +40,16 @@ const createEmptyRow = (): EventRow => ({
   photoPreview: null,
 });
 
-const BabysitterToday = () => {
-  const { user, logout } = useAuth();
+const ParentInput = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const [selectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-
-  const { data: assignedChildren = [] } = useQuery({
-    queryKey: ['assigned_children', user?.id],
-    queryFn: async () => {
-      const { data: assignments } = await supabase
-        .from('assignments')
-        .select('child_id, children(*)');
-      if (!assignments) return [];
-      return assignments.map((a: any) => a.children).filter(Boolean);
-    },
-    enabled: !!user,
-  });
+  const { data: children = [] } = useChildren();
 
   const [selectedChild, setSelectedChild] = useState('');
-  const activeChildId = selectedChild || assignedChildren[0]?.id || '';
+  const activeChildId = selectedChild || children[0]?.id || '';
 
   const { data: log } = useDailyLog(activeChildId, selectedDate);
   const { data: events = [] } = useEvents(log?.id);
@@ -167,27 +154,21 @@ const BabysitterToday = () => {
   return (
     <div className="min-h-screen pb-24">
       <div className="sticky top-0 z-10 bg-primary px-4 py-3 text-primary-foreground">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/parent/dashboard')}>
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
           <div>
-            <h1 className="text-lg font-bold">Input Harian</h1>
-            <p className="text-xs opacity-80">Halo, {user?.name} 👋</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/babysitter/history')}>
-              <History className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={logout}>
-              <LogOut className="h-5 w-5" />
-            </Button>
+            <h1 className="text-lg font-bold">Input Harian (Parent)</h1>
+            <p className="text-xs opacity-80">Catat aktivitas anak sendiri 👋</p>
           </div>
         </div>
       </div>
 
       <div className="px-4 py-3 space-y-4 max-w-2xl mx-auto">
-        <PendingInvites />
-        {assignedChildren.length === 0 ? (
+        {children.length === 0 ? (
           <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">
-            Belum ada anak yang ditugaskan. Hubungi orang tua untuk penugasan.
+            Belum ada anak terdaftar.
           </CardContent></Card>
         ) : (
           <>
@@ -195,7 +176,7 @@ const BabysitterToday = () => {
               <Select value={activeChildId} onValueChange={setSelectedChild}>
                 <SelectTrigger className="flex-1 h-11 bg-card"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
                 <SelectContent>
-                  {assignedChildren.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.avatar_emoji} {c.name}</SelectItem>)}
+                  {children.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.avatar_emoji} {c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
               <div className="h-11 px-3 flex items-center bg-card rounded-lg text-sm font-medium border">
@@ -263,7 +244,7 @@ const BabysitterToday = () => {
         )}
       </div>
 
-      {assignedChildren.length > 0 && (
+      {children.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t max-w-2xl mx-auto">
           <Button className="w-full h-14 text-base font-bold" onClick={handleSave} disabled={createOrGetLog.isPending || createEvent.isPending}>
             💾 Simpan Log Hari Ini
@@ -342,5 +323,4 @@ function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto 
   );
 }
 
-
-export default BabysitterToday;
+export default ParentInput;

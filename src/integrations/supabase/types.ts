@@ -180,6 +180,7 @@ export type Database = {
         Row: {
           amount: number | null
           created_at: string
+          created_by: string | null
           daily_log_id: string
           detail: string | null
           id: string
@@ -193,6 +194,7 @@ export type Database = {
         Insert: {
           amount?: number | null
           created_at?: string
+          created_by?: string | null
           daily_log_id: string
           detail?: string | null
           id?: string
@@ -206,6 +208,7 @@ export type Database = {
         Update: {
           amount?: number | null
           created_at?: string
+          created_by?: string | null
           daily_log_id?: string
           detail?: string | null
           id?: string
