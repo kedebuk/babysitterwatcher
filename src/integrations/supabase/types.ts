@@ -161,6 +161,38 @@ export type Database = {
           },
         ]
       }
+      pending_invites: {
+        Row: {
+          child_id: string
+          created_at: string
+          id: string
+          invited_by: string
+          invited_email: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          id?: string
+          invited_by: string
+          invited_email: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          id?: string
+          invited_by?: string
+          invited_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_invites_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
