@@ -191,7 +191,15 @@ const BabysitterToday = () => {
           </CardContent></Card>
         ) : (
           <>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              {activeChildId && (() => {
+                const c = assignedChildren.find((ch: any) => ch.id === activeChildId);
+                return c?.photo_url ? (
+                  <img src={c.photo_url} alt={c.name} className="h-11 w-11 rounded-xl object-cover shrink-0" />
+                ) : (
+                  <div className="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0">{c?.avatar_emoji || '👶'}</div>
+                );
+              })()}
               <Select value={activeChildId} onValueChange={setSelectedChild}>
                 <SelectTrigger className="flex-1 h-11 bg-card"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
                 <SelectContent>
