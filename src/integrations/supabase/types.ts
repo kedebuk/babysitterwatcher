@@ -14,16 +14,241 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      assignments: {
+        Row: {
+          babysitter_user_id: string
+          child_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          babysitter_user_id: string
+          child_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          babysitter_user_id?: string
+          child_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      children: {
+        Row: {
+          avatar_emoji: string | null
+          created_at: string
+          dob: string | null
+          id: string
+          name: string
+          notes: string | null
+          parent_id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_emoji?: string | null
+          created_at?: string
+          dob?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          parent_id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_emoji?: string | null
+          created_at?: string
+          dob?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          parent_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      daily_logs: {
+        Row: {
+          child_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          log_date: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          log_date?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          log_date?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_logs_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          amount: number | null
+          created_at: string
+          daily_log_id: string
+          detail: string | null
+          id: string
+          status: Database["public"]["Enums"]["event_status"] | null
+          time: string
+          type: Database["public"]["Enums"]["activity_type"]
+          unit: Database["public"]["Enums"]["event_unit"] | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          daily_log_id: string
+          detail?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["event_status"] | null
+          time: string
+          type: Database["public"]["Enums"]["activity_type"]
+          unit?: Database["public"]["Enums"]["event_unit"] | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          daily_log_id?: string
+          detail?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["event_status"] | null
+          time?: string
+          type?: Database["public"]["Enums"]["activity_type"]
+          unit?: Database["public"]["Enums"]["event_unit"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_daily_log_id_fkey"
+            columns: ["daily_log_id"]
+            isOneToOne: false
+            referencedRelation: "daily_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          id: string
+          name?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_access_log: {
+        Args: { _log_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_assigned_to_child: {
+        Args: { _child_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_parent_of_child: {
+        Args: { _child_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      activity_type:
+        | "susu"
+        | "mpasi"
+        | "tidur"
+        | "bangun"
+        | "pup"
+        | "pee"
+        | "mandi"
+        | "vitamin"
+        | "lap_badan"
+        | "catatan"
+      app_role: "parent" | "babysitter"
+      event_status: "habis" | "sisa"
+      event_unit: "ml" | "pcs" | "dosis"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +375,22 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      activity_type: [
+        "susu",
+        "mpasi",
+        "tidur",
+        "bangun",
+        "pup",
+        "pee",
+        "mandi",
+        "vitamin",
+        "lap_badan",
+        "catatan",
+      ],
+      app_role: ["parent", "babysitter"],
+      event_status: ["habis", "sisa"],
+      event_unit: ["ml", "pcs", "dosis"],
+    },
   },
 } as const
