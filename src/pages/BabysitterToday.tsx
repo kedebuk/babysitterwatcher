@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Plus, Trash2, LogOut, Clock, History, Camera, X, MessageCircle, MapPin, MoreVertical, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, LogOut, Clock, History, Camera, X, MessageCircle, MapPin, MoreVertical, RefreshCw, Baby, UserCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -44,7 +44,7 @@ const createEmptyRow = (): EventRow => ({
 });
 
 const BabysitterToday = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, setActiveRole } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -219,6 +219,22 @@ const BabysitterToday = () => {
                       navigate('/choose-role'); 
                     }}>
                       <RefreshCw className="mr-2 h-4 w-4" /> Ganti Role
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {assignedChildren.length === 0 && (user?.roles?.length ?? 0) <= 1 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={async () => {
+                      const { error } = await supabase.from('user_roles').insert({ user_id: user!.id, role: 'parent' });
+                      if (!error) {
+                        setActiveRole('parent');
+                        window.location.href = '/parent/dashboard';
+                      } else {
+                        toast({ title: 'Gagal', description: error.message, variant: 'destructive' });
+                      }
+                    }}>
+                      <Baby className="mr-2 h-4 w-4" /> Ganti ke Orang Tua
                     </DropdownMenuItem>
                   </>
                 )}
