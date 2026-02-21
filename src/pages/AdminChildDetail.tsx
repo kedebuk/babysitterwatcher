@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Shield, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { format, parseISO, subDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType } from '@/types';
@@ -54,6 +54,35 @@ const AdminChildDetail = () => {
     },
     enabled: !!log?.id,
   });
+
+  const { data: locationPings = [] } = useQuery({
+    queryKey: ['location_pings', childId, selectedDate],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('location_pings')
+        .select('*')
+        .eq('child_id', childId!)
+        .gte('created_at', selectedDate + 'T00:00:00')
+        .lte('created_at', selectedDate + 'T23:59:59')
+        .order('created_at');
+      return data || [];
+    },
+    enabled: !!childId,
+  });
+
+  const findClosestPing = (eventTime: string) => {
+    if (!locationPings.length || !eventTime) return null;
+    const eventMinutes = parseInt(eventTime.substring(0, 2)) * 60 + parseInt(eventTime.substring(3, 5));
+    let closest: any = null;
+    let minDiff = Infinity;
+    for (const ping of locationPings) {
+      const pingTime = new Date(ping.created_at);
+      const pingMinutes = pingTime.getHours() * 60 + pingTime.getMinutes();
+      const diff = Math.abs(pingMinutes - eventMinutes);
+      if (diff < minDiff && diff <= 30) { minDiff = diff; closest = ping; }
+    }
+    return closest;
+  };
 
   // Chart data
   const last7dates = Array.from({ length: 7 }, (_, i) => format(subDays(new Date(), 6 - i), 'yyyy-MM-dd'));
@@ -167,31 +196,45 @@ const AdminChildDetail = () => {
           {events.length === 0 ? (
             <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">Belum ada data untuk tanggal ini</CardContent></Card>
           ) : (
-            <div className="space-y-2">
-              {events.map((event: any) => (
-                <Card key={event.id} className="border-0 shadow-sm animate-fade-in">
-                  <CardContent className="p-3 flex items-start gap-3">
-                    <div className="text-center min-w-[44px]"><p className="text-xs font-bold text-muted-foreground">{event.time?.substring(0, 5)}</p></div>
-                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                      {ACTIVITY_ICONS[event.type as ActivityType] || '📝'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</p>
-                      {event.detail && <p className="text-xs text-muted-foreground truncate">{event.detail}</p>}
-                      {event.photo_url && (
-                        <img src={event.photo_url} alt="Foto" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" onClick={() => window.open(event.photo_url, '_blank')} />
-                      )}
-                    </div>
-                    {event.amount && (
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-bold">{event.amount}</p>
-                        <p className="text-xs text-muted-foreground">{event.unit}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+             <div className="space-y-2">
+               {events.map((event: any) => {
+                 const ping = findClosestPing(event.time);
+                 return (
+                 <Card key={event.id} className="border-0 shadow-sm animate-fade-in">
+                   <CardContent className="p-3 flex items-start gap-3">
+                     <div className="text-center min-w-[44px]"><p className="text-xs font-bold text-muted-foreground">{event.time?.substring(0, 5)}</p></div>
+                     <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
+                       {ACTIVITY_ICONS[event.type as ActivityType] || '📝'}
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <p className="text-sm font-semibold">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</p>
+                       {event.detail && <p className="text-xs text-muted-foreground truncate">{event.detail}</p>}
+                       {event.photo_url && (
+                         <img src={event.photo_url} alt="Foto" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" onClick={() => window.open(event.photo_url, '_blank')} />
+                       )}
+                       {ping && (
+                         <a
+                           href={`https://www.google.com/maps?q=${ping.latitude},${ping.longitude}`}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-primary hover:underline"
+                         >
+                           <MapPin className="h-3 w-3" />
+                           {ping.latitude.toFixed(5)}, {ping.longitude.toFixed(5)}
+                         </a>
+                       )}
+                     </div>
+                     {event.amount && (
+                       <div className="text-right shrink-0">
+                         <p className="text-sm font-bold">{event.amount}</p>
+                         <p className="text-xs text-muted-foreground">{event.unit}</p>
+                       </div>
+                     )}
+                   </CardContent>
+                 </Card>
+                 );
+               })}
+             </div>
           )}
         </div>
 
