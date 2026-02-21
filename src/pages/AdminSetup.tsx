@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -14,13 +14,37 @@ const AdminSetup = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hasAdmin, setHasAdmin] = useState<boolean | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
 
+  // Check if any admin already exists
+  useEffect(() => {
+    const checkAdmins = async () => {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('role', 'admin')
+        .limit(1);
+      setHasAdmin(data !== null && data.length > 0);
+    };
+    checkAdmins();
+  }, []);
+
   // If already logged in as admin, redirect
   if (!authLoading && user?.role === 'admin') {
     return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  // If admin already exists, block access
+  if (hasAdmin === true) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Still checking
+  if (hasAdmin === null) {
+    return <div className="flex min-h-screen items-center justify-center"><div className="animate-pulse text-muted-foreground">Memuat...</div></div>;
   }
 
   const handleRegisterAdmin = async (e: React.FormEvent) => {
@@ -59,7 +83,7 @@ const AdminSetup = () => {
             <Shield className="h-8 w-8 text-destructive-foreground" />
           </div>
           <h1 className="text-2xl font-bold">Admin Setup</h1>
-          <p className="text-sm text-muted-foreground">Daftarkan akun admin baru</p>
+          <p className="text-sm text-muted-foreground">Daftarkan akun admin pertama</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegisterAdmin} className="space-y-3">

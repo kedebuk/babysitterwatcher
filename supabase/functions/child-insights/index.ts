@@ -20,8 +20,13 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader! } } }
     );
 
-    // Get child info
-    const { data: child } = await supabase.from("children").select("name, dob").eq("id", child_id).single();
+    // Verify user has access to this child (RLS enforced)
+    const { data: child, error: childError } = await supabase.from("children").select("name, dob").eq("id", child_id).single();
+    if (childError || !child) {
+      return new Response(JSON.stringify({ error: "Not authorized to access this child" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Get last 14 days of logs + events
     const today = new Date();
