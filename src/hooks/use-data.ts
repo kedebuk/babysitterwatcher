@@ -34,11 +34,16 @@ export function useAssignments(childId?: string) {
   return useQuery({
     queryKey: ['assignments', childId],
     queryFn: async () => {
-      let query = supabase.from('assignments').select('*, profiles:babysitter_user_id(name, email)');
+      let query = supabase.from('assignments').select('*');
       if (childId) query = query.eq('child_id', childId);
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      if (!data || data.length === 0) return [];
+      const userIds = [...new Set(data.map(a => a.babysitter_user_id))];
+      const { data: profiles } = await supabase.from('profiles').select('id, name, email').in('id', userIds);
+      const profileMap: Record<string, any> = {};
+      (profiles || []).forEach(p => { profileMap[p.id] = p; });
+      return data.map(a => ({ ...a, profiles: profileMap[a.babysitter_user_id] || null }));
     },
     enabled: !!childId,
   });

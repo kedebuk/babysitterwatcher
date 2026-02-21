@@ -18,11 +18,22 @@ const PendingInvites = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('pending_invites')
-        .select('*, children:child_id(name, avatar_emoji, parent_id, profiles:parent_id(name))')
+        .select('*, children:child_id(name, avatar_emoji, parent_id)')
         .eq('invited_user_id', user!.id)
         .eq('status', 'pending');
       if (error) throw error;
-      return data || [];
+      if (!data || data.length === 0) return [];
+
+      // Fetch parent names separately
+      const parentIds = [...new Set(data.map((i: any) => i.children?.parent_id).filter(Boolean))];
+      const { data: profiles } = await supabase.from('profiles').select('id, name').in('id', parentIds);
+      const profileMap: Record<string, string> = {};
+      (profiles || []).forEach((p: any) => { profileMap[p.id] = p.name; });
+
+      return data.map((i: any) => ({
+        ...i,
+        parent_name: i.children?.parent_id ? profileMap[i.children.parent_id] : null,
+      }));
     },
     enabled: !!user?.id,
   });
@@ -89,7 +100,7 @@ const PendingInvites = () => {
                 <div>
                   <p className="text-sm font-semibold">{invite.children?.name || 'Anak'}</p>
                   <p className="text-xs text-muted-foreground">
-                    Dari: {invite.children?.profiles?.name || 'Parent'} • 
+                    Dari: {invite.parent_name || 'Parent'} • 
                     Peran: {invite.invite_role === 'parent' ? '👨‍👩‍👧 Keluarga' : '👩‍🍼 Babysitter'}
                   </p>
                 </div>
