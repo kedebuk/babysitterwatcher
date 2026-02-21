@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useChildren, useDailyLog, useEvents, useChildLogs } from '@/hooks/use-data';
+import { useChildren, useDailyLog, useEvents, useChildLogs, useProfileNames } from '@/hooks/use-data';
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, subDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell } from 'lucide-react';
+import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,6 +65,7 @@ const ParentDashboard = () => {
 
   const { data: log } = useDailyLog(activeChildId, selectedDate);
   const { data: events = [] } = useEvents(log?.id);
+  const { data: profileNames = {} } = useProfileNames(events.map((e: any) => e.created_by).filter(Boolean));
 
   // 7 day chart data
   const last7dates = Array.from({ length: 7 }, (_, i) => format(subDays(new Date(), 6 - i), 'yyyy-MM-dd'));
@@ -112,6 +113,9 @@ const ParentDashboard = () => {
             <p className="text-xs opacity-80">Halo, {user?.name} 👋</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/parent/input')}>
+              <PenLine className="h-5 w-5" />
+            </Button>
             <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/parent/children')}>
               <Users className="h-5 w-5" />
             </Button>
@@ -223,6 +227,9 @@ const ParentDashboard = () => {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</p>
                           {event.detail && <p className="text-xs text-muted-foreground truncate">{event.detail}</p>}
+                          {(event as any).created_by && profileNames[(event as any).created_by] && (
+                            <p className="text-[10px] text-muted-foreground mt-0.5">oleh {profileNames[(event as any).created_by]}</p>
+                          )}
                           {(event as any).photo_url && (
                             <img src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" onClick={() => window.open((event as any).photo_url, '_blank')} />
                           )}

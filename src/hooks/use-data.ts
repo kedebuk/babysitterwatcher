@@ -120,7 +120,7 @@ export function useEvents(dailyLogId?: string) {
 export function useCreateEvent() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (event: { daily_log_id: string; time: string; type: string; detail?: string; amount?: number; unit?: string; status?: string; photo_url?: string }) => {
+    mutationFn: async (event: { daily_log_id: string; time: string; type: string; detail?: string; amount?: number; unit?: string; status?: string; photo_url?: string; created_by?: string }) => {
       const { data, error } = await supabase.from('events').insert(event as any).select().single();
       if (error) throw error;
       return data;
@@ -185,5 +185,25 @@ export function useUserRole(userId?: string) {
       return data?.role;
     },
     enabled: !!userId,
+  });
+}
+
+// ============ Profile names for event creators ============
+export function useProfileNames(userIds: string[]) {
+  const uniqueIds = [...new Set(userIds.filter(Boolean))];
+  return useQuery({
+    queryKey: ['profile_names', uniqueIds.sort().join(',')],
+    queryFn: async () => {
+      if (uniqueIds.length === 0) return {};
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .in('id', uniqueIds);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (data || []).forEach(p => { map[p.id] = p.name; });
+      return map;
+    },
+    enabled: uniqueIds.length > 0,
   });
 }
