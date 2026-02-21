@@ -72,11 +72,11 @@ const Login = () => {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm animate-fade-in border-0 shadow-lg">
         <CardHeader className="text-center pb-2">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary">
-            <Baby className="h-8 w-8 text-primary-foreground" />
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10">
+            <Baby className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold">Child Tracker</h1>
-          <p className="text-sm text-muted-foreground">Pantau aktivitas si kecil</p>
+          <h1 className="font-display text-2xl font-bold text-foreground">Eleanor Tracker</h1>
+          <p className="text-sm text-muted-foreground">Pantau aktivitas si kecil dengan cinta 💛</p>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login">
