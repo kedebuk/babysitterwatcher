@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useChildren, useCreateChild } from '@/hooks/use-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogOut, BarChart3, UserPlus, Trash2, Mail, Eye } from 'lucide-react';
+import { Plus, LogOut, BarChart3, UserPlus, Trash2, Mail, Eye, Pencil, Camera } from 'lucide-react';
 import { format, parseISO, differenceInMonths } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +36,18 @@ const ParentChildren = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'babysitter' | 'parent'>('babysitter');
   const [inviteLoading, setInviteLoading] = useState(false);
+
+  // Edit child dialog
+  const [editOpen, setEditOpen] = useState(false);
+  const [editChild, setEditChild] = useState<any>(null);
+  const [editName, setEditName] = useState('');
+  const [editDob, setEditDob] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [editEmoji, setEditEmoji] = useState('👶');
+  const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
+  const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const editFileRef = useRef<HTMLInputElement>(null);
 
   // Get assignments for all children
   const { data: allAssignments = [] } = useQuery({
@@ -214,6 +226,53 @@ const ParentChildren = () => {
     }
   };
 
+  const openEditDialog = (child: any) => {
+    setEditChild(child);
+    setEditName(child.name);
+    setEditDob(child.dob || '');
+    setEditNotes(child.notes || '');
+    setEditEmoji(child.avatar_emoji || '👶');
+    setEditPhotoPreview((child as any).photo_url || null);
+    setEditPhotoFile(null);
+    setEditOpen(true);
+  };
+
+  const handleEditPhotoSelect = (file: File) => {
+    if (editPhotoPreview && !editPhotoPreview.startsWith('http')) URL.revokeObjectURL(editPhotoPreview);
+    setEditPhotoFile(file);
+    setEditPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleEditSave = async () => {
+    if (!editChild || !editName.trim() || !user) return;
+    setEditSaving(true);
+    try {
+      let photoUrl = (editChild as any).photo_url;
+      if (editPhotoFile) {
+        const ext = editPhotoFile.name.split('.').pop();
+        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from('child-photos').upload(path, editPhotoFile);
+        if (uploadErr) throw uploadErr;
+        const { data } = supabase.storage.from('child-photos').getPublicUrl(path);
+        photoUrl = data.publicUrl;
+      }
+      const { error } = await supabase.from('children').update({
+        name: editName.trim(),
+        dob: editDob || null,
+        notes: editNotes,
+        avatar_emoji: editEmoji,
+        photo_url: photoUrl,
+      } as any).eq('id', editChild.id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ['children'] });
+      toast({ title: '✅ Berhasil!', description: 'Data anak berhasil diperbarui' });
+      setEditOpen(false);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setEditSaving(false);
+  };
+
   if (isLoading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Memuat...</div>;
 
   return (
@@ -246,11 +305,17 @@ const ParentChildren = () => {
           return (
             <Card key={child.id} className="border-0 shadow-sm animate-fade-in">
               <CardContent className="p-4">
-                <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/parent/dashboard')}>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-2xl shrink-0">
-                    {child.avatar_emoji || '👶'}
+                <div className="flex items-center gap-4">
+                  <div className="relative shrink-0 cursor-pointer" onClick={() => navigate('/parent/dashboard')}>
+                    {(child as any).photo_url ? (
+                      <img src={(child as any).photo_url} alt={child.name} className="h-14 w-14 rounded-2xl object-cover" />
+                    ) : (
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-2xl">
+                        {child.avatar_emoji || '👶'}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 cursor-pointer" onClick={() => navigate('/parent/dashboard')}>
                     <h3 className="font-bold text-base">{child.name}</h3>
                     <p className="text-xs text-muted-foreground">
                       {age !== null ? `${age} bulan` : ''}
@@ -258,6 +323,9 @@ const ParentChildren = () => {
                     </p>
                     {child.notes && <p className="text-xs text-accent mt-0.5">⚠️ {child.notes}</p>}
                   </div>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground shrink-0" onClick={(e) => { e.stopPropagation(); openEditDialog(child); }}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                 </div>
 
                 {/* Connected people section */}
@@ -415,6 +483,53 @@ const ParentChildren = () => {
               <Button className="w-full h-12 font-semibold" onClick={handleInvite} disabled={!inviteEmail.trim() || inviteLoading}>
                 <UserPlus className="mr-2 h-5 w-5" />
                 {inviteLoading ? 'Memproses...' : `Undang ${inviteRole === 'babysitter' ? 'Babysitter' : 'Keluarga'}`}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit child dialog */}
+        <Dialog open={editOpen} onOpenChange={(o) => { setEditOpen(o); if (!o) { setEditPhotoFile(null); } }}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Edit Data Anak</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="relative cursor-pointer" onClick={() => editFileRef.current?.click()}>
+                  {editPhotoPreview ? (
+                    <img src={editPhotoPreview} alt="Foto anak" className="h-20 w-20 rounded-2xl object-cover" />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary text-3xl">
+                      {editEmoji}
+                    </div>
+                  )}
+                  <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full h-6 w-6 flex items-center justify-center">
+                    <Camera className="h-3.5 w-3.5" />
+                  </div>
+                </div>
+                <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) handleEditPhotoSelect(e.target.files[0]); e.target.value = ''; }} />
+                <div className="flex-1 space-y-1.5">
+                  <Label>Emoji Avatar</Label>
+                  <div className="flex gap-2">
+                    {['👶', '🧒', '👧', '👦', '🍼'].map(e => (
+                      <button key={e} onClick={() => setEditEmoji(e)} className={`text-2xl p-2 rounded-lg ${editEmoji === e ? 'bg-primary/20 ring-2 ring-primary' : 'bg-muted'}`}>{e}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Nama</Label>
+                <Input placeholder="Nama anak" value={editName} onChange={e => setEditName(e.target.value)} className="h-11" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Tanggal Lahir</Label>
+                <Input type="date" value={editDob} onChange={e => setEditDob(e.target.value)} className="h-11" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Catatan (opsional)</Label>
+                <Input placeholder="Alergi, kondisi khusus, dll" value={editNotes} onChange={e => setEditNotes(e.target.value)} className="h-11" />
+              </div>
+              <Button className="w-full h-12 font-semibold" onClick={handleEditSave} disabled={!editName.trim() || editSaving}>
+                {editSaving ? 'Menyimpan...' : '💾 Simpan Perubahan'}
               </Button>
             </div>
           </DialogContent>
