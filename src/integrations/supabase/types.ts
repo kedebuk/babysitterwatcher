@@ -461,17 +461,27 @@ export type Database = {
         Args: { _child_id: string; _user_id: string }
         Returns: boolean
       }
-      log_activity: {
-        Args: {
-          _action: string
-          _detail?: string
-          _target_id?: string
-          _target_type?: string
-          _user_email: string
-          _user_id: string
-        }
-        Returns: undefined
-      }
+      log_activity:
+        | {
+            Args: {
+              _action: string
+              _detail?: string
+              _target_id?: string
+              _target_type?: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _action: string
+              _detail?: string
+              _target_id?: string
+              _target_type?: string
+              _user_email: string
+              _user_id: string
+            }
+            Returns: undefined
+          }
     }
     Enums: {
       activity_type:
