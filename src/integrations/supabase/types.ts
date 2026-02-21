@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          detail: string | null
+          id: string
+          target_id: string | null
+          target_type: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          target_id?: string | null
+          target_type?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          target_id?: string | null
+          target_type?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       assignments: {
         Row: {
           babysitter_user_id: string
@@ -303,6 +336,17 @@ export type Database = {
       is_viewer_of_child: {
         Args: { _child_id: string; _user_id: string }
         Returns: boolean
+      }
+      log_activity: {
+        Args: {
+          _action: string
+          _detail?: string
+          _target_id?: string
+          _target_type?: string
+          _user_email: string
+          _user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
