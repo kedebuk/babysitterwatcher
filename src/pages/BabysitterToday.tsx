@@ -119,6 +119,24 @@ const BabysitterToday = () => {
     return data.publicUrl;
   };
 
+  const saveLocationPing = async (childId: string) => {
+    if (!user || !navigator.geolocation) return;
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, enableHighAccuracy: false })
+      );
+      await supabase.from('location_pings').insert({
+        child_id: childId,
+        user_id: user.id,
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+      });
+    } catch {
+      // silently fail - location is optional
+    }
+  };
+
   const handleSave = async () => {
     if (!activeChildId || !user) return;
     try {
@@ -147,6 +165,9 @@ const BabysitterToday = () => {
           created_by: user.id,
         });
       }
+
+      // Auto-capture location
+      saveLocationPing(activeChildId);
 
       setNewRows([createEmptyRow()]);
       setNotes('');
