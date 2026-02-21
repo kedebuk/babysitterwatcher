@@ -4,16 +4,21 @@ import { useAuth } from '@/contexts/AuthContext';
 
 // ============ Children ============
 export function useChildren() {
+  const { user, activeRole } = useAuth();
+  const effectiveRole = user?.roles && user.roles.length > 1 ? activeRole : user?.role;
   return useQuery({
-    queryKey: ['children'],
+    queryKey: ['children', user?.id, effectiveRole],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('children')
-        .select('*')
-        .order('created_at');
+      let query = supabase.from('children').select('*').order('created_at');
+      // When acting as parent, only show own children
+      if (effectiveRole === 'parent') {
+        query = query.eq('parent_id', user!.id);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
+    enabled: !!user,
   });
 }
 

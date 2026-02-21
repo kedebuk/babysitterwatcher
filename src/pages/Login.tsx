@@ -24,8 +24,8 @@ const Login = () => {
 
   // Redirect if already logged in
   if (!authLoading && user) {
-    if (user.role === 'admin') return <Navigate to="/choose-role" replace />;
-    const dest = user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today';
+    if ((user.roles?.length ?? 0) > 1) return <Navigate to="/choose-role" replace />;
+    const dest = user.role === 'admin' ? '/admin/dashboard' : user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today';
     return <Navigate to={dest} replace />;
   }
 
