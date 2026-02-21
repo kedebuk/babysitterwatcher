@@ -29,9 +29,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get profile
     const { data: profile } = await supabase
       .from('profiles')
-      .select('name')
+      .select('name, is_disabled')
       .eq('id', supaUser.id)
       .single();
+
+    // Check if user is disabled
+    if ((profile as any)?.is_disabled) {
+      await supabase.auth.signOut();
+      return null;
+    }
 
     // Get role
     const { data: roleData } = await supabase
@@ -77,8 +83,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchUserProfile]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { success: false, error: error.message };
+    
+    // Check if disabled
+    if (signInData.user) {
+      const { data: profile } = await supabase.from('profiles').select('is_disabled').eq('id', signInData.user.id).single();
+      if ((profile as any)?.is_disabled) {
+        await supabase.auth.signOut();
+        return { success: false, error: 'Akun Anda telah dinonaktifkan. Hubungi admin.' };
+      }
+    }
     return { success: true };
   }, []);
 
