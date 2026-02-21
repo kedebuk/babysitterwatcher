@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Plus, Trash2, LogOut, Clock, History, Camera, X, MessageCircle, MapPin, MoreVertical } from 'lucide-react';
+import { Plus, Trash2, LogOut, Clock, History, Camera, X, MessageCircle, MapPin, MoreVertical, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -211,6 +211,17 @@ const BabysitterToday = () => {
                 <DropdownMenuItem onClick={() => navigate('/babysitter/history')}>
                   <History className="mr-2 h-4 w-4" /> Riwayat
                 </DropdownMenuItem>
+                {(user?.roles?.length ?? 0) > 1 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => { 
+                      sessionStorage.removeItem('activeRole'); 
+                      navigate('/choose-role'); 
+                    }}>
+                      <RefreshCw className="mr-2 h-4 w-4" /> Ganti Role
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" /> Keluar

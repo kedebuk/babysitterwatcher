@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, subDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin, MoreVertical } from 'lucide-react';
+import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin, MoreVertical, RefreshCw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -166,6 +166,17 @@ const ParentDashboard = () => {
                 <DropdownMenuItem onClick={() => navigate('/insights')}>
                   <Brain className="mr-2 h-4 w-4" /> Insight Cerdas
                 </DropdownMenuItem>
+                {(user?.roles?.length ?? 0) > 1 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => { 
+                      sessionStorage.removeItem('activeRole'); 
+                      navigate('/choose-role'); 
+                    }}>
+                      <RefreshCw className="mr-2 h-4 w-4" /> Ganti Role
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" /> Keluar
