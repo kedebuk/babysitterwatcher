@@ -1,5 +1,4 @@
-import { MOCK_DAILY_LOGS, MOCK_CHILDREN, MOCK_ASSIGNMENTS, getEventsForLog, getTotalSusu } from '@/lib/mock-data';
-import { ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS } from '@/types';
+import { ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS, ActivityType } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,18 +6,47 @@ import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { ChevronLeft, Calendar } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 const BabysitterHistory = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const assignedChildIds = MOCK_ASSIGNMENTS
-    .filter(a => a.babysitter_user_id === user?.id)
-    .map(a => a.child_id);
+  const { data: logs = [] } = useQuery({
+    queryKey: ['babysitter_history', user?.id],
+    queryFn: async () => {
+      // Get assigned child ids
+      const { data: assignments } = await supabase
+        .from('assignments')
+        .select('child_id');
+      if (!assignments || assignments.length === 0) return [];
 
-  const logs = MOCK_DAILY_LOGS
-    .filter(l => assignedChildIds.includes(l.child_id))
-    .sort((a, b) => b.log_date.localeCompare(a.log_date));
+      const childIds = assignments.map(a => a.child_id);
+      const { data: dailyLogs } = await supabase
+        .from('daily_logs')
+        .select('*, children(name, avatar_emoji)')
+        .in('child_id', childIds)
+        .order('log_date', { ascending: false })
+        .limit(30);
+
+      if (!dailyLogs) return [];
+
+      // Get events for these logs
+      const logIds = dailyLogs.map(l => l.id);
+      const { data: events } = await supabase
+        .from('events')
+        .select('*')
+        .in('daily_log_id', logIds)
+        .order('time');
+
+      return dailyLogs.map(log => ({
+        ...log,
+        events: (events || []).filter(e => e.daily_log_id === log.id),
+      }));
+    },
+    enabled: !!user,
+  });
 
   return (
     <div className="min-h-screen pb-6">
@@ -35,11 +63,8 @@ const BabysitterHistory = () => {
       </div>
 
       <div className="px-4 py-4 space-y-3 max-w-2xl mx-auto">
-        {logs.map(log => {
-          const child = MOCK_CHILDREN.find(c => c.id === log.child_id);
-          const events = getEventsForLog(log.id);
-          const totalSusu = getTotalSusu(events);
-
+        {logs.map((log: any) => {
+          const totalSusu = log.events.filter((e: any) => e.type === 'susu' && e.amount).reduce((s: number, e: any) => s + Number(e.amount || 0), 0);
           return (
             <Card key={log.id} className="border-0 shadow-sm animate-fade-in">
               <CardContent className="p-4">
@@ -51,20 +76,20 @@ const BabysitterHistory = () => {
                     </span>
                   </div>
                   <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full">
-                    {child?.avatar_emoji} {child?.name}
+                    {log.children?.avatar_emoji} {log.children?.name}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mb-2">
-                  {events.slice(0, 8).map(event => (
-                    <span key={event.id} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${ACTIVITY_BADGE_CLASS[event.type]}`}>
-                      {ACTIVITY_ICONS[event.type]} {event.time}
+                  {log.events.slice(0, 8).map((event: any) => (
+                    <span key={event.id} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
+                      {ACTIVITY_ICONS[event.type as ActivityType] || '📝'} {event.time?.substring(0, 5)}
                     </span>
                   ))}
-                  {events.length > 8 && <span className="text-xs text-muted-foreground px-2">+{events.length - 8} lagi</span>}
+                  {log.events.length > 8 && <span className="text-xs text-muted-foreground px-2">+{log.events.length - 8} lagi</span>}
                 </div>
                 <div className="flex gap-4 text-xs text-muted-foreground">
                   <span>🍼 {totalSusu} ml</span>
-                  <span>📋 {events.length} event</span>
+                  <span>📋 {log.events.length} event</span>
                 </div>
               </CardContent>
             </Card>
