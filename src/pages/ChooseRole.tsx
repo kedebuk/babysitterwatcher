@@ -58,7 +58,7 @@ const ChooseRole = () => {
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
             <Baby className="h-7 w-7 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-bold">Halo, {user.name} 👋</h1>
+          <h1 className="font-display text-xl font-bold">Halo, {user.name} 👋</h1>
           <p className="text-sm text-muted-foreground">Mau masuk sebagai apa?</p>
         </CardHeader>
         <CardContent className="space-y-3">
