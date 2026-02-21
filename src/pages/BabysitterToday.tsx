@@ -14,6 +14,7 @@ import { Plus, Trash2, LogOut, Clock, History, Camera, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import PendingInvites from '@/components/PendingInvites';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
@@ -181,6 +182,7 @@ const BabysitterToday = () => {
       </div>
 
       <div className="px-4 py-3 space-y-4 max-w-2xl mx-auto">
+        <PendingInvites />
         {assignedChildren.length === 0 ? (
           <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">
             Belum ada anak yang ditugaskan. Hubungi orang tua untuk penugasan.

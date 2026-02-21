@@ -12,6 +12,7 @@ import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell } from 'lucide-rea
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import PendingInvites from '@/components/PendingInvites';
 
 function getTotalByType(events: any[], type: string): number {
   return events.filter(e => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
@@ -122,6 +123,7 @@ const ParentDashboard = () => {
       </div>
 
       <div className="px-4 py-3 space-y-4 max-w-2xl mx-auto">
+        <PendingInvites />
         {children.length === 0 ? (
           <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">
             Belum ada anak terdaftar. <Button variant="link" onClick={() => navigate('/parent/children')}>Tambah anak →</Button>
