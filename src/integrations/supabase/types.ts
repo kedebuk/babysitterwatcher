@@ -258,6 +258,8 @@ export type Database = {
           invite_role: string
           invited_by: string
           invited_email: string
+          invited_user_id: string | null
+          status: string
         }
         Insert: {
           child_id: string
@@ -266,6 +268,8 @@ export type Database = {
           invite_role?: string
           invited_by: string
           invited_email: string
+          invited_user_id?: string | null
+          status?: string
         }
         Update: {
           child_id?: string
@@ -274,6 +278,8 @@ export type Database = {
           invite_role?: string
           invited_by?: string
           invited_email?: string
+          invited_user_id?: string | null
+          status?: string
         }
         Relationships: [
           {

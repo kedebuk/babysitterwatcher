@@ -97,106 +97,76 @@ const ParentChildren = () => {
     try {
       const email = inviteEmail.trim().toLowerCase();
 
-      if (inviteRole === 'babysitter') {
-        // Existing babysitter invite logic
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id, name, email')
-          .eq('email', email)
-          .maybeSingle();
+      // Check if user already exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .eq('email', email)
+        .maybeSingle();
 
-        if (existingProfile) {
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', existingProfile.id)
-            .eq('role', 'babysitter')
-            .maybeSingle();
-
-          if (!roleData) {
-            toast({ title: '⚠️ Bukan babysitter', description: 'Akun ini tidak memiliki role babysitter', variant: 'destructive' });
-            setInviteLoading(false);
-            return;
-          }
-
-          const { data: existingAssignment } = await supabase
+      if (existingProfile) {
+        // Check if already assigned/connected
+        if (inviteRole === 'babysitter') {
+          const { data: existing } = await supabase
             .from('assignments')
             .select('id')
             .eq('child_id', inviteChildId)
             .eq('babysitter_user_id', existingProfile.id)
             .maybeSingle();
-
-          if (existingAssignment) {
+          if (existing) {
             toast({ title: '⚠️ Sudah ditugaskan', description: `${existingProfile.name} sudah ditugaskan untuk anak ini` });
             setInviteLoading(false);
             return;
           }
-
-          const { error } = await supabase
-            .from('assignments')
-            .insert({ child_id: inviteChildId, babysitter_user_id: existingProfile.id });
-          if (error) throw error;
-
-          toast({ title: '✅ Berhasil!', description: `${existingProfile.name} berhasil ditugaskan` });
         } else {
-          const { error } = await supabase
-            .from('pending_invites')
-            .insert({ child_id: inviteChildId, invited_email: email, invited_by: user!.id, invite_role: 'babysitter' } as any);
-
-          if (error) {
-            if (error.code === '23505') {
-              toast({ title: '⚠️ Sudah diundang', description: 'Email ini sudah diundang untuk anak ini' });
-            } else throw error;
-            setInviteLoading(false);
-            return;
-          }
-
-          toast({ title: '📩 Undangan tersimpan', description: `${email} akan otomatis ditugaskan saat mendaftar sebagai babysitter` });
-        }
-      } else {
-        // Parent/viewer invite
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id, name, email')
-          .eq('email', email)
-          .maybeSingle();
-
-        if (existingProfile) {
-          // Check if already a viewer
-          const { data: existingViewer } = await supabase
+          const { data: existing } = await supabase
             .from('child_viewers')
             .select('id')
             .eq('child_id', inviteChildId)
             .eq('viewer_user_id', existingProfile.id)
             .maybeSingle();
-
-          if (existingViewer) {
+          if (existing) {
             toast({ title: '⚠️ Sudah terhubung', description: `${existingProfile.name} sudah bisa melihat data anak ini` });
             setInviteLoading(false);
             return;
           }
-
-          const { error } = await supabase
-            .from('child_viewers')
-            .insert({ child_id: inviteChildId, viewer_user_id: existingProfile.id });
-          if (error) throw error;
-
-          toast({ title: '✅ Berhasil!', description: `${existingProfile.name} berhasil ditambahkan sebagai keluarga` });
-        } else {
-          const { error } = await supabase
-            .from('pending_invites')
-            .insert({ child_id: inviteChildId, invited_email: email, invited_by: user!.id, invite_role: 'parent' } as any);
-
-          if (error) {
-            if (error.code === '23505') {
-              toast({ title: '⚠️ Sudah diundang', description: 'Email ini sudah diundang untuk anak ini' });
-            } else throw error;
-            setInviteLoading(false);
-            return;
-          }
-
-          toast({ title: '📩 Undangan tersimpan', description: `${email} akan otomatis terhubung saat mendaftar` });
         }
+
+        // Save as pending invite with user ID (needs confirmation)
+        const { error } = await supabase
+          .from('pending_invites')
+          .insert({ child_id: inviteChildId, invited_email: email, invited_by: user!.id, invite_role: inviteRole, invited_user_id: existingProfile.id } as any);
+
+        if (error) {
+          if (error.code === '23505') {
+            toast({ title: '⚠️ Sudah diundang', description: 'Email ini sudah memiliki undangan pending' });
+          } else throw error;
+          setInviteLoading(false);
+          return;
+        }
+
+        // Send in-app notification to the invited user
+        await supabase.from('notifications').insert({
+          user_id: existingProfile.id,
+          message: `${user!.name} mengundang Anda sebagai ${inviteRole === 'parent' ? 'keluarga' : 'babysitter'} untuk anaknya. Buka dashboard untuk konfirmasi.`,
+        });
+
+        toast({ title: '📩 Undangan terkirim!', description: `${existingProfile.name} akan menerima notifikasi untuk konfirmasi` });
+      } else {
+        // User doesn't exist yet - save pending invite (auto-resolve on signup)
+        const { error } = await supabase
+          .from('pending_invites')
+          .insert({ child_id: inviteChildId, invited_email: email, invited_by: user!.id, invite_role: inviteRole } as any);
+
+        if (error) {
+          if (error.code === '23505') {
+            toast({ title: '⚠️ Sudah diundang', description: 'Email ini sudah diundang untuk anak ini' });
+          } else throw error;
+          setInviteLoading(false);
+          return;
+        }
+
+        toast({ title: '📩 Undangan tersimpan', description: `${email} akan otomatis terhubung saat mendaftar` });
       }
 
       qc.invalidateQueries({ queryKey: ['all_assignments'] });
