@@ -13,6 +13,7 @@ import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageC
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import PendingInvites from '@/components/PendingInvites';
 
 function getTotalByType(events: any[], type: string): number {
@@ -67,6 +68,35 @@ const ParentDashboard = () => {
   const { data: log } = useDailyLog(activeChildId, selectedDate);
   const { data: events = [] } = useEvents(log?.id);
   const { data: profileNames = {} } = useProfileNames(events.map((e: any) => e.created_by).filter(Boolean));
+
+  const { data: locationPings = [] } = useQuery({
+    queryKey: ['location_pings', activeChildId, selectedDate],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('location_pings')
+        .select('*')
+        .eq('child_id', activeChildId)
+        .gte('created_at', selectedDate + 'T00:00:00')
+        .lte('created_at', selectedDate + 'T23:59:59')
+        .order('created_at');
+      return data || [];
+    },
+    enabled: !!activeChildId,
+  });
+
+  const findClosestPing = (eventTime: string) => {
+    if (!locationPings.length || !eventTime) return null;
+    const eventMinutes = parseInt(eventTime.substring(0, 2)) * 60 + parseInt(eventTime.substring(3, 5));
+    let closest: any = null;
+    let minDiff = Infinity;
+    for (const ping of locationPings) {
+      const pingTime = new Date(ping.created_at);
+      const pingMinutes = pingTime.getHours() * 60 + pingTime.getMinutes();
+      const diff = Math.abs(pingMinutes - eventMinutes);
+      if (diff < minDiff && diff <= 30) { minDiff = diff; closest = ping; }
+    }
+    return closest;
+  };
 
   // 7 day chart data
   const last7dates = Array.from({ length: 7 }, (_, i) => format(subDays(new Date(), 6 - i), 'yyyy-MM-dd'));
@@ -246,7 +276,9 @@ const ParentDashboard = () => {
                 <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">Belum ada data untuk tanggal ini</CardContent></Card>
               ) : (
                 <div className="space-y-2">
-                  {events.map(event => (
+                  {events.map(event => {
+                    const ping = findClosestPing(event.time);
+                    return (
                     <Card key={event.id} className="border-0 shadow-sm animate-fade-in">
                       <CardContent className="p-3 flex items-start gap-3">
                         <div className="text-center min-w-[44px]"><p className="text-xs font-bold text-muted-foreground">{event.time?.substring(0, 5)}</p></div>
@@ -262,6 +294,17 @@ const ParentDashboard = () => {
                           {(event as any).photo_url && (
                             <img src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" onClick={() => window.open((event as any).photo_url, '_blank')} />
                           )}
+                          {ping && (
+                            <a
+                              href={`https://www.google.com/maps?q=${ping.latitude},${ping.longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-primary hover:underline"
+                            >
+                              <MapPin className="h-3 w-3" />
+                              {ping.latitude.toFixed(5)}, {ping.longitude.toFixed(5)}
+                            </a>
+                          )}
                         </div>
                         {event.amount && (
                           <div className="text-right shrink-0">
@@ -271,7 +314,8 @@ const ParentDashboard = () => {
                         )}
                       </CardContent>
                     </Card>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
