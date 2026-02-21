@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, subDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine } from 'lucide-react';
+import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -118,6 +118,15 @@ const ParentDashboard = () => {
             </Button>
             <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/parent/children')}>
               <Users className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/chat')}>
+              <MessageCircle className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/insights')}>
+              <Brain className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/location')}>
+              <MapPin className="h-5 w-5" />
             </Button>
             <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={logout}>
               <LogOut className="h-5 w-5" />

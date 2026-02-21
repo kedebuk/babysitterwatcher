@@ -18,6 +18,9 @@ import AdminChildDetail from "./pages/AdminChildDetail";
 import AdminLogs from "./pages/AdminLogs";
 import SelectRole from "./pages/SelectRole";
 import CompleteProfile from "./pages/CompleteProfile";
+import Chat from "./pages/Chat";
+import Insights from "./pages/Insights";
+import LocationPage from "./pages/LocationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +68,9 @@ const App = () => (
             <Route path="/parent/input" element={<ProtectedRoute allowedRole="parent"><ParentInput /></ProtectedRoute>} />
             <Route path="/babysitter/today" element={<ProtectedRoute allowedRole="babysitter"><BabysitterToday /></ProtectedRoute>} />
             <Route path="/babysitter/history" element={<ProtectedRoute allowedRole="babysitter"><BabysitterHistory /></ProtectedRoute>} />
+            <Route path="/chat" element={<>{/* Both parent and babysitter can access */}<Chat /></>} />
+            <Route path="/insights" element={<Insights />} />
+            <Route path="/location" element={<LocationPage />} />
             <Route path="/admin/dashboard" element={<ProtectedRoute allowedRole="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute allowedRole="admin"><AdminUsers /></ProtectedRoute>} />
             <Route path="/admin/children" element={<ProtectedRoute allowedRole="admin"><AdminChildren /></ProtectedRoute>} />
