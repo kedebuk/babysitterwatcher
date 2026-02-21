@@ -202,6 +202,9 @@ const ParentDashboard = () => {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</p>
                           {event.detail && <p className="text-xs text-muted-foreground truncate">{event.detail}</p>}
+                          {(event as any).photo_url && (
+                            <img src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" onClick={() => window.open((event as any).photo_url, '_blank')} />
+                          )}
                         </div>
                         {event.amount && (
                           <div className="text-right shrink-0">

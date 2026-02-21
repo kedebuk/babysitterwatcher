@@ -120,7 +120,7 @@ export function useEvents(dailyLogId?: string) {
 export function useCreateEvent() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (event: { daily_log_id: string; time: string; type: string; detail?: string; amount?: number; unit?: string; status?: string }) => {
+    mutationFn: async (event: { daily_log_id: string; time: string; type: string; detail?: string; amount?: number; unit?: string; status?: string; photo_url?: string }) => {
       const { data, error } = await supabase.from('events').insert(event as any).select().single();
       if (error) throw error;
       return data;
