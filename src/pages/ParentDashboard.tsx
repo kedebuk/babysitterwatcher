@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, subDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin, MoreVertical, RefreshCw } from 'lucide-react';
+import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin, MoreVertical, RefreshCw, UserCheck } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,7 +41,7 @@ const ParentDashboard = () => {
   const [selectedChild, setSelectedChild] = useState('');
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const { toast } = useToast();
-  const { user, logout } = useAuth();
+  const { user, logout, setActiveRole } = useAuth();
   const navigate = useNavigate();
 
   const activeChildId = selectedChild || children[0]?.id || '';
@@ -174,6 +174,22 @@ const ParentDashboard = () => {
                       navigate('/choose-role'); 
                     }}>
                       <RefreshCw className="mr-2 h-4 w-4" /> Ganti Role
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {children.length === 0 && (user?.roles?.length ?? 0) <= 1 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={async () => {
+                      const { error } = await supabase.from('user_roles').insert({ user_id: user!.id, role: 'babysitter' });
+                      if (!error) {
+                        setActiveRole('babysitter');
+                        window.location.href = '/babysitter/today';
+                      } else {
+                        toast({ title: 'Gagal', description: error.message, variant: 'destructive' });
+                      }
+                    }}>
+                      <UserCheck className="mr-2 h-4 w-4" /> Ganti ke Babysitter
                     </DropdownMenuItem>
                   </>
                 )}
