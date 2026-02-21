@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useChildren, useDailyLog, useEvents, useChildLogs, useProfileNames } from '@/hooks/use-data';
+import { useChildren, useDailyLog, useEvents, useChildLogs, useProfileNames, useDeleteEvent } from '@/hooks/use-data';
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, subDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin, MoreVertical, RefreshCw, UserCheck } from 'lucide-react';
+import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin, MoreVertical, RefreshCw, UserCheck, Trash2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +44,8 @@ const ParentDashboard = () => {
   const { toast } = useToast();
   const { user, logout, setActiveRole } = useAuth();
   const navigate = useNavigate();
+  const deleteEvent = useDeleteEvent();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; daily_log_id: string; label: string } | null>(null);
 
   const activeChildId = selectedChild || children[0]?.id || '';
   const child = children.find(c => c.id === activeChildId);
@@ -333,12 +336,26 @@ const ParentDashboard = () => {
                             </a>
                           )}
                         </div>
-                        {event.amount && (
-                          <div className="text-right shrink-0">
-                            <p className="text-sm font-bold">{event.amount}</p>
-                            <p className="text-xs text-muted-foreground">{event.unit}</p>
-                          </div>
-                        )}
+                        <div className="flex flex-col items-end shrink-0 gap-1">
+                          {event.amount && (
+                            <div className="text-right">
+                              <p className="text-sm font-bold">{event.amount}</p>
+                              <p className="text-xs text-muted-foreground">{event.unit}</p>
+                            </div>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() => setDeleteTarget({
+                              id: event.id,
+                              daily_log_id: event.daily_log_id,
+                              label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})`,
+                            })}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                     );
@@ -356,6 +373,34 @@ const ParentDashboard = () => {
           </>
         )}
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Aktivitas?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus <strong>{deleteTarget?.label}</strong>? Tindakan ini tidak bisa dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteTarget) {
+                  deleteEvent.mutate({ id: deleteTarget.id, daily_log_id: deleteTarget.daily_log_id }, {
+                    onSuccess: () => toast({ title: '✅ Dihapus', description: 'Aktivitas berhasil dihapus' }),
+                    onError: (err: any) => toast({ title: 'Gagal', description: err.message, variant: 'destructive' }),
+                  });
+                  setDeleteTarget(null);
+                }
+              }}
+            >
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
