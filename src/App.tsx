@@ -16,6 +16,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminChildren from "./pages/AdminChildren";
 import AdminChildDetail from "./pages/AdminChildDetail";
 import AdminLogs from "./pages/AdminLogs";
+import SelectRole from "./pages/SelectRole";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; 
   const { user, loading } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="animate-pulse text-muted-foreground">Memuat...</div></div>;
   if (!user) return <Navigate to="/login" replace />;
+  if (!user.role) return <Navigate to="/select-role" replace />;
   if (user.role !== allowedRole) {
     if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
     return <Navigate to={user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today'} replace />;
@@ -35,6 +37,7 @@ function RootRedirect() {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="animate-pulse text-muted-foreground">Memuat...</div></div>;
   if (!user) return <Navigate to="/login" replace />;
+  if (!user.role) return <Navigate to="/select-role" replace />;
   if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
   return <Navigate to={user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today'} replace />;
 }
@@ -49,6 +52,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<RootRedirect />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/select-role" element={<SelectRole />} />
             <Route path="/admin-setup" element={<AdminSetup />} />
             <Route path="/parent/dashboard" element={<ProtectedRoute allowedRole="parent"><ParentDashboard /></ProtectedRoute>} />
             <Route path="/parent/children" element={<ProtectedRoute allowedRole="parent"><ParentChildren /></ProtectedRoute>} />
