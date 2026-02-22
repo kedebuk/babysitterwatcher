@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, PenLine, MessageCircle, User, History, Bell } from 'lucide-react';
+import { Home, PenLine, MessageCircle, User, History, Bell, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,13 +15,14 @@ interface NavItem {
 const PARENT_ITEMS: NavItem[] = [
   { icon: Home, label: 'Dashboard', path: '/parent/dashboard' },
   { icon: PenLine, label: 'Input', path: '/parent/input' },
+  { icon: Package, label: 'Stok', path: '/inventory' },
   { icon: MessageCircle, label: 'Chat', path: '/chat', badgeKey: 'unread_messages' },
   { icon: User, label: 'Profil', path: '/profile', badgeKey: 'notifications' },
 ];
 
 const BABYSITTER_ITEMS: NavItem[] = [
   { icon: PenLine, label: 'Input', path: '/babysitter/today' },
-  { icon: History, label: 'Riwayat', path: '/babysitter/history' },
+  { icon: Package, label: 'Stok', path: '/inventory' },
   { icon: MessageCircle, label: 'Chat', path: '/chat', badgeKey: 'unread_messages' },
   { icon: User, label: 'Profil', path: '/profile', badgeKey: 'notifications' },
 ];
