@@ -5,14 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, LogOut, Shield, CreditCard, Eye, Phone, MapPin, Calendar } from 'lucide-react';
+import { ArrowLeft, LogOut, Shield, CreditCard, Eye, Phone, MapPin, Calendar, Baby, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
 import { useAdminUpdateSubscription, type Subscription } from '@/hooks/use-subscription';
 
@@ -63,6 +62,30 @@ const AdminUsers = () => {
     },
   });
 
+  const { data: allChildren = [] } = useQuery({
+    queryKey: ['admin_all_children_for_users'],
+    queryFn: async () => {
+      const { data } = await supabase.from('children').select('id, name, parent_id, avatar_emoji, photo_url');
+      return data || [];
+    },
+  });
+
+  const { data: allAssignments = [] } = useQuery({
+    queryKey: ['admin_all_assignments_for_users'],
+    queryFn: async () => {
+      const { data } = await supabase.from('assignments').select('child_id, babysitter_user_id');
+      return data || [];
+    },
+  });
+
+  const { data: allViewers = [] } = useQuery({
+    queryKey: ['admin_all_viewers_for_users'],
+    queryFn: async () => {
+      const { data } = await supabase.from('child_viewers').select('child_id, viewer_user_id');
+      return data || [];
+    },
+  });
+
   const toggleDisable = useMutation({
     mutationFn: async ({ userId, disabled }: { userId: string; disabled: boolean }) => {
       const { error } = await supabase.from('profiles').update({ is_disabled: disabled } as any).eq('id', userId);
@@ -80,6 +103,36 @@ const AdminUsers = () => {
   };
 
   const getUserSub = (userId: string) => allSubs.find(s => s.user_id === userId);
+
+  const getProfileName = (userId: string) => {
+    const p = profiles.find((p: any) => p.id === userId);
+    return p?.name || p?.email || userId.slice(0, 8);
+  };
+
+  // Get children for a parent
+  const getChildrenForParent = (parentId: string) => {
+    return allChildren.filter((c: any) => c.parent_id === parentId);
+  };
+
+  // Get babysitters assigned to a parent's children
+  const getBabysittersForParent = (parentId: string) => {
+    const childIds = allChildren.filter((c: any) => c.parent_id === parentId).map((c: any) => c.id);
+    const babysitterIds = [...new Set(allAssignments.filter((a: any) => childIds.includes(a.child_id)).map((a: any) => a.babysitter_user_id))];
+    return babysitterIds.map(id => ({ id, name: getProfileName(id) }));
+  };
+
+  // Get parent(s) a babysitter is assigned to
+  const getParentsForBabysitter = (babysitterId: string) => {
+    const childIds = allAssignments.filter((a: any) => a.babysitter_user_id === babysitterId).map((a: any) => a.child_id);
+    const parentIds = [...new Set(allChildren.filter((c: any) => childIds.includes(c.id)).map((c: any) => c.parent_id))];
+    return parentIds.map(id => ({ id, name: getProfileName(id) }));
+  };
+
+  // Get children a babysitter is assigned to
+  const getChildrenForBabysitter = (babysitterId: string) => {
+    const childIds = allAssignments.filter((a: any) => a.babysitter_user_id === babysitterId).map((a: any) => a.child_id);
+    return allChildren.filter((c: any) => childIds.includes(c.id));
+  };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -157,6 +210,78 @@ const AdminUsers = () => {
     }
   };
 
+  const renderConnections = (profile: any, role: string) => {
+    if (role === 'parent') {
+      const children = getChildrenForParent(profile.id);
+      const babysitters = getBabysittersForParent(profile.id);
+      if (children.length === 0 && babysitters.length === 0) return null;
+      return (
+        <div className="ml-12 space-y-1.5 border-l-2 border-primary/20 pl-3">
+          {children.length > 0 && (
+            <div className="flex items-start gap-1.5">
+              <Baby className="h-3.5 w-3.5 text-primary/60 mt-0.5 shrink-0" />
+              <div className="flex flex-wrap gap-1">
+                {children.map((c: any) => (
+                  <span key={c.id} className="text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-medium">
+                    {c.avatar_emoji || '👶'} {c.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {babysitters.length > 0 && (
+            <div className="flex items-start gap-1.5">
+              <Users className="h-3.5 w-3.5 text-orange-500/60 mt-0.5 shrink-0" />
+              <div className="flex flex-wrap gap-1">
+                {babysitters.map(b => (
+                  <span key={b.id} className="text-[11px] bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 px-1.5 py-0.5 rounded-md font-medium">
+                    👩‍🍼 {b.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (role === 'babysitter') {
+      const parents = getParentsForBabysitter(profile.id);
+      const children = getChildrenForBabysitter(profile.id);
+      if (parents.length === 0 && children.length === 0) return null;
+      return (
+        <div className="ml-12 space-y-1.5 border-l-2 border-orange-300/40 pl-3">
+          {parents.length > 0 && (
+            <div className="flex items-start gap-1.5">
+              <Users className="h-3.5 w-3.5 text-primary/60 mt-0.5 shrink-0" />
+              <div className="flex flex-wrap gap-1">
+                {parents.map(p => (
+                  <span key={p.id} className="text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-medium">
+                    👩 {p.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {children.length > 0 && (
+            <div className="flex items-start gap-1.5">
+              <Baby className="h-3.5 w-3.5 text-primary/60 mt-0.5 shrink-0" />
+              <div className="flex flex-wrap gap-1">
+                {children.map((c: any) => (
+                  <span key={c.id} className="text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-medium">
+                    {c.avatar_emoji || '👶'} {c.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   if (isLoading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Memuat...</div>;
 
   return (
@@ -206,6 +331,10 @@ const AdminUsers = () => {
                     />
                   )}
                 </div>
+
+                {/* Connections: children & babysitters */}
+                {renderConnections(profile, role)}
+
                 {role !== 'admin' && (
                   <div className="flex items-center justify-between pl-12">
                     <div className="flex items-center gap-2">
@@ -243,7 +372,6 @@ const AdminUsers = () => {
           </DialogHeader>
           {selectedProfile && (
             <div className="space-y-4">
-              {/* Avatar */}
               <div className="flex justify-center">
                 {selectedProfile.avatar_url ? (
                   <img src={selectedProfile.avatar_url} alt={selectedProfile.name} className="h-24 w-24 rounded-full object-cover border-2 border-primary/20" />
@@ -253,7 +381,6 @@ const AdminUsers = () => {
                   </div>
                 )}
               </div>
-
               <div className="text-center">
                 <p className="text-lg font-bold">{selectedProfile.name}</p>
                 <p className="text-sm text-muted-foreground">{selectedProfile.email}</p>
@@ -261,7 +388,6 @@ const AdminUsers = () => {
                   {getRoleBadge(getUserRole(selectedProfile.id))}
                 </span>
               </div>
-
               <div className="space-y-2 bg-muted/50 rounded-xl p-3">
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -279,7 +405,6 @@ const AdminUsers = () => {
                   <span className="text-muted-foreground">{selectedProfile.address || '-'}</span>
                 </div>
               </div>
-
               <div className="text-xs text-muted-foreground text-center">
                 Bergabung: {new Date(selectedProfile.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
