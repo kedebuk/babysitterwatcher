@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Plus, Trash2, LogOut, Clock, History, Camera, X, MessageCircle, MapPin, MoreVertical, RefreshCw, Baby, UserCheck, User } from 'lucide-react';
+import { Plus, Trash2, LogOut, Clock, History, Camera, X, MessageCircle, MapPin, MoreVertical, RefreshCw, Baby, UserCheck, User, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -205,6 +205,9 @@ const BabysitterToday = () => {
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => navigate('/chat')}>
                   <MessageCircle className="mr-2 h-4 w-4" /> Pesan
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/inventory')}>
+                  <Package className="mr-2 h-4 w-4" /> Stok Kebutuhan
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/location')}>
                   <MapPin className="mr-2 h-4 w-4" /> Lokasi GPS

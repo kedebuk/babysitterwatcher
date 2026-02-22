@@ -336,6 +336,104 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_items: {
+        Row: {
+          child_id: string
+          created_at: string
+          created_by: string
+          current_stock: number
+          emoji: string
+          id: string
+          low_stock_threshold: number
+          name: string
+          photo_url: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          created_by: string
+          current_stock?: number
+          emoji?: string
+          id?: string
+          low_stock_threshold?: number
+          name: string
+          photo_url?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          created_by?: string
+          current_stock?: number
+          emoji?: string
+          id?: string
+          low_stock_threshold?: number
+          name?: string
+          photo_url?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_usage: {
+        Row: {
+          child_id: string
+          created_at: string
+          created_by: string
+          id: string
+          item_id: string
+          notes: string | null
+          quantity: number
+          usage_date: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          item_id: string
+          notes?: string | null
+          quantity?: number
+          usage_date?: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          item_id?: string
+          notes?: string | null
+          quantity?: number
+          usage_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_usage_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_usage_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       location_pings: {
         Row: {
           accuracy: number | null
