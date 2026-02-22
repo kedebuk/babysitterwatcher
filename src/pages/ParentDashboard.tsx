@@ -120,6 +120,8 @@ const ParentDashboard = () => {
 
   const totalSusu = getTotalByType(events, 'susu');
   const totalMakan = getTotalByType(events, 'mpasi') + getTotalByType(events, 'snack') + getTotalByType(events, 'buah');
+  const totalSnack = getTotalByType(events, 'snack');
+  const totalBuah = getTotalByType(events, 'buah');
   const pup = events.filter(e => e.type === 'pup').length;
   const pee = events.filter(e => e.type === 'pee').length;
   const vitaminEvent = events.find(e => e.type === 'vitamin');
@@ -248,7 +250,7 @@ const ParentDashboard = () => {
               <Button variant="ghost" size="icon" onClick={() => changeDate(1)}><ChevronRight className="h-5 w-5" /></Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-susu text-sm">🍼</div>
@@ -276,6 +278,20 @@ const ParentDashboard = () => {
                   <span className="text-xs text-muted-foreground">Vitamin</span>
                 </div>
                 <p className="text-lg font-bold">{vitaminEvent ? `✅ ${vitaminEvent.time?.substring(0, 5)}` : '❌ Belum'}</p>
+              </CardContent></Card>
+              <Card className="border-0 shadow-sm"><CardContent className="p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-snack text-sm">🍪</div>
+                  <span className="text-xs text-muted-foreground">Snack</span>
+                </div>
+                <p className="text-2xl font-bold">{totalSnack}</p>
+              </CardContent></Card>
+              <Card className="border-0 shadow-sm"><CardContent className="p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-buah text-sm">🍎</div>
+                  <span className="text-xs text-muted-foreground">Buah</span>
+                </div>
+                <p className="text-2xl font-bold">{totalBuah}</p>
               </CardContent></Card>
             </div>
 
