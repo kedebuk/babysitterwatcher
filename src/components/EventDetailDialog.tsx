@@ -1,7 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ActivityType, ACTIVITY_LABELS, ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS } from '@/types';
-import { Pencil } from 'lucide-react';
+import { Pencil, MapPin } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface EventDetailDialogProps {
   event: any;
@@ -11,9 +12,30 @@ interface EventDetailDialogProps {
   onEdit?: () => void;
 }
 
+function useReverseGeocode(lat: number | null, lng: number | null) {
+  const [name, setName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!lat || !lng) { setName(null); return; }
+    setName(null);
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=16&addressdetails=1`, {
+      headers: { 'Accept-Language': 'id' },
+    })
+      .then(r => r.json())
+      .then(data => {
+        const a = data.address;
+        const parts = [a?.village || a?.suburb || a?.neighbourhood, a?.city || a?.town || a?.county, a?.state].filter(Boolean);
+        setName(parts.length > 0 ? parts.join(', ') : data.display_name?.split(',').slice(0, 3).join(',') || null);
+      })
+      .catch(() => setName(null));
+  }, [lat, lng]);
+  return name;
+}
+
 export function EventDetailDialog({ event, open, onOpenChange, createdByName, onEdit }: EventDetailDialogProps) {
   if (!event) return null;
   const actType = event.type as ActivityType;
+  const hasCoords = event.latitude && event.longitude;
+  const areaName = useReverseGeocode(hasCoords ? event.latitude : null, hasCoords ? event.longitude : null);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -29,7 +51,6 @@ export function EventDetailDialog({ event, open, onOpenChange, createdByName, on
         </DialogHeader>
 
         <div className="px-4 pb-4 space-y-3">
-          {/* Detail */}
           {event.detail && (
             <div>
               <p className="text-[11px] font-medium text-muted-foreground mb-0.5">📝 Detail</p>
@@ -37,7 +58,6 @@ export function EventDetailDialog({ event, open, onOpenChange, createdByName, on
             </div>
           )}
 
-          {/* Amount */}
           {event.amount && (
             <div>
               <p className="text-[11px] font-medium text-muted-foreground mb-0.5">📊 Jumlah</p>
@@ -45,7 +65,6 @@ export function EventDetailDialog({ event, open, onOpenChange, createdByName, on
             </div>
           )}
 
-          {/* Created by */}
           {createdByName && (
             <div>
               <p className="text-[11px] font-medium text-muted-foreground mb-0.5">👤 Dicatat oleh</p>
@@ -53,7 +72,21 @@ export function EventDetailDialog({ event, open, onOpenChange, createdByName, on
             </div>
           )}
 
-          {/* Photos */}
+          {hasCoords && (
+            <div>
+              <p className="text-[11px] font-medium text-muted-foreground mb-0.5">📍 Lokasi</p>
+              <a
+                href={`https://www.google.com/maps?q=${event.latitude},${event.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+              >
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                {areaName || `${Number(event.latitude).toFixed(5)}, ${Number(event.longitude).toFixed(5)}`}
+              </a>
+            </div>
+          )}
+
           {(event.photo_url || event.photo_url_after) && (
             <div>
               <p className="text-[11px] font-medium text-muted-foreground mb-1.5">📷 Foto</p>
@@ -74,8 +107,7 @@ export function EventDetailDialog({ event, open, onOpenChange, createdByName, on
             </div>
           )}
 
-          {/* No detail/photo fallback */}
-          {!event.detail && !event.amount && !event.photo_url && !event.photo_url_after && (
+          {!event.detail && !event.amount && !event.photo_url && !event.photo_url_after && !hasCoords && (
             <p className="text-sm text-muted-foreground italic">Tidak ada detail tambahan.</p>
           )}
 
