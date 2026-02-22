@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +17,7 @@ const OnboardingChildren = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const numChildren = (location.state as any)?.numChildren || 1;
   const [currentStep, setCurrentStep] = useState(0);
@@ -100,7 +102,11 @@ const OnboardingChildren = () => {
         });
       }
 
-      navigate('/parent/dashboard');
+      // Invalidate subscription cache so SubscriptionGuard sees the new trial
+      await queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      // Small delay to ensure cache is updated before navigating
+      await new Promise(resolve => setTimeout(resolve, 300));
+      navigate('/parent/dashboard', { replace: true });
     } catch (e: any) {
       toast({ title: 'Gagal menyimpan', description: e.message, variant: 'destructive' });
     } finally {

@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, activeRole } = useAuth();
   const { data: subscription, isLoading } = useSubscription();
   const navigate = useNavigate();
   const [showExpiredModal, setShowExpiredModal] = useState(true);
@@ -21,7 +21,8 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Admin and babysitter bypass subscription check
-  if (user?.role === 'admin' || user?.role === 'babysitter') return <>{children}</>;
+  const effectiveRole = activeRole || user?.role;
+  if (effectiveRole === 'admin' || effectiveRole === 'babysitter') return <>{children}</>;
 
   // No subscription at all
   if (!subscription) {
