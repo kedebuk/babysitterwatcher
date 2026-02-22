@@ -100,7 +100,7 @@ const OnboardingChildren = () => {
         });
       }
 
-      navigate('/onboarding/invite');
+      navigate('/parent/dashboard');
     } catch (e: any) {
       toast({ title: 'Gagal menyimpan', description: e.message, variant: 'destructive' });
     } finally {
