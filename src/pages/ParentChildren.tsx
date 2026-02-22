@@ -10,12 +10,13 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogOut, BarChart3, UserPlus, Trash2, Mail, Eye, Pencil, Camera, Archive, ArchiveRestore } from 'lucide-react';
+import { Plus, LogOut, BarChart3, UserPlus, Trash2, Mail, Eye, Pencil, Camera, Archive, ArchiveRestore, LogOutIcon } from 'lucide-react';
 import { format, parseISO, differenceInMonths } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getChineseZodiac, getWesternZodiac } from '@/lib/zodiac';
 
 const ParentChildren = () => {
   const { user, logout } = useAuth();
@@ -228,7 +229,20 @@ const ParentChildren = () => {
       const { error } = await supabase.from('child_viewers').delete().eq('id', viewerId);
       if (error) throw error;
       qc.invalidateQueries({ queryKey: ['child_viewers'] });
+      qc.invalidateQueries({ queryKey: ['children'] });
       toast({ title: 'Dihapus', description: 'Akses keluarga dihapus' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleLeaveChild = async (childId: string) => {
+    try {
+      const { error } = await supabase.from('child_viewers').delete().eq('child_id', childId).eq('viewer_user_id', user!.id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ['children'] });
+      qc.invalidateQueries({ queryKey: ['child_viewers'] });
+      toast({ title: '👋 Keluar', description: 'Anda telah keluar dari profil anak ini' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
@@ -393,9 +407,19 @@ const ParentChildren = () => {
                       {age !== null ? `${age} bulan` : ''}
                       {child.dob ? ` • Lahir ${format(parseISO(child.dob), 'd MMM yyyy', { locale: idLocale })}` : ''}
                     </p>
+                    {child.dob && (() => {
+                      const dobDate = parseISO(child.dob);
+                      const shio = getChineseZodiac(dobDate);
+                      const zodiac = getWesternZodiac(dobDate);
+                      return (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {shio.emoji} Shio {shio.animal} • {shio.elementEmoji} {shio.element} • {zodiac.emoji} {zodiac.sign}
+                        </p>
+                      );
+                    })()}
                     {child.notes && <p className="text-xs text-accent mt-0.5">⚠️ {child.notes}</p>}
                   </div>
-                  {child.parent_id === user?.id && (
+                  {child.parent_id === user?.id ? (
                     <div className="flex gap-1 shrink-0">
                       <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground" onClick={(e) => { e.stopPropagation(); openEditDialog(child); }}>
                         <Pencil className="h-4 w-4" />
@@ -407,6 +431,10 @@ const ParentChildren = () => {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
+                  ) : (
+                    <Button variant="outline" size="sm" className="h-8 text-xs text-destructive border-destructive/30" onClick={(e) => { e.stopPropagation(); handleLeaveChild(child.id); }}>
+                      <LogOutIcon className="h-3.5 w-3.5 mr-1" /> Keluar
+                    </Button>
                   )}
                 </div>
 
