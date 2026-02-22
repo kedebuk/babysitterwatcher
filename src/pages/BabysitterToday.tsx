@@ -18,6 +18,7 @@ import { useQuery } from '@tanstack/react-query';
 import PendingInvites from '@/components/PendingInvites';
 import { BottomNav } from '@/components/BottomNav';
 import { EditEventDialog } from '@/components/EditEventDialog';
+import { EventDetailDialog } from '@/components/EventDetailDialog';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
@@ -81,6 +82,7 @@ const BabysitterToday = () => {
   const [newRows, setNewRows] = useState<EventRow[]>([createEmptyRow()]);
   const [notes, setNotes] = useState('');
   const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [viewingEvent, setViewingEvent] = useState<any>(null);
 
   const totalSusu = events.filter(e => e.type === 'susu' && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
 
@@ -315,7 +317,7 @@ const BabysitterToday = () => {
                 <h2 className="text-sm font-bold mb-2 text-muted-foreground">Event Tercatat</h2>
                 <div className="space-y-1.5">
                   {events.map(event => (
-                    <Card key={event.id} className="border-0 shadow-sm">
+                    <Card key={event.id} className="border-0 shadow-sm cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setViewingEvent(event)}>
                       <CardContent className="p-2.5">
                         <div className="flex items-center gap-2.5">
                           <span className="text-xs font-bold text-muted-foreground min-w-[36px]">{event.time?.substring(0, 5)}</span>
@@ -329,29 +331,13 @@ const BabysitterToday = () => {
                               {profileNames[(event as any).created_by]}
                             </span>
                           )}
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={() => setEditingEvent(event)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setEditingEvent(event); }}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteEvent(event.id, event.daily_log_id)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id, event.daily_log_id); }}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
-                        {((event as any).photo_url || (event as any).photo_url_after) && (
-                          <div className="mt-2 flex gap-2">
-                            {(event as any).photo_url && (
-                              <div className="text-center">
-                                <img src={(event as any).photo_url} alt="Sebelum" className="rounded-lg w-20 h-20 object-cover" />
-                                <span className="text-[10px] text-muted-foreground">Sebelum</span>
-                              </div>
-                            )}
-                            {(event as any).photo_url_after && (
-                              <div className="text-center">
-                                <img src={(event as any).photo_url_after} alt="Sesudah" className="rounded-lg w-20 h-20 object-cover" />
-                                <span className="text-[10px] text-muted-foreground">Sesudah</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -383,6 +369,15 @@ const BabysitterToday = () => {
         )}
       </div>
 
+      {viewingEvent && (
+        <EventDetailDialog
+          event={viewingEvent}
+          open={!!viewingEvent}
+          onOpenChange={(open) => { if (!open) setViewingEvent(null); }}
+          createdByName={viewingEvent?.created_by ? profileNames[viewingEvent.created_by] : undefined}
+          onEdit={() => { setEditingEvent(viewingEvent); setViewingEvent(null); }}
+        />
+      )}
       {editingEvent && (
         <EditEventDialog
           event={editingEvent}
