@@ -193,9 +193,9 @@ const InventoryPage = () => {
   });
 
   const restockItem = useMutation({
-    mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
+    mutationFn: async ({ itemId, quantity, notes }: { itemId: string; quantity: number; notes?: string }) => {
       const { error } = await supabase.from('inventory_items')
-        .update({ current_stock: quantity })
+        .update({ current_stock: quantity, notes: notes || null })
         .eq('id', itemId);
       if (error) throw error;
     },
@@ -427,6 +427,11 @@ const InventoryPage = () => {
                                 Estimasi habis dalam ~{daysLeft} hari
                               </p>
                             )}
+                            {(item as any).notes && (
+                              <p className="text-xs text-muted-foreground mt-1 italic bg-muted/50 rounded px-2 py-1">
+                                📝 {(item as any).notes}
+                              </p>
+                            )}
                             {/* Usage controls */}
                             <div className="flex items-center gap-2 mt-2">
                               <div className="flex items-center border rounded-lg overflow-hidden">
@@ -459,9 +464,14 @@ const InventoryPage = () => {
                                       <Label>Stok baru (total)</Label>
                                       <Input type="number" id={`restock-${item.id}`} defaultValue={String(item.current_stock)} />
                                     </div>
+                                    <div>
+                                      <Label>Catatan</Label>
+                                      <Input id={`restock-note-${item.id}`} defaultValue={(item as any).notes || ''} placeholder="Catatan dari sitter..." />
+                                    </div>
                                     <Button className="w-full" onClick={() => {
                                       const input = document.getElementById(`restock-${item.id}`) as HTMLInputElement;
-                                      restockItem.mutate({ itemId: item.id, quantity: Number(input.value) || 0 });
+                                      const noteInput = document.getElementById(`restock-note-${item.id}`) as HTMLInputElement;
+                                      restockItem.mutate({ itemId: item.id, quantity: Number(input.value) || 0, notes: noteInput.value });
                                     }}>Perbarui Stok</Button>
                                   </div>
                                 </DialogContent>
