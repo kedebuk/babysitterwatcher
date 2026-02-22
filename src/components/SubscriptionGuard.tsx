@@ -7,12 +7,12 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { data: subscription, isLoading } = useSubscription();
   const navigate = useNavigate();
   const [showExpiredModal, setShowExpiredModal] = useState(true);
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Memuat...</div>
