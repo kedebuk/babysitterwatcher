@@ -268,7 +268,7 @@ const ParentDashboard = () => {
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-pup text-sm">💩</div>
-                  <span className="text-xs text-muted-foreground">BAB / BAK</span>
+                  <span className="text-xs text-muted-foreground">BAB</span>
                 </div>
                 <p className="text-2xl font-bold">{pup} <span className="text-sm font-normal text-muted-foreground">/ {pee}x</span></p>
               </CardContent></Card>
