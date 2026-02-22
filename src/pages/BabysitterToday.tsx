@@ -113,7 +113,7 @@ const BabysitterToday = () => {
 
   const uploadPhoto = async (file: File): Promise<string | null> => {
     const ext = file.name.split('.').pop();
-    const path = `${user!.id}/${crypto.randomUUID()}.${ext}`;
+    const path = `${activeChildId}/${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from('event-photos').upload(path, file);
     if (error) throw error;
     const { data } = supabase.storage.from('event-photos').getPublicUrl(path);
