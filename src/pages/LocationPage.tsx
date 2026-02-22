@@ -234,8 +234,8 @@ const LocationPage = () => {
       </div>
 
       {latestPing ? (
-        <div className="flex-1 px-4 pb-4 max-w-2xl mx-auto w-full" style={{ minHeight: '400px' }}>
-          <Card className="mb-3 border shadow-sm">
+        <div className="px-4 pb-4 max-w-2xl mx-auto w-full">
+          <Card className="border shadow-sm">
             <CardContent className="p-3 flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold">{pingProfiles[latestPing.user_id] || 'Babysitter'}</p>
@@ -253,30 +253,6 @@ const LocationPage = () => {
               </a>
             </CardContent>
           </Card>
-          <div className="rounded-xl overflow-hidden border h-[400px]">
-            <MapContainer center={[latestPing.latitude, latestPing.longitude]} zoom={15} style={{ height: '100%', width: '100%' }} zoomControl={false}>
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
-              <RecenterMap lat={latestPing.latitude} lng={latestPing.longitude} />
-              {pings.map((p: any) => (
-                <Marker key={p.id} position={[p.latitude, p.longitude]}>
-                  <Popup>
-                    <div className="text-xs">
-                      <p className="font-bold">{pingProfiles[p.user_id] || 'Babysitter'}</p>
-                      <p>{format(new Date(p.created_at), 'HH:mm:ss', { locale: idLocale })}</p>
-                      <a
-                        href={`https://www.google.com/maps?q=${p.latitude},${p.longitude}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary underline"
-                      >
-                        Google Maps
-                      </a>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-          </div>
         </div>
       ) : (
         <div className="px-4 max-w-2xl mx-auto w-full">
