@@ -352,10 +352,18 @@ const AdminUsers = () => {
                   </div>
                 )}
                 {role === 'admin' && (
-                  <div className="flex items-center justify-end pl-12">
-                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openProfileDialog(profile)}>
-                      <Eye className="h-3 w-3" /> Detail
-                    </Button>
+                  <div className="flex items-center justify-between pl-12">
+                    <div className="flex items-center gap-2">
+                      {getSubBadge(sub)}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openProfileDialog(profile)}>
+                        <Eye className="h-3 w-3" /> Detail
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openSubDialog(profile.id)}>
+                        <CreditCard className="h-3 w-3" /> Kelola
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardContent>
