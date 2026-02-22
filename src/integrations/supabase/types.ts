@@ -798,7 +798,7 @@ export type Database = {
       app_role: "parent" | "babysitter" | "admin" | "viewer"
       child_gender: "male" | "female"
       event_status: "habis" | "sisa"
-      event_unit: "ml" | "pcs" | "dosis"
+      event_unit: "ml" | "pcs" | "dosis" | "gram"
       subscription_billing_cycle: "monthly" | "quarterly"
       subscription_plan_type: "trial" | "standard" | "premium_promo"
       subscription_status: "trial" | "active" | "expired" | "cancelled"
@@ -946,7 +946,7 @@ export const Constants = {
       app_role: ["parent", "babysitter", "admin", "viewer"],
       child_gender: ["male", "female"],
       event_status: ["habis", "sisa"],
-      event_unit: ["ml", "pcs", "dosis"],
+      event_unit: ["ml", "pcs", "dosis", "gram"],
       subscription_billing_cycle: ["monthly", "quarterly"],
       subscription_plan_type: ["trial", "standard", "premium_promo"],
       subscription_status: ["trial", "active", "expired", "cancelled"],
