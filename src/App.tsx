@@ -32,6 +32,7 @@ import SubscriptionStatus from "./pages/SubscriptionStatus";
 import ResetPassword from "./pages/ResetPassword";
 import CompletePhone from "./pages/CompletePhone";
 import InventoryPage from "./pages/InventoryPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -105,6 +106,7 @@ const App = () => (
             <Route path="/insights" element={<Insights />} />
             <Route path="/location" element={<LocationPage />} />
             <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/admin/dashboard" element={<ProtectedRoute allowedRole="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute allowedRole="admin"><AdminUsers /></ProtectedRoute>} />
             <Route path="/admin/children" element={<ProtectedRoute allowedRole="admin"><AdminChildren /></ProtectedRoute>} />

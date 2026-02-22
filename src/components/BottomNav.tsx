@@ -17,14 +17,14 @@ const PARENT_ITEMS: NavItem[] = [
   { icon: PenLine, label: 'Input', path: '/parent/input' },
   { icon: Package, label: 'Stok', path: '/inventory' },
   { icon: MessageCircle, label: 'Chat', path: '/chat', badgeKey: 'unread_messages' },
-  { icon: User, label: 'Profil', path: '/profile', badgeKey: 'notifications' },
+  { icon: Bell, label: 'Notifikasi', path: '/notifications', badgeKey: 'notifications' },
 ];
 
 const BABYSITTER_ITEMS: NavItem[] = [
   { icon: PenLine, label: 'Input', path: '/babysitter/today' },
   { icon: Package, label: 'Stok', path: '/inventory' },
   { icon: MessageCircle, label: 'Chat', path: '/chat', badgeKey: 'unread_messages' },
-  { icon: User, label: 'Profil', path: '/profile', badgeKey: 'notifications' },
+  { icon: Bell, label: 'Notifikasi', path: '/notifications', badgeKey: 'notifications' },
 ];
 
 interface BottomNavProps {
