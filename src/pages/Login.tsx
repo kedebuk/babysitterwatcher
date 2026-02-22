@@ -18,6 +18,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [role, setRole] = useState<'parent' | 'babysitter'>('parent');
   const [loading, setLoading] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
@@ -64,6 +65,7 @@ const Login = () => {
 
   // Redirect if already logged in
   if (!authLoading && user) {
+    if (!user.phoneComplete) return <Navigate to="/complete-phone" replace />;
     if ((user.roles?.length ?? 0) > 1) return <Navigate to="/choose-role" replace />;
     const dest = user.role === 'admin' ? '/admin/dashboard' : user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today';
     return <Navigate to={dest} replace />;
@@ -87,15 +89,28 @@ const Login = () => {
       toast({ title: 'Error', description: 'Password minimal 6 karakter', variant: 'destructive' });
       return;
     }
+    if (!phone.trim() || phone.trim().length < 8) {
+      toast({ title: 'Error', description: 'Masukkan nomor HP WhatsApp yang valid', variant: 'destructive' });
+      return;
+    }
     setLoading(true);
     const result = await signup(email, password, name, role);
-    setLoading(false);
     if (result.success) {
+      // Save phone number to profile after signup
+      // We need to wait for the user to be created, then update profile
+      // The trigger creates the profile, so we update it after a short delay
+      setTimeout(async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await supabase.from('profiles').update({ phone: phone.trim() } as any).eq('id', session.user.id);
+        }
+      }, 1000);
       trackEvent('pixel_event_signup');
       toast({ title: '✅ Akun dibuat!', description: 'Silakan login dengan akun baru Anda' });
     } else {
       toast({ title: 'Daftar gagal', description: result.error, variant: 'destructive' });
     }
+    setLoading(false);
   };
 
   const handleGoogleLogin = async () => {
@@ -180,6 +195,10 @@ const Login = () => {
                 <div className="space-y-1.5">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input id="signup-email" type="email" placeholder="email@contoh.com" value={email} onChange={e => setEmail(e.target.value)} required className="h-12 text-base" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-phone">No. HP WhatsApp</Label>
+                  <Input id="signup-phone" type="tel" placeholder="08xxxxxxxxxx" value={phone} onChange={e => setPhone(e.target.value)} required className="h-12 text-base" maxLength={20} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="signup-password">Password</Label>
