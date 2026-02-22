@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -30,6 +31,20 @@ const NotificationsPage = () => {
     enabled: !!user,
     refetchInterval: 10000,
   });
+
+  // Auto mark all as read when page opens
+  useEffect(() => {
+    if (user && notifications.length > 0 && notifications.some((n: any) => !n.is_read)) {
+      supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+        .then(() => {
+          qc.invalidateQueries({ queryKey: ['unread_notifications_count'] });
+        });
+    }
+  }, [user, notifications]);
 
   const markAsRead = async (id: string) => {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
