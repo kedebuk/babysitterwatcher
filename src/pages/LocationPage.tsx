@@ -235,6 +235,24 @@ const LocationPage = () => {
 
       {latestPing ? (
         <div className="flex-1 px-4 pb-4 max-w-2xl mx-auto w-full" style={{ minHeight: '400px' }}>
+          <Card className="mb-3 border shadow-sm">
+            <CardContent className="p-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">{pingProfiles[latestPing.user_id] || 'Babysitter'}</p>
+                <p className="text-xs text-muted-foreground">
+                  Terakhir: {format(new Date(latestPing.created_at), 'HH:mm:ss, d MMM', { locale: idLocale })}
+                </p>
+              </div>
+              <a
+                href={`https://www.google.com/maps?q=${latestPing.latitude},${latestPing.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                <Navigation className="h-3.5 w-3.5" /> Buka Google Maps
+              </a>
+            </CardContent>
+          </Card>
           <div className="rounded-xl overflow-hidden border h-[400px]">
             <MapContainer center={[latestPing.latitude, latestPing.longitude]} zoom={15} style={{ height: '100%', width: '100%' }} zoomControl={false}>
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
@@ -245,15 +263,20 @@ const LocationPage = () => {
                     <div className="text-xs">
                       <p className="font-bold">{pingProfiles[p.user_id] || 'Babysitter'}</p>
                       <p>{format(new Date(p.created_at), 'HH:mm:ss', { locale: idLocale })}</p>
+                      <a
+                        href={`https://www.google.com/maps?q=${p.latitude},${p.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary underline"
+                      >
+                        Google Maps
+                      </a>
                     </div>
                   </Popup>
                 </Marker>
               ))}
             </MapContainer>
           </div>
-          <p className="text-xs text-muted-foreground mt-2 text-center">
-            Terakhir update: {format(new Date(latestPing.created_at), 'HH:mm:ss, d MMM', { locale: idLocale })}
-          </p>
         </div>
       ) : (
         <div className="px-4 max-w-2xl mx-auto w-full">
