@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useChildren, useCreateChild } from '@/hooks/use-data';
+import { useSubscription } from '@/hooks/use-subscription';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ const ParentChildren = () => {
   const qc = useQueryClient();
   const { data: children = [], isLoading } = useChildren();
   const createChild = useCreateChild();
+  const { data: subscription } = useSubscription();
 
   // Add child dialog
   const [open, setOpen] = useState(false);
@@ -342,6 +344,8 @@ const ParentChildren = () => {
 
   const activeChildren = children.filter((c: any) => !c.is_archived);
   const archivedChildren = children.filter((c: any) => c.is_archived);
+  const maxChildren = subscription?.number_of_children ?? Infinity;
+  const canAddMore = activeChildren.length < maxChildren;
 
   return (
     <div className="min-h-screen pb-6">
@@ -493,10 +497,16 @@ const ParentChildren = () => {
           );
         })}
 
+        {!canAddMore && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-300">
+            ⚠️ Anda sudah mencapai batas {maxChildren} anak sesuai paket langganan. Upgrade paket untuk menambah anak.
+          </div>
+        )}
+
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full h-14 border-dashed text-muted-foreground">
-              <Plus className="mr-2 h-5 w-5" /> Tambah Anak
+            <Button variant="outline" className="w-full h-14 border-dashed text-muted-foreground" disabled={!canAddMore}>
+              <Plus className="mr-2 h-5 w-5" /> Tambah Anak {!canAddMore ? `(Maks ${maxChildren})` : ''}
             </Button>
           </DialogTrigger>
           <DialogContent>

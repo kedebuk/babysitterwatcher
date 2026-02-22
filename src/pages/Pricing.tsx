@@ -7,7 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { Baby, Sparkles, Clock, CheckCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Baby, Sparkles, Clock, CheckCircle, MessageCircle } from 'lucide-react';
 
 const TOTAL_SLOTS = 62;
 
@@ -82,6 +83,18 @@ const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'quarterly'>('monthly');
   const [numChildren, setNumChildren] = useState(1);
   const [customCount, setCustomCount] = useState(false);
+  const [adminWa, setAdminWa] = useState('');
+
+  useEffect(() => {
+    supabase
+      .from('app_settings' as any)
+      .select('value')
+      .eq('key', 'admin_whatsapp')
+      .single()
+      .then(({ data }) => {
+        if (data) setAdminWa((data as any).value || '');
+      });
+  }, []);
 
   const price = calculatePrice(numChildren, billingCycle, plans);
 
@@ -315,6 +328,20 @@ const Pricing = () => {
             </div>
           ))}
         </div>
+        {/* WhatsApp CTA */}
+        {adminWa && (
+          <div className="flex justify-center">
+            <a
+              href={`https://wa.me/${adminWa}?text=${encodeURIComponent('Halo Admin, saya ingin konfirmasi pembelian paket Eleanor Tracker.')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white px-5 py-3 text-sm font-semibold transition-colors shadow-md"
+            >
+              <MessageCircle className="h-5 w-5" />
+              Hubungi Admin via WhatsApp
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Sticky CTA */}

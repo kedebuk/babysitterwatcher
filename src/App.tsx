@@ -17,6 +17,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminChildren from "./pages/AdminChildren";
 import AdminChildDetail from "./pages/AdminChildDetail";
 import AdminLogs from "./pages/AdminLogs";
+import AdminSettings from "./pages/AdminSettings";
 import SelectRole from "./pages/SelectRole";
 import CompleteProfile from "./pages/CompleteProfile";
 import ChooseRole from "./pages/ChooseRole";
@@ -103,6 +104,7 @@ const App = () => (
             <Route path="/admin/children" element={<ProtectedRoute allowedRole="admin"><AdminChildren /></ProtectedRoute>} />
             <Route path="/admin/children/:childId" element={<ProtectedRoute allowedRole="admin"><AdminChildDetail /></ProtectedRoute>} />
             <Route path="/admin/logs" element={<ProtectedRoute allowedRole="admin"><AdminLogs /></ProtectedRoute>} />
+            <Route path="/admin/settings" element={<ProtectedRoute allowedRole="admin"><AdminSettings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
