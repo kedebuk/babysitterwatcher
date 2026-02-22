@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, subDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin, MoreVertical, RefreshCw, UserCheck, Trash2, CreditCard, User, Package } from 'lucide-react';
+import { EventDetailDialog } from '@/components/EventDetailDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -50,6 +51,7 @@ const ParentDashboard = () => {
   const deleteEvent = useDeleteEvent();
   const queryClient = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; daily_log_id: string; label: string } | null>(null);
+  const [detailEvent, setDetailEvent] = useState<any>(null);
 
   const activeChildId = selectedChild || children[0]?.id || '';
   const child = children.find(c => c.id === activeChildId);
@@ -358,7 +360,7 @@ const ParentDashboard = () => {
                   {events.map(event => {
                     const ping = findClosestPing(event.time);
                     return (
-                    <Card key={event.id} className="border-0 shadow-sm animate-fade-in">
+                    <Card key={event.id} className="border-0 shadow-sm animate-fade-in cursor-pointer hover:shadow-md transition-shadow" onClick={() => setDetailEvent(event)}>
                       <CardContent className="p-3 flex items-start gap-3">
                         <div className="text-center min-w-[44px]"><p className="text-xs font-bold text-muted-foreground">{event.time?.substring(0, 5)}</p></div>
                         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
@@ -432,6 +434,13 @@ const ParentDashboard = () => {
           </>
         )}
       </div>
+
+      <EventDetailDialog
+        event={detailEvent}
+        open={!!detailEvent}
+        onOpenChange={(open) => !open && setDetailEvent(null)}
+        createdByName={detailEvent?.created_by ? profileNames[detailEvent.created_by] : undefined}
+      />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
