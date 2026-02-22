@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, Lock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { BottomNav } from '@/components/BottomNav';
 
 const ProfilePage = () => {
   const { user, refreshUser } = useAuth();
@@ -157,6 +158,8 @@ const ProfilePage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <BottomNav role={user?.role === 'babysitter' ? 'babysitter' : 'parent'} />
     </div>
   );
 };

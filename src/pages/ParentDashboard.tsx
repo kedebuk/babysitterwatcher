@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import PendingInvites from '@/components/PendingInvites';
+import { BottomNav } from '@/components/BottomNav';
 
 function getTotalByType(events: any[], type: string): number {
   return events.filter(e => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
@@ -139,7 +140,7 @@ const ParentDashboard = () => {
   if (loadingChildren) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Memuat...</div>;
 
   return (
-    <div className="min-h-screen pb-6">
+    <div className="min-h-screen pb-20">
       <div className="sticky top-0 z-10 bg-primary px-4 py-3 text-primary-foreground">
         <div className="flex items-center justify-between">
           <div>
@@ -408,6 +409,8 @@ const ParentDashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BottomNav role="parent" />
     </div>
   );
 };
