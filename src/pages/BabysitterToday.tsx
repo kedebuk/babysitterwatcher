@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Plus, Trash2, LogOut, Clock, History, Camera, X, MessageCircle, MapPin, MoreVertical, RefreshCw, Baby, UserCheck } from 'lucide-react';
+import { Plus, Trash2, LogOut, Clock, History, Camera, X, MessageCircle, MapPin, MoreVertical, RefreshCw, Baby, UserCheck, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -210,6 +210,9 @@ const BabysitterToday = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/babysitter/history')}>
                   <History className="mr-2 h-4 w-4" /> Riwayat
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <User className="mr-2 h-4 w-4" /> Profil Saya
                 </DropdownMenuItem>
                 {(user?.roles?.length ?? 0) > 1 && (
                   <>

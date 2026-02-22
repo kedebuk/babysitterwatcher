@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,9 +19,29 @@ const Login = () => {
   const [name, setName] = useState('');
   const [role, setRole] = useState<'parent' | 'babysitter'>('parent');
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
   const { user, loading: authLoading, login, signup } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail.trim()) {
+      toast({ title: 'Error', description: 'Masukkan email Anda', variant: 'destructive' });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: 'Gagal', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: '✅ Email terkirim!', description: 'Cek inbox email Anda untuk link reset password.' });
+      setShowForgot(false);
+    }
+  };
 
   // Redirect if already logged in
   if (!authLoading && user) {
@@ -92,13 +113,31 @@ const Login = () => {
                   <Input id="login-email" type="email" placeholder="email@contoh.com" value={email} onChange={e => setEmail(e.target.value)} required className="h-12 text-base" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="login-password">Password</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="login-password">Password</Label>
+                    <button type="button" onClick={() => setShowForgot(true)} className="text-xs text-primary hover:underline">Lupa password?</button>
+                  </div>
                   <Input id="login-password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="h-12 text-base" />
                 </div>
                 <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={loading}>
                   <LogIn className="mr-2 h-5 w-5" /> Masuk
                 </Button>
               </form>
+
+              {showForgot && (
+                <div className="mt-4 p-4 bg-muted rounded-xl space-y-3">
+                  <p className="text-sm font-semibold">Reset Password</p>
+                  <p className="text-xs text-muted-foreground">Masukkan email Anda, kami akan kirim link reset password.</p>
+                  <Input type="email" placeholder="email@contoh.com" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} className="h-10 text-sm" />
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setShowForgot(false)} className="flex-1">Batal</Button>
+                    <Button size="sm" onClick={handleForgotPassword} disabled={loading} className="flex-1">
+                      {loading ? 'Mengirim...' : 'Kirim Link'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="relative my-4">
                 <Separator />
                 <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">atau</span>
