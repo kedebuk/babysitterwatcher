@@ -120,6 +120,7 @@ export function EditEventDialog({ event, open, onOpenChange, childId }: EditEven
                   <SelectTrigger className="h-10 mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ml">ml</SelectItem>
+                    <SelectItem value="gram">gram</SelectItem>
                     <SelectItem value="pcs">pcs</SelectItem>
                     <SelectItem value="dosis">dosis</SelectItem>
                   </SelectContent>

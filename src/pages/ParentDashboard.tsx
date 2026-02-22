@@ -33,7 +33,8 @@ function generateWhatsAppText(childName: string, date: string, events: any[], no
   const totalMpasi = getTotalByType(events, 'mpasi');
   const pup = events.filter(e => e.type === 'pup').length;
   const pee = events.filter(e => e.type === 'pee').length;
-  text += `\n📊 Ringkasan:\n🍼 Total susu: ${totalSusu} ml\n🥣 Total MPASI: ${totalMpasi} ml\n💩 BAB: ${pup}x | 💧 BAK: ${pee}x\n`;
+  const totalMakan = getTotalByType(events, 'mpasi') + getTotalByType(events, 'snack') + getTotalByType(events, 'buah');
+  text += `\n📊 Ringkasan:\n🍼 Total susu: ${totalSusu} ml\n🥣 Total Makan: ${totalMakan}\n💩 BAB: ${pup}x | 💧 BAK: ${pee}x\n`;
   if (notes) text += `\n📝 Catatan: ${notes}`;
   return text;
 }
@@ -112,13 +113,13 @@ const ParentDashboard = () => {
     return {
       date: format(parseISO(date), 'd MMM', { locale: idLocale }),
       susu: getTotalByType(evts, 'susu'),
-      mpasi: getTotalByType(evts, 'mpasi'),
+      makan: getTotalByType(evts, 'mpasi') + getTotalByType(evts, 'snack') + getTotalByType(evts, 'buah'),
       pup: evts.filter((e: any) => e.type === 'pup').length,
     };
   });
 
   const totalSusu = getTotalByType(events, 'susu');
-  const totalMpasi = getTotalByType(events, 'mpasi');
+  const totalMakan = getTotalByType(events, 'mpasi') + getTotalByType(events, 'snack') + getTotalByType(events, 'buah');
   const pup = events.filter(e => e.type === 'pup').length;
   const pee = events.filter(e => e.type === 'pee').length;
   const vitaminEvent = events.find(e => e.type === 'vitamin');
@@ -258,9 +259,9 @@ const ParentDashboard = () => {
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-makan text-sm">🥣</div>
-                  <span className="text-xs text-muted-foreground">Total MPASI</span>
+                  <span className="text-xs text-muted-foreground">Total Makan</span>
                 </div>
-                <p className="text-2xl font-bold">{totalMpasi} <span className="text-sm font-normal text-muted-foreground">ml</span></p>
+                <p className="text-2xl font-bold">{totalMakan}</p>
               </CardContent></Card>
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
@@ -299,7 +300,7 @@ const ParentDashboard = () => {
                     <Tooltip />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
                     <Bar dataKey="susu" name="Susu (ml)" fill="hsl(210, 75%, 55%)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="mpasi" name="MPASI (ml)" fill="hsl(25, 85%, 55%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="makan" name="Makan" fill="hsl(25, 85%, 55%)" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="pup" name="BAB" fill="hsl(145, 55%, 45%)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>

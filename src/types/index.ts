@@ -14,7 +14,7 @@ export type ActivityType =
   | 'catatan';
 
 export type EventStatus = 'habis' | 'sisa' | null;
-export type EventUnit = 'ml' | 'pcs' | 'dosis' | null;
+export type EventUnit = 'ml' | 'pcs' | 'dosis' | 'gram' | null;
 export type UserRole = 'parent' | 'babysitter' | 'viewer';
 
 export interface User {

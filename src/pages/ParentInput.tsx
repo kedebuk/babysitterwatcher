@@ -351,6 +351,7 @@ function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto 
               <SelectTrigger className="w-[80px] h-10"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ml">ml</SelectItem>
+                <SelectItem value="gram">gram</SelectItem>
                 <SelectItem value="pcs">pcs</SelectItem>
                 <SelectItem value="dosis">dosis</SelectItem>
               </SelectContent>
