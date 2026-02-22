@@ -144,6 +144,56 @@ export type Database = {
         }
         Relationships: []
       }
+      children_profiles: {
+        Row: {
+          created_at: string
+          date_of_birth: string
+          gender: Database["public"]["Enums"]["child_gender"]
+          id: string
+          is_active: boolean
+          medical_notes: string | null
+          name: string
+          photo_url: string | null
+          routine_notes: string | null
+          subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_of_birth: string
+          gender?: Database["public"]["Enums"]["child_gender"]
+          id?: string
+          is_active?: boolean
+          medical_notes?: string | null
+          name: string
+          photo_url?: string | null
+          routine_notes?: string | null
+          subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date_of_birth?: string
+          gender?: Database["public"]["Enums"]["child_gender"]
+          id?: string
+          is_active?: boolean
+          medical_notes?: string | null
+          name?: string
+          photo_url?: string | null
+          routine_notes?: string | null
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "children_profiles_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_logs: {
         Row: {
           child_id: string
@@ -234,6 +284,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      family_invites: {
+        Row: {
+          created_at: string
+          expires_at: string
+          family_id: string
+          id: string
+          invite_code: string
+          invited_by: string
+          status: string
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          family_id: string
+          id?: string
+          invite_code: string
+          invited_by: string
+          status?: string
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          family_id?: string
+          id?: string
+          invite_code?: string
+          invited_by?: string
+          status?: string
+          used_by?: string | null
+        }
+        Relationships: []
       }
       location_pings: {
         Row: {
@@ -376,6 +459,36 @@ export type Database = {
           },
         ]
       }
+      pricing_plans: {
+        Row: {
+          child_order: number
+          discount_pct: number
+          id: number
+          is_active: boolean
+          monthly_price_idr: number
+          plan_name: string
+          quarterly_extra_discount_pct: number
+        }
+        Insert: {
+          child_order: number
+          discount_pct?: number
+          id?: number
+          is_active?: boolean
+          monthly_price_idr: number
+          plan_name: string
+          quarterly_extra_discount_pct?: number
+        }
+        Update: {
+          child_order?: number
+          discount_pct?: number
+          id?: number
+          is_active?: boolean
+          monthly_price_idr?: number
+          plan_name?: string
+          quarterly_extra_discount_pct?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -409,6 +522,66 @@ export type Database = {
           is_disabled?: boolean
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          admin_override: boolean
+          admin_override_note: string | null
+          billing_cycle: Database["public"]["Enums"]["subscription_billing_cycle"]
+          created_at: string
+          id: string
+          number_of_children: number
+          plan_type: Database["public"]["Enums"]["subscription_plan_type"]
+          premium_promo_end_date: string | null
+          price_per_month: number
+          price_per_quarter: number | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          subscription_end_date: string | null
+          subscription_start_date: string
+          trial_end_date: string | null
+          trial_start_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_override?: boolean
+          admin_override_note?: string | null
+          billing_cycle?: Database["public"]["Enums"]["subscription_billing_cycle"]
+          created_at?: string
+          id?: string
+          number_of_children?: number
+          plan_type?: Database["public"]["Enums"]["subscription_plan_type"]
+          premium_promo_end_date?: string | null
+          price_per_month?: number
+          price_per_quarter?: number | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          subscription_end_date?: string | null
+          subscription_start_date?: string
+          trial_end_date?: string | null
+          trial_start_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_override?: boolean
+          admin_override_note?: string | null
+          billing_cycle?: Database["public"]["Enums"]["subscription_billing_cycle"]
+          created_at?: string
+          id?: string
+          number_of_children?: number
+          plan_type?: Database["public"]["Enums"]["subscription_plan_type"]
+          premium_promo_end_date?: string | null
+          price_per_month?: number
+          price_per_quarter?: number | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          subscription_end_date?: string | null
+          subscription_start_date?: string
+          trial_end_date?: string | null
+          trial_start_date?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -496,8 +669,12 @@ export type Database = {
         | "lap_badan"
         | "catatan"
       app_role: "parent" | "babysitter" | "admin"
+      child_gender: "male" | "female"
       event_status: "habis" | "sisa"
       event_unit: "ml" | "pcs" | "dosis"
+      subscription_billing_cycle: "monthly" | "quarterly"
+      subscription_plan_type: "trial" | "standard" | "premium_promo"
+      subscription_status: "trial" | "active" | "expired" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -638,8 +815,12 @@ export const Constants = {
         "catatan",
       ],
       app_role: ["parent", "babysitter", "admin"],
+      child_gender: ["male", "female"],
       event_status: ["habis", "sisa"],
       event_unit: ["ml", "pcs", "dosis"],
+      subscription_billing_cycle: ["monthly", "quarterly"],
+      subscription_plan_type: ["trial", "standard", "premium_promo"],
+      subscription_status: ["trial", "active", "expired", "cancelled"],
     },
   },
 } as const
