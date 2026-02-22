@@ -464,15 +464,33 @@ const InventoryPage = () => {
                                       <Label>Stok baru (total)</Label>
                                       <Input type="number" id={`restock-${item.id}`} defaultValue={String(item.current_stock)} />
                                     </div>
-                                    <div>
-                                      <Label>Catatan</Label>
-                                      <Input id={`restock-note-${item.id}`} defaultValue={(item as any).notes || ''} placeholder="Catatan dari sitter..." />
-                                    </div>
                                     <Button className="w-full" onClick={() => {
                                       const input = document.getElementById(`restock-${item.id}`) as HTMLInputElement;
-                                      const noteInput = document.getElementById(`restock-note-${item.id}`) as HTMLInputElement;
-                                      restockItem.mutate({ itemId: item.id, quantity: Number(input.value) || 0, notes: noteInput.value });
+                                      restockItem.mutate({ itemId: item.id, quantity: Number(input.value) || 0 });
                                     }}>Perbarui Stok</Button>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button size="sm" variant="outline" className="h-8 text-xs">📝 Catatan</Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader><DialogTitle>Catatan {item.emoji} {item.name}</DialogTitle></DialogHeader>
+                                  <div className="space-y-3">
+                                    <div>
+                                      <Label>Catatan</Label>
+                                      <textarea
+                                        id={`note-${item.id}`}
+                                        defaultValue={(item as any).notes || ''}
+                                        placeholder="Tulis catatan... misal: sisa setengah, ada jamur, dll"
+                                        className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                      />
+                                    </div>
+                                    <Button className="w-full" onClick={() => {
+                                      const noteEl = document.getElementById(`note-${item.id}`) as HTMLTextAreaElement;
+                                      restockItem.mutate({ itemId: item.id, quantity: Number(item.current_stock), notes: noteEl.value });
+                                    }}>Simpan Catatan</Button>
                                   </div>
                                 </DialogContent>
                               </Dialog>
