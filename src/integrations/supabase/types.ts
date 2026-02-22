@@ -259,6 +259,7 @@ export type Database = {
           detail: string | null
           id: string
           photo_url: string | null
+          photo_url_after: string | null
           status: Database["public"]["Enums"]["event_status"] | null
           time: string
           type: Database["public"]["Enums"]["activity_type"]
@@ -273,6 +274,7 @@ export type Database = {
           detail?: string | null
           id?: string
           photo_url?: string | null
+          photo_url_after?: string | null
           status?: Database["public"]["Enums"]["event_status"] | null
           time: string
           type: Database["public"]["Enums"]["activity_type"]
@@ -287,6 +289,7 @@ export type Database = {
           detail?: string | null
           id?: string
           photo_url?: string | null
+          photo_url_after?: string | null
           status?: Database["public"]["Enums"]["event_status"] | null
           time?: string
           type?: Database["public"]["Enums"]["activity_type"]
