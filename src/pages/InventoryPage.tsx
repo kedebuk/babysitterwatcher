@@ -21,7 +21,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 const EMOJI_OPTIONS = ['📦', '🍼', '🧷', '💊', '🧴', '🧻', '🧸', '👶', '🍪', '🥛'];
 const UNIT_OPTIONS = ['pcs', 'ml', 'sachet', 'botol', 'pack', 'dosis', 'lembar', '%'];
-const PERCENT_STEPS = [0, 25, 50, 75, 100];
 
 async function uploadInventoryPhoto(file: File, childId: string): Promise<string> {
   const ext = file.name.split('.').pop() || 'jpg';
@@ -473,59 +472,45 @@ const InventoryPage = () => {
                             )}
                             {/* Usage controls */}
                             <div className="flex flex-wrap items-center gap-2 mt-2">
-                              {item.unit === '%' ? (
-                                /* Percentage quick-set buttons */
-                                <>
-                                  {PERCENT_STEPS.map(pct => (
-                                    <Button key={pct} size="sm" className="h-8 text-xs min-w-[3rem]"
-                                      variant={Number(item.current_stock) === pct ? 'default' : 'outline'}
-                                      onClick={() => restockItem.mutate({ itemId: item.id, quantity: pct })}>
-                                      {pct}%
-                                    </Button>
-                                  ))}
-                                </>
-                              ) : (
-                                /* Regular quantity controls */
-                                <>
-                                  <div className="flex items-center border rounded-lg overflow-hidden">
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-none"
-                                      onClick={() => setUseQty(p => ({ ...p, [item.id]: String(Math.max(1, Number(qty) - 1)) }))}>
-                                      <Minus className="h-3 w-3" />
-                                    </Button>
-                                    <Input type="number" className="h-8 w-12 text-center border-0 rounded-none p-0 text-sm"
-                                      value={qty}
-                                      onChange={e => setUseQty(p => ({ ...p, [item.id]: e.target.value }))} />
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-none"
-                                      onClick={() => setUseQty(p => ({ ...p, [item.id]: String(Number(qty) + 1) }))}>
-                                      <Plus className="h-3 w-3" />
-                                    </Button>
+                              <div className="flex items-center border rounded-lg overflow-hidden">
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-none"
+                                  onClick={() => setUseQty(p => ({ ...p, [item.id]: String(Math.max(1, Number(qty) - 1)) }))}>
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <Input type="number" className="h-8 w-14 text-center border-0 rounded-none p-0 text-sm"
+                                  value={qty}
+                                  onChange={e => setUseQty(p => ({ ...p, [item.id]: e.target.value }))} />
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-none"
+                                  onClick={() => setUseQty(p => ({ ...p, [item.id]: String(Number(qty) + 1) }))}>
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                                {item.unit === '%' && <span className="text-xs text-muted-foreground pr-2">%</span>}
+                              </div>
+                              <Button size="sm" variant="default" className="h-8 text-xs"
+                                disabled={recordUsage.isPending}
+                                onClick={() => recordUsage.mutate({ itemId: item.id, quantity: Number(qty) || 1 })}>
+                                Pakai
+                              </Button>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button size="sm" variant="outline" className="h-8 text-xs">Isi Ulang</Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader><DialogTitle>Isi Ulang {item.emoji} {item.name}</DialogTitle></DialogHeader>
+                                  <div className="space-y-3">
+                                    <p className="text-sm text-muted-foreground">Stok saat ini: {item.current_stock} {item.unit}</p>
+                                    <div>
+                                      <Label>{item.unit === '%' ? 'Isi baru (%)' : 'Stok baru (total)'}</Label>
+                                      <Input type="number" id={`restock-${item.id}`} defaultValue={String(item.current_stock)}
+                                        max={item.unit === '%' ? 100 : undefined} />
+                                    </div>
+                                    <Button className="w-full" onClick={() => {
+                                      const input = document.getElementById(`restock-${item.id}`) as HTMLInputElement;
+                                      restockItem.mutate({ itemId: item.id, quantity: Number(input.value) || 0 });
+                                    }}>Perbarui Stok</Button>
                                   </div>
-                                  <Button size="sm" variant="default" className="h-8 text-xs"
-                                    disabled={recordUsage.isPending}
-                                    onClick={() => recordUsage.mutate({ itemId: item.id, quantity: Number(qty) || 1 })}>
-                                    Pakai
-                                  </Button>
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <Button size="sm" variant="outline" className="h-8 text-xs">Isi Ulang</Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                      <DialogHeader><DialogTitle>Isi Ulang {item.emoji} {item.name}</DialogTitle></DialogHeader>
-                                      <div className="space-y-3">
-                                        <p className="text-sm text-muted-foreground">Stok saat ini: {item.current_stock} {item.unit}</p>
-                                        <div>
-                                          <Label>Stok baru (total)</Label>
-                                          <Input type="number" id={`restock-${item.id}`} defaultValue={String(item.current_stock)} />
-                                        </div>
-                                        <Button className="w-full" onClick={() => {
-                                          const input = document.getElementById(`restock-${item.id}`) as HTMLInputElement;
-                                          restockItem.mutate({ itemId: item.id, quantity: Number(input.value) || 0 });
-                                        }}>Perbarui Stok</Button>
-                                      </div>
-                                    </DialogContent>
-                                  </Dialog>
-                                </>
-                              )}
+                                </DialogContent>
+                              </Dialog>
                               <Dialog>
                                 <DialogTrigger asChild>
                                   <Button size="sm" variant="outline" className="h-8 text-xs">📝 Catatan</Button>
