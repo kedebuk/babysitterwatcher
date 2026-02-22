@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChildren } from '@/hooks/use-data';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { BottomNav } from '@/components/BottomNav';
-import { Plus, Minus, Package, TrendingDown, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Plus, Minus, Package, TrendingDown, AlertTriangle, ArrowLeft, Camera, ImageIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, subDays, differenceInDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
@@ -21,6 +21,15 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 const EMOJI_OPTIONS = ['📦', '🍼', '🧷', '💊', '🧴', '🧻', '🧸', '👶', '🍪', '🥛'];
 const UNIT_OPTIONS = ['pcs', 'ml', 'sachet', 'botol', 'pack', 'dosis', 'lembar'];
+
+async function uploadInventoryPhoto(file: File, childId: string): Promise<string> {
+  const ext = file.name.split('.').pop() || 'jpg';
+  const path = `${childId}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from('inventory-photos').upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from('inventory-photos').getPublicUrl(path);
+  return data.publicUrl;
+}
 
 function useInventoryItems(childId: string) {
   return useQuery({
@@ -86,7 +95,12 @@ const InventoryPage = () => {
   const activeChildId = selectedChild || children[0]?.id || '';
   const [addOpen, setAddOpen] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', emoji: '📦', unit: 'pcs', current_stock: '', low_stock_threshold: '5' });
+  const [newItemPhoto, setNewItemPhoto] = useState<File | null>(null);
+  const [newItemPhotoPreview, setNewItemPhotoPreview] = useState<string | null>(null);
+  const newItemFileRef = useRef<HTMLInputElement>(null);
   const [useQty, setUseQty] = useState<Record<string, string>>({});
+  const [editPhotoItemId, setEditPhotoItemId] = useState<string | null>(null);
+  const [editingPhoto, setEditingPhoto] = useState(false);
 
   const { data: items = [], isLoading } = useInventoryItems(activeChildId);
   const { data: usageHistory = [] } = useInventoryUsage(activeChildId);
@@ -116,6 +130,10 @@ const InventoryPage = () => {
 
   const createItem = useMutation({
     mutationFn: async (item: typeof newItem) => {
+      let photo_url: string | null = null;
+      if (newItemPhoto) {
+        photo_url = await uploadInventoryPhoto(newItemPhoto, activeChildId);
+      }
       const { data, error } = await supabase.from('inventory_items').insert({
         child_id: activeChildId,
         name: item.name,
@@ -124,6 +142,7 @@ const InventoryPage = () => {
         current_stock: Number(item.current_stock) || 0,
         low_stock_threshold: Number(item.low_stock_threshold) || 5,
         created_by: user!.id,
+        photo_url,
       }).select().single();
       if (error) throw error;
       return data;
@@ -132,7 +151,24 @@ const InventoryPage = () => {
       qc.invalidateQueries({ queryKey: ['inventory_items', activeChildId] });
       setAddOpen(false);
       setNewItem({ name: '', emoji: '📦', unit: 'pcs', current_stock: '', low_stock_threshold: '5' });
+      setNewItemPhoto(null);
+      setNewItemPhotoPreview(null);
       toast({ title: 'Item ditambahkan!' });
+    },
+    onError: (e: any) => toast({ title: 'Gagal', description: e.message, variant: 'destructive' }),
+  });
+
+  const updateItemPhoto = useMutation({
+    mutationFn: async ({ itemId, file }: { itemId: string; file: File }) => {
+      const photo_url = await uploadInventoryPhoto(file, activeChildId);
+      const { error } = await supabase.from('inventory_items').update({ photo_url }).eq('id', itemId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['inventory_items', activeChildId] });
+      setEditPhotoItemId(null);
+      setEditingPhoto(false);
+      toast({ title: 'Foto diperbarui!' });
     },
     onError: (e: any) => toast({ title: 'Gagal', description: e.message, variant: 'destructive' }),
   });
@@ -267,8 +303,36 @@ const InventoryPage = () => {
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader><DialogTitle>Tambah Item Stok</DialogTitle></DialogHeader>
+                   <DialogHeader><DialogTitle>Tambah Item Stok</DialogTitle></DialogHeader>
                   <div className="space-y-3">
+                    {/* Photo upload */}
+                    <div>
+                      <Label>Foto Item (opsional)</Label>
+                      <input type="file" accept="image/*" ref={newItemFileRef} className="hidden"
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setNewItemPhoto(file);
+                            setNewItemPhotoPreview(URL.createObjectURL(file));
+                          }
+                        }} />
+                      <div className="mt-1 flex items-center gap-3">
+                        {newItemPhotoPreview ? (
+                          <img src={newItemPhotoPreview} alt="Preview" className="h-16 w-16 rounded-lg object-cover border" />
+                        ) : (
+                          <div className="h-16 w-16 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                            <ImageIcon className="h-6 w-6 text-muted-foreground/40" />
+                          </div>
+                        )}
+                        <Button type="button" variant="outline" size="sm" onClick={() => newItemFileRef.current?.click()}>
+                          <Camera className="h-4 w-4 mr-1.5" /> {newItemPhotoPreview ? 'Ganti Foto' : 'Upload Foto'}
+                        </Button>
+                        {newItemPhotoPreview && (
+                          <Button type="button" variant="ghost" size="sm" className="text-destructive"
+                            onClick={() => { setNewItemPhoto(null); setNewItemPhotoPreview(null); }}>Hapus</Button>
+                        )}
+                      </div>
+                    </div>
                     <div>
                       <Label>Nama Item</Label>
                       <Input placeholder="Contoh: Susu SGM" value={newItem.name}
@@ -330,7 +394,20 @@ const InventoryPage = () => {
                     <Card key={item.id} className={isLow ? 'border-destructive/40' : ''}>
                       <CardContent className="p-3">
                         <div className="flex items-start gap-3">
-                          <div className="text-3xl">{item.emoji}</div>
+                          {/* Item photo or emoji */}
+                          <div className="relative group">
+                            {item.photo_url ? (
+                              <img src={item.photo_url} alt={item.name} className="h-12 w-12 rounded-lg object-cover border" />
+                            ) : (
+                              <div className="text-3xl">{item.emoji}</div>
+                            )}
+                            <button
+                              className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                              onClick={() => setEditPhotoItemId(item.id)}
+                            >
+                              <Camera className="h-4 w-4 text-white" />
+                            </button>
+                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
                               <h3 className="font-semibold text-sm">{item.name}</h3>
@@ -396,7 +473,44 @@ const InventoryPage = () => {
                     </Card>
                   );
                 })
-              )}
+               )}
+
+              {/* Edit photo dialog */}
+              <Dialog open={!!editPhotoItemId} onOpenChange={open => { if (!open) setEditPhotoItemId(null); }}>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Ubah Foto Item</DialogTitle></DialogHeader>
+                  <div className="space-y-3">
+                    {(() => {
+                      const editItem = items.find(i => i.id === editPhotoItemId);
+                      return editItem ? (
+                        <>
+                          <div className="flex justify-center">
+                            {editItem.photo_url ? (
+                              <img src={editItem.photo_url} alt={editItem.name} className="h-24 w-24 rounded-xl object-cover border" />
+                            ) : (
+                              <div className="h-24 w-24 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center text-4xl">
+                                {editItem.emoji}
+                              </div>
+                            )}
+                          </div>
+                          <input type="file" accept="image/*" id="edit-photo-input" className="hidden"
+                            onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (file && editPhotoItemId) {
+                                setEditingPhoto(true);
+                                updateItemPhoto.mutate({ itemId: editPhotoItemId, file });
+                              }
+                            }} />
+                          <Button className="w-full" variant="outline" disabled={editingPhoto}
+                            onClick={() => document.getElementById('edit-photo-input')?.click()}>
+                            <Camera className="h-4 w-4 mr-2" /> {editingPhoto ? 'Mengupload...' : 'Pilih Foto Baru'}
+                          </Button>
+                        </>
+                      ) : null;
+                    })()}
+                  </div>
+                </DialogContent>
+              </Dialog>
             </TabsContent>
 
             {/* TAB: Dashboard */}
