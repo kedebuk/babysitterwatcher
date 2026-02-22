@@ -11,6 +11,7 @@ interface AppUser {
   role: UserRole | null;
   roles: UserRole[];
   profileComplete: boolean;
+  phoneComplete: boolean;
 }
 
 interface AuthContextType {
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get profile
     const { data: profile } = await supabase
       .from('profiles')
-      .select('name, is_disabled, dob, address, avatar_url')
+      .select('name, is_disabled, dob, address, avatar_url, phone')
       .eq('id', supaUser.id)
       .single();
 
@@ -73,6 +74,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (profile as any)?.address && (profile as any).address.trim() !== ''
     );
 
+    // Check if phone number is filled
+    const phoneComplete = !!(profile as any)?.phone && (profile as any).phone.trim() !== '';
+
     return {
       id: supaUser.id,
       email: supaUser.email || '',
@@ -80,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role,
       roles,
       profileComplete,
+      phoneComplete,
     };
   }, []);
 

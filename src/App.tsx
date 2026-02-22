@@ -30,6 +30,7 @@ import OnboardingInvite from "./pages/OnboardingInvite";
 import ProfilePage from "./pages/ProfilePage";
 import SubscriptionStatus from "./pages/SubscriptionStatus";
 import ResetPassword from "./pages/ResetPassword";
+import CompletePhone from "./pages/CompletePhone";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; 
   const { user, loading, activeRole } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="animate-pulse text-muted-foreground">Memuat...</div></div>;
   if (!user) return <Navigate to="/login" replace />;
+  if (!user.phoneComplete) return <Navigate to="/complete-phone" replace />;
   if (!user.role) return <Navigate to="/select-role" replace />;
 
   const roles = user.roles || [];
@@ -61,6 +63,7 @@ function RootRedirect() {
   const { user, loading, activeRole } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="animate-pulse text-muted-foreground">Memuat...</div></div>;
   if (!user) return <Navigate to="/login" replace />;
+  if (!user.phoneComplete) return <Navigate to="/complete-phone" replace />;
   if (!user.role) return <Navigate to="/select-role" replace />;
   
   const roles = user.roles || [];
@@ -83,6 +86,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/select-role" element={<SelectRole />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
+            <Route path="/complete-phone" element={<CompletePhone />} />
             <Route path="/choose-role" element={<ChooseRole />} />
             <Route path="/admin-setup" element={<AdminSetup />} />
             <Route path="/pricing" element={<Pricing />} />
