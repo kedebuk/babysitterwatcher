@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import PendingInvites from '@/components/PendingInvites';
 import { BottomNav } from '@/components/BottomNav';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
+import { StorageImage } from '@/components/StorageImage';
 
 function getTotalByType(events: any[], type: string): number {
   return events.filter(e => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
@@ -162,7 +163,7 @@ const ViewerDashboard = () => {
             <div className="flex items-center gap-3">
               {child && (
                 (child as any).photo_url ? (
-                  <img src={(child as any).photo_url} alt={child.name} className="h-11 w-11 rounded-xl object-cover shrink-0" />
+                  <StorageImage src={(child as any).photo_url} alt={child.name} className="h-11 w-11 rounded-xl object-cover shrink-0" />
                 ) : (
                   <div className="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0">{child.avatar_emoji || '👶'}</div>
                 )
@@ -263,8 +264,8 @@ const ViewerDashboard = () => {
                         </div>
                         {(event.photo_url || event.photo_url_after) && (
                           <div className="flex gap-1">
-                            {event.photo_url && <img src={event.photo_url} alt="" className="h-10 w-10 rounded-lg object-cover" />}
-                            {event.photo_url_after && <img src={event.photo_url_after} alt="" className="h-10 w-10 rounded-lg object-cover" />}
+                            {event.photo_url && <StorageImage src={event.photo_url} alt="" className="h-10 w-10 rounded-lg object-cover" />}
+                            {event.photo_url_after && <StorageImage src={event.photo_url_after} alt="" className="h-10 w-10 rounded-lg object-cover" />}
                           </div>
                         )}
                       </CardContent>

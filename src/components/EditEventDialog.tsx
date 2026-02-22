@@ -8,6 +8,7 @@ import { Camera, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUpdateEvent } from '@/hooks/use-data';
 import { useToast } from '@/hooks/use-toast';
+import { useSignedUrl } from '@/components/StorageImage';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'snack', 'buah', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
@@ -93,8 +94,10 @@ export function EditEventDialog({ event, open, onOpenChange, childId }: EditEven
     setAfterPreview(URL.createObjectURL(file));
   };
 
-  const displayBeforePhoto = beforePreview || photoUrl;
-  const displayAfterPhoto = afterPreview || afterPhotoUrl;
+  const signedBeforeUrl = useSignedUrl(photoUrl);
+  const signedAfterUrl = useSignedUrl(afterPhotoUrl);
+  const displayBeforePhoto = beforePreview || signedBeforeUrl;
+  const displayAfterPhoto = afterPreview || signedAfterUrl;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
