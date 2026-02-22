@@ -258,6 +258,8 @@ export type Database = {
           daily_log_id: string
           detail: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           photo_url: string | null
           photo_url_after: string | null
           status: Database["public"]["Enums"]["event_status"] | null
@@ -273,6 +275,8 @@ export type Database = {
           daily_log_id: string
           detail?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           photo_url?: string | null
           photo_url_after?: string | null
           status?: Database["public"]["Enums"]["event_status"] | null
@@ -288,6 +292,8 @@ export type Database = {
           daily_log_id?: string
           detail?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           photo_url?: string | null
           photo_url_after?: string | null
           status?: Database["public"]["Enums"]["event_status"] | null

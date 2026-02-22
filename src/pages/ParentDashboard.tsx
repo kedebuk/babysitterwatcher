@@ -373,7 +373,17 @@ const ParentDashboard = () => {
                           {(event as any).photo_url && (
                             <img src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" onClick={() => window.open((event as any).photo_url, '_blank')} />
                           )}
-                          {ping && (
+                          {((event as any).latitude && (event as any).longitude) ? (
+                            <a
+                              href={`https://www.google.com/maps?q=${(event as any).latitude},${(event as any).longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-primary hover:underline"
+                            >
+                              <MapPin className="h-3 w-3" />
+                              📍 Lihat Lokasi
+                            </a>
+                          ) : ping && (
                             <a
                               href={`https://www.google.com/maps?q=${ping.latitude},${ping.longitude}`}
                               target="_blank"
@@ -381,7 +391,7 @@ const ParentDashboard = () => {
                               className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-primary hover:underline"
                             >
                               <MapPin className="h-3 w-3" />
-                              {ping.latitude.toFixed(5)}, {ping.longitude.toFixed(5)}
+                              📍 Lihat Lokasi
                             </a>
                           )}
                         </div>
