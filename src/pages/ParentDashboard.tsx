@@ -263,7 +263,7 @@ const ParentDashboard = () => {
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-makan text-sm">🥣</div>
                   <span className="text-xs text-muted-foreground">Total Makan</span>
                 </div>
-                <p className="text-2xl font-bold">{totalMakan}</p>
+                <p className="text-2xl font-bold">{totalMakan} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
               </CardContent></Card>
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
@@ -284,14 +284,14 @@ const ParentDashboard = () => {
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-snack text-sm">🍪</div>
                   <span className="text-xs text-muted-foreground">Snack</span>
                 </div>
-                <p className="text-2xl font-bold">{totalSnack}</p>
+                <p className="text-2xl font-bold">{totalSnack} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
               </CardContent></Card>
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-buah text-sm">🍎</div>
                   <span className="text-xs text-muted-foreground">Buah</span>
                 </div>
-                <p className="text-2xl font-bold">{totalBuah}</p>
+                <p className="text-2xl font-bold">{totalBuah} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
               </CardContent></Card>
             </div>
 
