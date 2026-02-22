@@ -11,12 +11,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Plus, Trash2, LogOut, Clock, History, Camera, X, MessageCircle, MapPin, MoreVertical, RefreshCw, Baby, UserCheck, User, Package } from 'lucide-react';
+import { Plus, Trash2, LogOut, Clock, History, Camera, X, MessageCircle, MapPin, MoreVertical, RefreshCw, Baby, UserCheck, User, Package, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import PendingInvites from '@/components/PendingInvites';
 import { BottomNav } from '@/components/BottomNav';
+import { EditEventDialog } from '@/components/EditEventDialog';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
@@ -79,6 +80,7 @@ const BabysitterToday = () => {
 
   const [newRows, setNewRows] = useState<EventRow[]>([createEmptyRow()]);
   const [notes, setNotes] = useState('');
+  const [editingEvent, setEditingEvent] = useState<any>(null);
 
   const totalSusu = events.filter(e => e.type === 'susu' && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
 
@@ -327,6 +329,9 @@ const BabysitterToday = () => {
                               {profileNames[(event as any).created_by]}
                             </span>
                           )}
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={() => setEditingEvent(event)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteEvent(event.id, event.daily_log_id)}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -378,6 +383,14 @@ const BabysitterToday = () => {
         )}
       </div>
 
+      {editingEvent && (
+        <EditEventDialog
+          event={editingEvent}
+          open={!!editingEvent}
+          onOpenChange={(open) => { if (!open) setEditingEvent(null); }}
+          childId={activeChildId}
+        />
+      )}
       <BottomNav role="babysitter" />
     </div>
   );

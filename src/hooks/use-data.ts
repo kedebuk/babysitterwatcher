@@ -171,6 +171,18 @@ export function useCreateEvent() {
   });
 }
 
+export function useUpdateEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, daily_log_id, ...updates }: { id: string; daily_log_id: string; detail?: string; amount?: number | null; unit?: string | null; status?: string | null; photo_url?: string | null; photo_url_after?: string | null }) => {
+      const { error } = await supabase.from('events').update(updates as any).eq('id', id);
+      if (error) throw error;
+      return daily_log_id;
+    },
+    onSuccess: (daily_log_id) => qc.invalidateQueries({ queryKey: ['events', daily_log_id] }),
+  });
+}
+
 export function useDeleteEvent() {
   const qc = useQueryClient();
   return useMutation({
