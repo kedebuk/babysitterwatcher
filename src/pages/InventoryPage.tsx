@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { BottomNav } from '@/components/BottomNav';
-import { Plus, Minus, Package, TrendingDown, AlertTriangle, ArrowLeft, Camera, ImageIcon } from 'lucide-react';
+import { Plus, Minus, Package, TrendingDown, AlertTriangle, ArrowLeft, Camera, ImageIcon, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, subDays, differenceInDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
@@ -102,6 +102,8 @@ const InventoryPage = () => {
   const [useQty, setUseQty] = useState<Record<string, string>>({});
   const [editPhotoItemId, setEditPhotoItemId] = useState<string | null>(null);
   const [editingPhoto, setEditingPhoto] = useState(false);
+  const [editItemId, setEditItemId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', emoji: '📦', unit: 'pcs', low_stock_threshold: '5' });
 
   const { data: items = [], isLoading } = useInventoryItems(activeChildId);
   const { data: usageHistory = [] } = useInventoryUsage(activeChildId);
@@ -215,6 +217,19 @@ const InventoryPage = () => {
       qc.invalidateQueries({ queryKey: ['inventory_items', activeChildId] });
       toast({ title: 'Item dihapus' });
     },
+  });
+
+  const updateItem = useMutation({
+    mutationFn: async ({ itemId, data }: { itemId: string; data: { name: string; emoji: string; unit: string; low_stock_threshold: number } }) => {
+      const { error } = await supabase.from('inventory_items').update(data).eq('id', itemId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['inventory_items', activeChildId] });
+      setEditItemId(null);
+      toast({ title: 'Item diperbarui!' });
+    },
+    onError: (e: any) => toast({ title: 'Gagal', description: e.message, variant: 'destructive' }),
   });
 
   // Usage chart data (last 7 days)
@@ -417,8 +432,17 @@ const InventoryPage = () => {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
                               <h3 className="font-semibold text-sm">{item.name}</h3>
-                              <Button variant="ghost" size="sm" className="text-destructive h-6 px-2 text-xs"
-                                onClick={() => deleteItem.mutate(item.id)}>Hapus</Button>
+                              <div className="flex gap-1">
+                                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs"
+                                  onClick={() => {
+                                    setEditForm({ name: item.name, emoji: item.emoji, unit: item.unit, low_stock_threshold: String(item.low_stock_threshold) });
+                                    setEditItemId(item.id);
+                                  }}>
+                                  <Pencil className="h-3 w-3 mr-1" />Edit
+                                </Button>
+                                <Button variant="ghost" size="sm" className="text-destructive h-6 px-2 text-xs"
+                                  onClick={() => deleteItem.mutate(item.id)}>Hapus</Button>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2 mt-1">
                               <span className={`text-lg font-bold ${isLow ? 'text-destructive' : 'text-foreground'}`}>
@@ -567,6 +591,53 @@ const InventoryPage = () => {
                         </>
                       ) : null;
                     })()}
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Edit item dialog */}
+              <Dialog open={!!editItemId} onOpenChange={open => { if (!open) setEditItemId(null); }}>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Edit Item</DialogTitle></DialogHeader>
+                  <div className="space-y-3">
+                    <div>
+                      <Label>Nama Item</Label>
+                      <Input value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>Emoji</Label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {EMOJI_OPTIONS.map(e => (
+                          <button key={e} onClick={() => setEditForm(p => ({ ...p, emoji: e }))}
+                            className={`text-2xl p-1.5 rounded-lg border-2 transition-colors ${editForm.emoji === e ? 'border-primary bg-primary/10' : 'border-transparent hover:border-muted'}`}>
+                            {e}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Satuan</Label>
+                        <Select value={editForm.unit} onValueChange={v => setEditForm(p => ({ ...p, unit: v }))}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {UNIT_OPTIONS.map(u => <SelectItem key={u} value={u}>{u === '%' ? '% (cairan/botol)' : u}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Batas Stok Rendah</Label>
+                        <Input type="number" value={editForm.low_stock_threshold}
+                          onChange={e => setEditForm(p => ({ ...p, low_stock_threshold: e.target.value }))} />
+                      </div>
+                    </div>
+                    <Button className="w-full" disabled={!editForm.name || updateItem.isPending}
+                      onClick={() => editItemId && updateItem.mutate({
+                        itemId: editItemId,
+                        data: { name: editForm.name, emoji: editForm.emoji, unit: editForm.unit, low_stock_threshold: Number(editForm.low_stock_threshold) || 5 }
+                      })}>
+                      {updateItem.isPending ? 'Menyimpan...' : 'Simpan Perubahan'}
+                    </Button>
                   </div>
                 </DialogContent>
               </Dialog>
