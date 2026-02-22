@@ -20,7 +20,8 @@ import { id as idLocale } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const EMOJI_OPTIONS = ['📦', '🍼', '🧷', '💊', '🧴', '🧻', '🧸', '👶', '🍪', '🥛'];
-const UNIT_OPTIONS = ['pcs', 'ml', 'sachet', 'botol', 'pack', 'dosis', 'lembar'];
+const UNIT_OPTIONS = ['pcs', 'ml', 'sachet', 'botol', 'pack', 'dosis', 'lembar', '%'];
+const PERCENT_STEPS = [0, 25, 50, 75, 100];
 
 async function uploadInventoryPhoto(file: File, childId: string): Promise<string> {
   const ext = file.name.split('.').pop() || 'jpg';
@@ -352,17 +353,22 @@ const InventoryPage = () => {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label>Satuan</Label>
-                        <Select value={newItem.unit} onValueChange={v => setNewItem(p => ({ ...p, unit: v }))}>
+                        <Select value={newItem.unit} onValueChange={v => setNewItem(p => ({
+                          ...p, unit: v,
+                          current_stock: v === '%' ? '100' : p.current_stock,
+                          low_stock_threshold: v === '%' ? '25' : p.low_stock_threshold,
+                        }))}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            {UNIT_OPTIONS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                            {UNIT_OPTIONS.map(u => <SelectItem key={u} value={u}>{u === '%' ? '% (cairan/botol)' : u}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <Label>Stok Awal</Label>
-                        <Input type="number" placeholder="0" value={newItem.current_stock}
-                          onChange={e => setNewItem(p => ({ ...p, current_stock: e.target.value }))} />
+                        <Label>{newItem.unit === '%' ? 'Isi Awal (%)' : 'Stok Awal'}</Label>
+                        <Input type="number" placeholder={newItem.unit === '%' ? '100' : '0'} value={newItem.current_stock}
+                          onChange={e => setNewItem(p => ({ ...p, current_stock: e.target.value }))}
+                          max={newItem.unit === '%' ? 100 : undefined} />
                       </div>
                     </div>
                     <div>
@@ -421,6 +427,15 @@ const InventoryPage = () => {
                               <span className="text-xs text-muted-foreground">{item.unit}</span>
                               {isLow && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Menipis!</Badge>}
                             </div>
+                            {/* Percentage bar */}
+                            {item.unit === '%' && (
+                              <div className="mt-1.5 w-full bg-muted rounded-full h-2.5 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all ${Number(item.current_stock) <= 25 ? 'bg-destructive' : Number(item.current_stock) <= 50 ? 'bg-yellow-500' : 'bg-emerald-500'}`}
+                                  style={{ width: `${Math.min(100, Math.max(0, Number(item.current_stock)))}%` }}
+                                />
+                              </div>
+                            )}
                             {daysLeft !== null && (
                               <p className="text-xs text-muted-foreground mt-0.5">
                                 <TrendingDown className="inline h-3 w-3 mr-1" />
@@ -433,44 +448,60 @@ const InventoryPage = () => {
                               </p>
                             )}
                             {/* Usage controls */}
-                            <div className="flex items-center gap-2 mt-2">
-                              <div className="flex items-center border rounded-lg overflow-hidden">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-none"
-                                  onClick={() => setUseQty(p => ({ ...p, [item.id]: String(Math.max(1, Number(qty) - 1)) }))}>
-                                  <Minus className="h-3 w-3" />
-                                </Button>
-                                <Input type="number" className="h-8 w-12 text-center border-0 rounded-none p-0 text-sm"
-                                  value={qty}
-                                  onChange={e => setUseQty(p => ({ ...p, [item.id]: e.target.value }))} />
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-none"
-                                  onClick={() => setUseQty(p => ({ ...p, [item.id]: String(Number(qty) + 1) }))}>
-                                  <Plus className="h-3 w-3" />
-                                </Button>
-                              </div>
-                              <Button size="sm" variant="default" className="h-8 text-xs"
-                                disabled={recordUsage.isPending}
-                                onClick={() => recordUsage.mutate({ itemId: item.id, quantity: Number(qty) || 1 })}>
-                                Pakai
-                              </Button>
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button size="sm" variant="outline" className="h-8 text-xs">Isi Ulang</Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader><DialogTitle>Isi Ulang {item.emoji} {item.name}</DialogTitle></DialogHeader>
-                                  <div className="space-y-3">
-                                    <p className="text-sm text-muted-foreground">Stok saat ini: {item.current_stock} {item.unit}</p>
-                                    <div>
-                                      <Label>Stok baru (total)</Label>
-                                      <Input type="number" id={`restock-${item.id}`} defaultValue={String(item.current_stock)} />
-                                    </div>
-                                    <Button className="w-full" onClick={() => {
-                                      const input = document.getElementById(`restock-${item.id}`) as HTMLInputElement;
-                                      restockItem.mutate({ itemId: item.id, quantity: Number(input.value) || 0 });
-                                    }}>Perbarui Stok</Button>
+                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                              {item.unit === '%' ? (
+                                /* Percentage quick-set buttons */
+                                <>
+                                  {PERCENT_STEPS.map(pct => (
+                                    <Button key={pct} size="sm" className="h-8 text-xs min-w-[3rem]"
+                                      variant={Number(item.current_stock) === pct ? 'default' : 'outline'}
+                                      onClick={() => restockItem.mutate({ itemId: item.id, quantity: pct })}>
+                                      {pct}%
+                                    </Button>
+                                  ))}
+                                </>
+                              ) : (
+                                /* Regular quantity controls */
+                                <>
+                                  <div className="flex items-center border rounded-lg overflow-hidden">
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-none"
+                                      onClick={() => setUseQty(p => ({ ...p, [item.id]: String(Math.max(1, Number(qty) - 1)) }))}>
+                                      <Minus className="h-3 w-3" />
+                                    </Button>
+                                    <Input type="number" className="h-8 w-12 text-center border-0 rounded-none p-0 text-sm"
+                                      value={qty}
+                                      onChange={e => setUseQty(p => ({ ...p, [item.id]: e.target.value }))} />
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-none"
+                                      onClick={() => setUseQty(p => ({ ...p, [item.id]: String(Number(qty) + 1) }))}>
+                                      <Plus className="h-3 w-3" />
+                                    </Button>
                                   </div>
-                                </DialogContent>
-                              </Dialog>
+                                  <Button size="sm" variant="default" className="h-8 text-xs"
+                                    disabled={recordUsage.isPending}
+                                    onClick={() => recordUsage.mutate({ itemId: item.id, quantity: Number(qty) || 1 })}>
+                                    Pakai
+                                  </Button>
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button size="sm" variant="outline" className="h-8 text-xs">Isi Ulang</Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                      <DialogHeader><DialogTitle>Isi Ulang {item.emoji} {item.name}</DialogTitle></DialogHeader>
+                                      <div className="space-y-3">
+                                        <p className="text-sm text-muted-foreground">Stok saat ini: {item.current_stock} {item.unit}</p>
+                                        <div>
+                                          <Label>Stok baru (total)</Label>
+                                          <Input type="number" id={`restock-${item.id}`} defaultValue={String(item.current_stock)} />
+                                        </div>
+                                        <Button className="w-full" onClick={() => {
+                                          const input = document.getElementById(`restock-${item.id}`) as HTMLInputElement;
+                                          restockItem.mutate({ itemId: item.id, quantity: Number(input.value) || 0 });
+                                        }}>Perbarui Stok</Button>
+                                      </div>
+                                    </DialogContent>
+                                  </Dialog>
+                                </>
+                              )}
                               <Dialog>
                                 <DialogTrigger asChild>
                                   <Button size="sm" variant="outline" className="h-8 text-xs">📝 Catatan</Button>
