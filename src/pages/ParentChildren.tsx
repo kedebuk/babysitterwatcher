@@ -290,7 +290,7 @@ const ParentChildren = () => {
   };
 
   const handleDeleteChild = async () => {
-    if (!deleteChild || deleteConfirmName !== deleteChild.name) return;
+    if (!deleteChild || deleteConfirmName.trim() !== deleteChild.name.trim()) return;
     setDeleteLoading(true);
     try {
       // Delete related data first
@@ -685,7 +685,7 @@ const ParentChildren = () => {
               <Button
                 variant="destructive"
                 onClick={handleDeleteChild}
-                disabled={deleteConfirmName !== deleteChild?.name || deleteLoading}
+                disabled={deleteConfirmName.trim() !== deleteChild?.name?.trim() || deleteLoading}
               >
                 {deleteLoading ? 'Menghapus...' : '🗑️ Hapus Permanen'}
               </Button>
