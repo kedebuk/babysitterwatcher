@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUpdateEvent } from '@/hooks/use-data';
 import { useToast } from '@/hooks/use-toast';
 
-const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
+const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'snack', 'buah', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
 interface EditEventDialogProps {
   event: any;
@@ -37,7 +37,7 @@ export function EditEventDialog({ event, open, onOpenChange, childId }: EditEven
   const [saving, setSaving] = useState(false);
 
   const actType = event?.type as ActivityType;
-  const showAmountFields = actType === 'susu' || actType === 'mpasi' || actType === 'vitamin';
+  const showAmountFields = actType === 'susu' || actType === 'mpasi' || actType === 'vitamin' || actType === 'snack' || actType === 'buah';
 
   const uploadPhoto = async (file: File): Promise<string | null> => {
     const ext = file.name.split('.').pop();

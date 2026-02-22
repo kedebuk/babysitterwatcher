@@ -20,7 +20,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { EditEventDialog } from '@/components/EditEventDialog';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
 
-const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
+const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'snack', 'buah', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
 interface EventRow {
   tempId: string;
@@ -421,7 +421,7 @@ function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto 
           </Button>
         </div>
         <Input placeholder="Detail (mis: susu 30 ml habis)" value={row.detail} onChange={e => updateRow(row.tempId, 'detail', e.target.value)} className="h-10 text-sm" />
-        {(row.type === 'susu' || row.type === 'mpasi' || row.type === 'vitamin') && (
+        {(row.type === 'susu' || row.type === 'mpasi' || row.type === 'vitamin' || row.type === 'snack' || row.type === 'buah') && (
           <div className="flex gap-2">
             <Input type="number" placeholder="Jumlah" value={row.amount} onChange={e => updateRow(row.tempId, 'amount', e.target.value)} className="flex-1 h-10 text-sm" />
             <Select value={row.unit || 'ml'} onValueChange={v => updateRow(row.tempId, 'unit', v)}>
