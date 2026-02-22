@@ -144,6 +144,19 @@ const ParentInput = () => {
   const handleSave = async () => {
     if (!activeChildId || !user) return;
     try {
+      // Capture GPS once for all events
+      let latitude: number | undefined;
+      let longitude: number | undefined;
+      if (navigator.geolocation) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 });
+          });
+          latitude = pos.coords.latitude;
+          longitude = pos.coords.longitude;
+        } catch { /* GPS not available */ }
+      }
+
       const dailyLog = await createOrGetLog.mutateAsync({
         child_id: activeChildId,
         log_date: selectedDate,
@@ -172,6 +185,8 @@ const ParentInput = () => {
           photo_url: photoUrl,
           photo_url_after: afterPhotoUrl,
           created_by: user.id,
+          latitude,
+          longitude,
         });
       }
 
