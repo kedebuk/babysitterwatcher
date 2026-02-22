@@ -2,7 +2,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, Baby, LogOut, UserCheck } from 'lucide-react';
+import { Shield, Baby, LogOut, UserCheck, Eye } from 'lucide-react';
 
 const ROLE_CONFIG = {
   parent: {
@@ -18,6 +18,13 @@ const ROLE_CONFIG = {
     icon: UserCheck,
     color: 'bg-secondary',
     redirect: '/babysitter/today',
+  },
+  viewer: {
+    label: 'Keluarga',
+    description: 'Lihat aktivitas anak (view only)',
+    icon: Eye,
+    color: 'bg-accent',
+    redirect: '/viewer/dashboard',
   },
   admin: {
     label: 'Administrator',
@@ -46,7 +53,7 @@ const ChooseRole = () => {
     return <Navigate to="/select-role" replace />;
   }
 
-  const handleChoose = (role: 'parent' | 'babysitter' | 'admin') => {
+  const handleChoose = (role: 'parent' | 'babysitter' | 'admin' | 'viewer') => {
     setActiveRole(role);
     navigate(ROLE_CONFIG[role].redirect, { replace: true });
   };

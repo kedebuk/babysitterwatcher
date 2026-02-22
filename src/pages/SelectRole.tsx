@@ -26,7 +26,7 @@ const SelectRole = () => {
     return <Navigate to={user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today'} replace />;
   }
 
-  const handleSelectRole = async (role: 'parent' | 'babysitter') => {
+  const handleSelectRole = async (role: 'parent' | 'babysitter' | 'viewer') => {
     setSaving(true);
     const { error } = await supabase.from('user_roles').insert({
       user_id: user.id,
@@ -74,6 +74,18 @@ const SelectRole = () => {
             <div className="text-left">
               <div className="font-semibold">Babysitter</div>
               <div className="text-xs text-muted-foreground">Input aktivitas anak yang ditugaskan</div>
+            </div>
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full h-14 text-base justify-start gap-3"
+            onClick={() => handleSelectRole('viewer')}
+            disabled={saving}
+          >
+            <span className="text-2xl">👨‍👩‍👧</span>
+            <div className="text-left">
+              <div className="font-semibold">Keluarga</div>
+              <div className="text-xs text-muted-foreground">Lihat aktivitas anak (view only, gratis)</div>
             </div>
           </Button>
         </CardContent>

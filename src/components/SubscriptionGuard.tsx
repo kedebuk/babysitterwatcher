@@ -63,9 +63,9 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Admin and babysitter bypass subscription check
+  // Admin, babysitter, and viewer bypass subscription check
   const effectiveRole = activeRole || user?.role;
-  if (effectiveRole === 'admin' || effectiveRole === 'babysitter') return <>{children}</>;
+  if (effectiveRole === 'admin' || effectiveRole === 'babysitter' || effectiveRole === 'viewer') return <>{children}</>;
 
   // No subscription — auto-create trial for parents
   if (!subscription) {

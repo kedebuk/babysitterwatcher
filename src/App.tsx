@@ -33,11 +33,12 @@ import ResetPassword from "./pages/ResetPassword";
 import CompletePhone from "./pages/CompletePhone";
 import InventoryPage from "./pages/InventoryPage";
 import NotificationsPage from "./pages/NotificationsPage";
+import ViewerDashboard from "./pages/ViewerDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; allowedRole: 'parent' | 'babysitter' | 'admin' }) {
+function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; allowedRole: 'parent' | 'babysitter' | 'admin' | 'viewer' }) {
   const { user, loading, activeRole } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="animate-pulse text-muted-foreground">Memuat...</div></div>;
   if (!user) return <Navigate to="/login" replace />;
@@ -57,7 +58,7 @@ function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; 
     return <Navigate to="/complete-profile" replace />;
   }
 
-  const redirectMap = { parent: '/parent/dashboard', babysitter: '/babysitter/today', admin: '/admin/dashboard' };
+  const redirectMap: Record<string, string> = { parent: '/parent/dashboard', babysitter: '/babysitter/today', admin: '/admin/dashboard', viewer: '/viewer/dashboard' };
   return <Navigate to={redirectMap[effectiveRole || user.role!]} replace />;
 }
 
@@ -72,7 +73,7 @@ function RootRedirect() {
   if (roles.length > 1 && !activeRole) return <Navigate to="/choose-role" replace />;
   
   const effectiveRole = roles.length > 1 ? activeRole : user.role;
-  const redirectMap = { parent: '/parent/dashboard', babysitter: '/babysitter/today', admin: '/admin/dashboard' };
+  const redirectMap: Record<string, string> = { parent: '/parent/dashboard', babysitter: '/babysitter/today', admin: '/admin/dashboard', viewer: '/viewer/dashboard' };
   return <Navigate to={redirectMap[effectiveRole || user.role!]} replace />;
 }
 
@@ -107,6 +108,7 @@ const App = () => (
             <Route path="/location" element={<LocationPage />} />
             <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/viewer/dashboard" element={<ProtectedRoute allowedRole="viewer"><ViewerDashboard /></ProtectedRoute>} />
             <Route path="/admin/dashboard" element={<ProtectedRoute allowedRole="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute allowedRole="admin"><AdminUsers /></ProtectedRoute>} />
             <Route path="/admin/children" element={<ProtectedRoute allowedRole="admin"><AdminChildren /></ProtectedRoute>} />
