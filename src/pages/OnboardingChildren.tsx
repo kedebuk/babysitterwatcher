@@ -54,20 +54,36 @@ const OnboardingChildren = () => {
     // Save all children
     setSaving(true);
     try {
-      // Get subscription
-      const { data: sub } = await supabase
-        .from('subscriptions' as any)
+      // Check if subscription exists, if not create a trial
+      let { data: sub } = await supabase
+        .from('subscriptions')
         .select('id')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
+      if (!sub) {
+        const trialEnd = new Date();
+        trialEnd.setDate(trialEnd.getDate() + 3);
+        const { data: newSub } = await supabase.from('subscriptions').insert({
+          user_id: user.id,
+          plan_type: 'trial' as any,
+          status: 'trial' as any,
+          number_of_children: numChildren,
+          trial_start_date: new Date().toISOString(),
+          trial_end_date: trialEnd.toISOString(),
+          subscription_start_date: new Date().toISOString(),
+          price_per_month: 0,
+        }).select('id').single();
+        sub = newSub;
+      }
+
       for (const child of childrenData) {
         // Insert into children_profiles
-        await supabase.from('children_profiles' as any).insert({
+        await supabase.from('children_profiles').insert({
           user_id: user.id,
-          subscription_id: (sub as any)?.id,
+          subscription_id: sub?.id || null,
           name: child.name,
           date_of_birth: child.dob,
           gender: child.gender,
