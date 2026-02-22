@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, subDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin, MoreVertical, RefreshCw, UserCheck, Trash2, CreditCard, User, Package } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
@@ -169,7 +170,8 @@ const ParentDashboard = () => {
             <h1 className="text-lg font-bold">Dashboard</h1>
             <p className="text-xs opacity-80">Halo, {user?.name} 👋</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1">
+            <ThemeToggle className="text-primary-foreground hover:bg-primary-foreground/20" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20">
