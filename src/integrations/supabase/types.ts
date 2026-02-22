@@ -793,6 +793,8 @@ export type Database = {
         | "vitamin"
         | "lap_badan"
         | "catatan"
+        | "snack"
+        | "buah"
       app_role: "parent" | "babysitter" | "admin" | "viewer"
       child_gender: "male" | "female"
       event_status: "habis" | "sisa"
@@ -938,6 +940,8 @@ export const Constants = {
         "vitamin",
         "lap_badan",
         "catatan",
+        "snack",
+        "buah",
       ],
       app_role: ["parent", "babysitter", "admin", "viewer"],
       child_gender: ["male", "female"],

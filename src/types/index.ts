@@ -2,6 +2,8 @@
 export type ActivityType = 
   | 'susu'
   | 'mpasi'
+  | 'snack'
+  | 'buah'
   | 'tidur'
   | 'bangun'
   | 'pup'
@@ -58,6 +60,8 @@ export interface Assignment {
 export const ACTIVITY_LABELS: Record<ActivityType, string> = {
   susu: 'Susu/Formula',
   mpasi: 'MPASI/Makan',
+  snack: 'Snack',
+  buah: 'Buah',
   tidur: 'Tidur',
   bangun: 'Bangun',
   pup: 'BAB (Pup)',
@@ -71,6 +75,8 @@ export const ACTIVITY_LABELS: Record<ActivityType, string> = {
 export const ACTIVITY_ICONS: Record<ActivityType, string> = {
   susu: '🍼',
   mpasi: '🥣',
+  snack: '🍪',
+  buah: '🍎',
   tidur: '😴',
   bangun: '☀️',
   pup: '💩',
@@ -84,6 +90,8 @@ export const ACTIVITY_ICONS: Record<ActivityType, string> = {
 export const ACTIVITY_BADGE_CLASS: Record<ActivityType, string> = {
   susu: 'activity-badge-susu',
   mpasi: 'activity-badge-makan',
+  snack: 'activity-badge-snack',
+  buah: 'activity-badge-buah',
   tidur: 'activity-badge-tidur',
   bangun: 'activity-badge-tidur',
   pup: 'activity-badge-pup',
