@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, LogOut, Shield, CreditCard } from 'lucide-react';
+import { ArrowLeft, LogOut, Shield, CreditCard, Eye, Phone, MapPin, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,8 @@ const AdminUsers = () => {
   const qc = useQueryClient();
 
   const [subDialogOpen, setSubDialogOpen] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [subForm, setSubForm] = useState({
     plan_type: 'trial' as 'trial' | 'standard' | 'premium_promo',
@@ -97,6 +99,11 @@ const AdminUsers = () => {
       cancelled: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300',
     };
     return <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${colors[sub.status]}`}>{sub.status}</span>;
+  };
+
+  const openProfileDialog = (profile: any) => {
+    setSelectedProfile(profile);
+    setProfileDialogOpen(true);
   };
 
   const openSubDialog = (userId: string) => {
@@ -205,8 +212,20 @@ const AdminUsers = () => {
                       {getSubBadge(sub)}
                       {sub && <span className="text-[10px] text-muted-foreground">{sub.number_of_children} anak</span>}
                     </div>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openSubDialog(profile.id)}>
-                      <CreditCard className="h-3 w-3" /> Kelola
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openProfileDialog(profile)}>
+                        <Eye className="h-3 w-3" /> Detail
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openSubDialog(profile.id)}>
+                        <CreditCard className="h-3 w-3" /> Kelola
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {role === 'admin' && (
+                  <div className="flex items-center justify-end pl-12">
+                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openProfileDialog(profile)}>
+                      <Eye className="h-3 w-3" /> Detail
                     </Button>
                   </div>
                 )}
@@ -215,6 +234,59 @@ const AdminUsers = () => {
           );
         })}
       </div>
+
+      {/* Profile Detail Dialog */}
+      <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Detail Profil</DialogTitle>
+          </DialogHeader>
+          {selectedProfile && (
+            <div className="space-y-4">
+              {/* Avatar */}
+              <div className="flex justify-center">
+                {selectedProfile.avatar_url ? (
+                  <img src={selectedProfile.avatar_url} alt={selectedProfile.name} className="h-24 w-24 rounded-full object-cover border-2 border-primary/20" />
+                ) : (
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-secondary text-3xl font-bold">
+                    {selectedProfile.name?.charAt(0)?.toUpperCase() || '?'}
+                  </div>
+                )}
+              </div>
+
+              <div className="text-center">
+                <p className="text-lg font-bold">{selectedProfile.name}</p>
+                <p className="text-sm text-muted-foreground">{selectedProfile.email}</p>
+                <span className="text-xs font-medium px-2 py-1 rounded-full bg-secondary inline-block mt-1">
+                  {getRoleBadge(getUserRole(selectedProfile.id))}
+                </span>
+              </div>
+
+              <div className="space-y-2 bg-muted/50 rounded-xl p-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="font-medium">No. HP:</span>
+                  <span className="text-muted-foreground">{selectedProfile.phone || '-'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="font-medium">Tgl Lahir:</span>
+                  <span className="text-muted-foreground">{selectedProfile.dob || '-'}</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <span className="font-medium">Alamat:</span>
+                  <span className="text-muted-foreground">{selectedProfile.address || '-'}</span>
+                </div>
+              </div>
+
+              <div className="text-xs text-muted-foreground text-center">
+                Bergabung: {new Date(selectedProfile.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Subscription Override Dialog */}
       <Dialog open={subDialogOpen} onOpenChange={setSubDialogOpen}>
