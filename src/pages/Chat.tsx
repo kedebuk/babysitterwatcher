@@ -11,45 +11,181 @@ import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { BottomNav } from '@/components/BottomNav';
 
+interface ChatContact {
+  id: string;
+  name: string;
+  avatar_url?: string;
+  child_id: string;
+  child_name: string;
+  role_label: string;
+}
+
 const Chat = () => {
-  const { user } = useAuth();
+  const { user, activeRole } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [selectedContact, setSelectedContact] = useState<{ id: string; name: string; avatar_url?: string; child_id: string; child_name: string } | null>(null);
+  const [selectedContact, setSelectedContact] = useState<ChatContact | null>(null);
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const role = user?.role;
+  const role = activeRole || user?.role;
 
-  // Get contacts: parent sees babysitters assigned to their children, babysitter sees parents of assigned children
+  // Get contacts: only people connected to the same child
   const { data: contacts = [] } = useQuery({
     queryKey: ['chat_contacts', user?.id, role],
-    queryFn: async () => {
+    queryFn: async (): Promise<ChatContact[]> => {
+      if (!user) return [];
+      const result: ChatContact[] = [];
+      const seen = new Set<string>();
+
       if (role === 'parent') {
-        // Get children, then their assigned babysitters
-        const { data: children } = await supabase.from('children').select('id, name').eq('parent_id', user!.id);
+        // Get MY children only (explicit parent_id filter to avoid admin RLS showing all)
+        const { data: children } = await supabase
+          .from('children')
+          .select('id, name, avatar_emoji')
+          .eq('parent_id', user.id);
         if (!children?.length) return [];
+
         const childIds = children.map(c => c.id);
-        const { data: assignments } = await supabase.from('assignments').select('child_id, babysitter_user_id').in('child_id', childIds);
-        if (!assignments?.length) return [];
-        const userIds = [...new Set(assignments.map(a => a.babysitter_user_id))];
-        const { data: profiles } = await supabase.from('profiles').select('id, name, avatar_url').in('id', userIds);
         const childMap: Record<string, string> = {};
-        children.forEach(c => { childMap[c.id] = c.name; });
-        return (assignments || []).map(a => {
-          const p = (profiles || []).find(pr => pr.id === a.babysitter_user_id);
-          return { id: a.babysitter_user_id, name: p?.name || 'Babysitter', avatar_url: p?.avatar_url, child_id: a.child_id, child_name: childMap[a.child_id] || '' };
+        children.forEach(c => { childMap[c.id] = `${c.avatar_emoji || '👶'} ${c.name}`; });
+
+        // Get babysitters assigned to my children
+        const { data: assignments } = await supabase
+          .from('assignments')
+          .select('child_id, babysitter_user_id')
+          .in('child_id', childIds);
+
+        // Get viewers (family) of my children
+        const { data: viewers } = await supabase
+          .from('child_viewers')
+          .select('child_id, viewer_user_id')
+          .in('child_id', childIds);
+
+        const userIds = [
+          ...new Set([
+            ...(assignments || []).map(a => a.babysitter_user_id),
+            ...(viewers || []).map(v => v.viewer_user_id),
+          ])
+        ].filter(id => id !== user.id);
+
+        if (userIds.length === 0) return [];
+
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url')
+          .in('id', userIds);
+        const profileMap: Record<string, any> = {};
+        (profiles || []).forEach(p => { profileMap[p.id] = p; });
+
+        // Add babysitters
+        (assignments || []).forEach(a => {
+          const key = `${a.babysitter_user_id}-${a.child_id}`;
+          if (seen.has(key)) return;
+          seen.add(key);
+          const p = profileMap[a.babysitter_user_id];
+          if (p) {
+            result.push({
+              id: a.babysitter_user_id,
+              name: p.name || 'Babysitter',
+              avatar_url: p.avatar_url,
+              child_id: a.child_id,
+              child_name: childMap[a.child_id] || '',
+              role_label: 'Babysitter',
+            });
+          }
         });
-      } else {
-        // Babysitter: get assigned children and their parents
-        const { data: assignments } = await supabase.from('assignments').select('child_id, children(id, name, parent_id)');
+
+        // Add viewers/family
+        (viewers || []).forEach(v => {
+          const key = `${v.viewer_user_id}-${v.child_id}`;
+          if (seen.has(key)) return;
+          seen.add(key);
+          const p = profileMap[v.viewer_user_id];
+          if (p) {
+            result.push({
+              id: v.viewer_user_id,
+              name: p.name || 'Keluarga',
+              avatar_url: p.avatar_url,
+              child_id: v.child_id,
+              child_name: childMap[v.child_id] || '',
+              role_label: 'Keluarga',
+            });
+          }
+        });
+      } else if (role === 'babysitter') {
+        // Get assigned children and their parents + viewers
+        const { data: assignments } = await supabase
+          .from('assignments')
+          .select('child_id, children(id, name, parent_id, avatar_emoji)');
         if (!assignments?.length) return [];
+
+        const childIds = assignments.map((a: any) => a.child_id);
         const parentIds = [...new Set(assignments.map((a: any) => a.children?.parent_id).filter(Boolean))];
-        const { data: profiles } = await supabase.from('profiles').select('id, name, avatar_url').in('id', parentIds);
-        return assignments.map((a: any) => {
-          const p = (profiles || []).find(pr => pr.id === a.children?.parent_id);
-          return { id: a.children?.parent_id, name: p?.name || 'Parent', avatar_url: p?.avatar_url, child_id: a.child_id, child_name: a.children?.name || '' };
-        }).filter(c => c.id);
+
+        // Get viewers too
+        const { data: viewers } = await supabase
+          .from('child_viewers')
+          .select('child_id, viewer_user_id')
+          .in('child_id', childIds);
+
+        const userIds = [
+          ...new Set([
+            ...parentIds,
+            ...(viewers || []).map(v => v.viewer_user_id),
+          ])
+        ].filter(id => id !== user.id);
+
+        if (userIds.length === 0) return [];
+
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url')
+          .in('id', userIds);
+        const profileMap: Record<string, any> = {};
+        (profiles || []).forEach(p => { profileMap[p.id] = p; });
+
+        assignments.forEach((a: any) => {
+          const parentId = a.children?.parent_id;
+          if (parentId && parentId !== user.id) {
+            const key = `${parentId}-${a.child_id}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              const p = profileMap[parentId];
+              if (p) {
+                result.push({
+                  id: parentId,
+                  name: p.name || 'Parent',
+                  avatar_url: p.avatar_url,
+                  child_id: a.child_id,
+                  child_name: `${a.children?.avatar_emoji || '👶'} ${a.children?.name || ''}`,
+                  role_label: 'Orang Tua',
+                });
+              }
+            }
+          }
+        });
+
+        // Add viewers
+        (viewers || []).forEach(v => {
+          const key = `${v.viewer_user_id}-${v.child_id}`;
+          if (seen.has(key) || v.viewer_user_id === user.id) return;
+          seen.add(key);
+          const p = profileMap[v.viewer_user_id];
+          const child = assignments.find((a: any) => a.child_id === v.child_id)?.children;
+          if (p) {
+            result.push({
+              id: v.viewer_user_id,
+              name: p.name || 'Keluarga',
+              avatar_url: p.avatar_url,
+              child_id: v.child_id,
+              child_name: child ? `${child.avatar_emoji || '👶'} ${child.name}` : '',
+              role_label: 'Keluarga',
+            });
+          }
+        });
       }
+
+      return result;
     },
     enabled: !!user,
   });
@@ -127,7 +263,7 @@ const Chat = () => {
         <div className="px-4 py-3 space-y-2 max-w-2xl mx-auto">
           {contacts.length === 0 ? (
             <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">
-              Belum ada kontak. {role === 'parent' ? 'Tambahkan babysitter ke anak Anda dulu.' : 'Anda belum ditugaskan ke anak manapun.'}
+              Belum ada kontak. {role === 'parent' ? 'Tambahkan babysitter atau keluarga ke anak Anda dulu.' : 'Anda belum ditugaskan ke anak manapun.'}
             </CardContent></Card>
           ) : (
             contacts.map((c, i) => (
@@ -142,8 +278,9 @@ const Chat = () => {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate">{c.name}</p>
-                    <p className="text-xs text-muted-foreground">👶 {c.child_name}</p>
+                    <p className="text-xs text-muted-foreground">{c.child_name}</p>
                   </div>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground shrink-0">{c.role_label}</span>
                 </CardContent>
               </Card>
           ))
@@ -172,7 +309,7 @@ const Chat = () => {
           )}
           <div>
             <p className="text-sm font-bold">{selectedContact.name}</p>
-            <p className="text-[10px] opacity-80">👶 {selectedContact.child_name}</p>
+            <p className="text-[10px] opacity-80">{selectedContact.child_name} · {selectedContact.role_label}</p>
           </div>
         </div>
       </div>
