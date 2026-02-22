@@ -29,11 +29,11 @@ function RecenterMap({ lat, lng }: { lat: number; lng: number }) {
 }
 
 const LocationPage = () => {
-  const { user } = useAuth();
+  const { user, activeRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const role = user?.role;
+  const role = activeRole || user?.role;
 
   // Babysitter: get assigned children
   const { data: assignedChildren = [] } = useQuery({
