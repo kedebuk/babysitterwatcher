@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Baby, Sparkles, Clock, CheckCircle, MessageCircle } from 'lucide-react';
+import { useMetaPixel } from '@/hooks/use-meta-pixel';
 
 const TOTAL_SLOTS = 62;
 
@@ -84,6 +85,7 @@ const Pricing = () => {
   const [numChildren, setNumChildren] = useState(1);
   const [customCount, setCustomCount] = useState(false);
   const [adminWa, setAdminWa] = useState('');
+  const { trackEvent } = useMetaPixel();
 
   useEffect(() => {
     supabase
@@ -335,6 +337,7 @@ const Pricing = () => {
               href={`https://wa.me/${adminWa}?text=${encodeURIComponent('Halo Admin, saya ingin konfirmasi pembelian paket Eleanor Tracker.')}`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent('pixel_event_whatsapp')}
               className="inline-flex items-center gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white px-5 py-3 text-sm font-semibold transition-colors shadow-md"
             >
               <MessageCircle className="h-5 w-5" />

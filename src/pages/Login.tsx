@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, Navigate } from 'react-router-dom';
@@ -12,6 +12,7 @@ import { Baby, LogIn, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { lovable } from '@/integrations/lovable/index';
 import { Separator } from '@/components/ui/separator';
+import { useMetaPixel } from '@/hooks/use-meta-pixel';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -24,6 +25,7 @@ const Login = () => {
   const { user, loading: authLoading, login, signup } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { trackEvent } = useMetaPixel();
 
   const handleForgotPassword = async () => {
     if (!forgotEmail.trim()) {
@@ -42,6 +44,23 @@ const Login = () => {
       setShowForgot(false);
     }
   };
+
+  // Track Google signup pixel event for new users returning from OAuth
+  useEffect(() => {
+    if (!authLoading && user) {
+      const googleSignupTracked = sessionStorage.getItem('google_signup_tracked');
+      if (!googleSignupTracked) {
+        // Check if user was created very recently (within 60 seconds = likely just signed up via Google)
+        const profileCreated = new Date(user.id ? Date.now() : 0); // fallback
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasAuthParams = window.location.hash.includes('access_token') || urlParams.has('code');
+        if (hasAuthParams) {
+          trackEvent('pixel_event_signup');
+          sessionStorage.setItem('google_signup_tracked', 'true');
+        }
+      }
+    }
+  }, [authLoading, user, trackEvent]);
 
   // Redirect if already logged in
   if (!authLoading && user) {
@@ -72,6 +91,7 @@ const Login = () => {
     const result = await signup(email, password, name, role);
     setLoading(false);
     if (result.success) {
+      trackEvent('pixel_event_signup');
       toast({ title: '✅ Akun dibuat!', description: 'Silakan login dengan akun baru Anda' });
     } else {
       toast({ title: 'Daftar gagal', description: result.error, variant: 'destructive' });
