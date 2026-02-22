@@ -9,6 +9,7 @@ import { ArrowLeft, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
+import { BottomNav } from '@/components/BottomNav';
 
 const Chat = () => {
   const { user } = useAuth();
@@ -114,7 +115,7 @@ const Chat = () => {
   // Contact list view
   if (!selectedContact) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen pb-16">
         <div className="sticky top-0 z-10 bg-primary px-4 py-3 text-primary-foreground">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate(backPath)}>
@@ -145,9 +146,11 @@ const Chat = () => {
                   </div>
                 </CardContent>
               </Card>
-            ))
+          ))
           )}
         </div>
+
+        <BottomNav role={role === 'babysitter' ? 'babysitter' : 'parent'} />
       </div>
     );
   }

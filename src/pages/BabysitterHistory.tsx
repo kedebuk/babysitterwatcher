@@ -8,6 +8,7 @@ import { id as idLocale } from 'date-fns/locale';
 import { ChevronLeft, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { BottomNav } from '@/components/BottomNav';
 
 const BabysitterHistory = () => {
   const { user } = useAuth();
@@ -103,6 +104,8 @@ const BabysitterHistory = () => {
           </div>
         )}
       </div>
+
+      <BottomNav role="babysitter" />
     </div>
   );
 };

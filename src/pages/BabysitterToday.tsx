@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import PendingInvites from '@/components/PendingInvites';
+import { BottomNav } from '@/components/BottomNav';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
@@ -340,12 +341,14 @@ const BabysitterToday = () => {
       </div>
 
       {assignedChildren.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t max-w-2xl mx-auto">
+        <div className="fixed bottom-14 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t max-w-2xl mx-auto">
           <Button className="w-full h-14 text-base font-bold" onClick={handleSave} disabled={createOrGetLog.isPending || createEvent.isPending}>
             💾 Simpan Log Hari Ini
           </Button>
         </div>
       )}
+
+      <BottomNav role="babysitter" />
     </div>
   );
 };
