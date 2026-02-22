@@ -56,7 +56,7 @@ const OnboardingChildren = () => {
     try {
       // Get subscription
       const { data: sub } = await supabase
-        .from('subscriptions')
+        .from('subscriptions' as any)
         .select('id')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
@@ -65,9 +65,9 @@ const OnboardingChildren = () => {
 
       for (const child of childrenData) {
         // Insert into children_profiles
-        await supabase.from('children_profiles').insert({
+        await supabase.from('children_profiles' as any).insert({
           user_id: user.id,
-          subscription_id: sub?.id,
+          subscription_id: (sub as any)?.id,
           name: child.name,
           date_of_birth: child.dob,
           gender: child.gender,

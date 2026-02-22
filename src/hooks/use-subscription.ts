@@ -37,12 +37,12 @@ export function usePricingPlans() {
     queryKey: ['pricing_plans'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('pricing_plans')
+        .from('pricing_plans' as any)
         .select('*')
         .eq('is_active', true)
         .order('child_order');
       if (error) throw error;
-      return (data || []) as PricingPlan[];
+      return (data || []) as unknown as PricingPlan[];
     },
   });
 }
@@ -53,14 +53,14 @@ export function useSubscription() {
     queryKey: ['subscription', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('subscriptions')
+        .from('subscriptions' as any)
         .select('*')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data as Subscription | null;
+      return data as unknown as Subscription | null;
     },
     enabled: !!user,
   });
@@ -82,7 +82,7 @@ export function useCreateSubscription() {
       status: 'trial' | 'active' | 'expired' | 'cancelled';
     }) => {
       const { data, error } = await supabase
-        .from('subscriptions')
+        .from('subscriptions' as any)
         .insert({
           ...sub,
           subscription_start_date: new Date().toISOString(),
@@ -104,20 +104,20 @@ export function useAdminUpdateSubscription() {
     mutationFn: async ({ userId, data }: { userId: string; data: Record<string, any> }) => {
       // Check if subscription exists
       const { data: existing } = await supabase
-        .from('subscriptions')
+        .from('subscriptions' as any)
         .select('id')
         .eq('user_id', userId)
         .maybeSingle();
 
       if (existing) {
         const { error } = await supabase
-          .from('subscriptions')
+          .from('subscriptions' as any)
           .update({ ...data, admin_override: true } as any)
-          .eq('id', existing.id);
+          .eq('id', (existing as any).id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('subscriptions')
+          .from('subscriptions' as any)
           .insert({ ...data, user_id: userId, admin_override: true, subscription_start_date: new Date().toISOString() } as any);
         if (error) throw error;
       }

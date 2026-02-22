@@ -20,8 +20,8 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Admin bypasses subscription check
-  if (user?.role === 'admin') return <>{children}</>;
+  // Admin and babysitter bypass subscription check
+  if (user?.role === 'admin' || user?.role === 'babysitter') return <>{children}</>;
 
   // No subscription at all
   if (!subscription) {
