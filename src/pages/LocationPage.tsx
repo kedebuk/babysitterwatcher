@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, MapPin, Loader2, Navigation } from 'lucide-react';
+import { ArrowLeft, MapPin, Loader2, Navigation, RefreshCw, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -54,6 +54,40 @@ const LocationPage = () => {
   const activeChildId = selectedChild || assignedChildren[0]?.id || '';
   const [sharing, setSharing] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
+  const [requesting, setRequesting] = useState(false);
+
+  // Get babysitter(s) assigned to selected child (for parent to request location)
+  const { data: assignedBabysitters = [] } = useQuery({
+    queryKey: ['child_babysitters', activeChildId],
+    queryFn: async () => {
+      const { data } = await supabase.from('assignments').select('babysitter_user_id').eq('child_id', activeChildId);
+      return (data || []).map((a: any) => a.babysitter_user_id);
+    },
+    enabled: !!activeChildId && role === 'parent',
+  });
+
+  const requestBabysitterLocation = async () => {
+    if (!assignedBabysitters.length || !user) return;
+    setRequesting(true);
+    try {
+      const childName = assignedChildren.find((c: any) => c.id === activeChildId)?.name || 'anak';
+      const notifications = assignedBabysitters.map((bId: string) => ({
+        user_id: bId,
+        message: `📍 ${user.name} meminta update lokasi Anda untuk ${childName}. Buka halaman Lokasi dan aktifkan "Bagikan Lokasi".`,
+      }));
+      await supabase.from('notifications').insert(notifications);
+      toast({ title: '✅ Permintaan terkirim', description: 'Babysitter akan menerima notifikasi untuk update lokasi.' });
+    } catch (e: any) {
+      toast({ title: 'Gagal', description: e.message, variant: 'destructive' });
+    } finally {
+      setRequesting(false);
+    }
+  };
+
+  const refreshLocation = () => {
+    qc.invalidateQueries({ queryKey: ['location_pings', activeChildId] });
+    toast({ title: '🔄 Lokasi di-refresh' });
+  };
 
   // Get latest location pings
   const { data: pings = [] } = useQuery({
@@ -173,6 +207,29 @@ const LocationPage = () => {
               <><Navigation className="mr-2 h-4 w-4" /> Bagikan Lokasi</>
             )}
           </Button>
+        )}
+
+        {role === 'parent' && (
+          <div className="flex gap-2">
+            <Button
+              variant="default"
+              className="flex-1 h-12 text-base font-bold gap-2"
+              onClick={requestBabysitterLocation}
+              disabled={!activeChildId || requesting || assignedBabysitters.length === 0}
+            >
+              {requesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              Request Posisi Babysitter
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-12 w-12 shrink-0"
+              onClick={refreshLocation}
+              disabled={!activeChildId}
+            >
+              <RefreshCw className="h-5 w-5" />
+            </Button>
+          </div>
         )}
       </div>
 
