@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,10 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Phone, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 const CompletePhone = () => {
   const { user, loading, refreshUser } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -50,7 +53,40 @@ const CompletePhone = () => {
     }
 
     await refreshUser();
-    toast({ title: '✅ Nomor HP disimpan!' });
+
+    // Auto-create 3-day trial for parent users
+    if (user.role === 'parent') {
+      try {
+        const { data: existingSub } = await supabase
+          .from('subscriptions')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (!existingSub) {
+          const now = new Date();
+          const trialEnd = new Date(now.getTime() + 3 * 86400000);
+          await supabase.from('subscriptions').insert({
+            user_id: user.id,
+            plan_type: 'trial' as any,
+            status: 'trial' as any,
+            number_of_children: 1,
+            trial_start_date: now.toISOString(),
+            trial_end_date: trialEnd.toISOString(),
+            subscription_start_date: now.toISOString(),
+            price_per_month: 0,
+          });
+          await queryClient.invalidateQueries({ queryKey: ['subscription'] });
+        }
+      } catch (err) {
+        console.error('Failed to create trial:', err);
+      }
+      toast({ title: '✅ Nomor HP disimpan! Trial 3 hari aktif 🎉' });
+      navigate('/parent/dashboard', { replace: true });
+    } else {
+      toast({ title: '✅ Nomor HP disimpan!' });
+    }
     setSaving(false);
   };
 

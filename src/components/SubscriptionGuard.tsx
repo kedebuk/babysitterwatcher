@@ -67,9 +67,30 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   const effectiveRole = activeRole || user?.role;
   if (effectiveRole === 'admin' || effectiveRole === 'babysitter') return <>{children}</>;
 
-  // No subscription at all
+  // No subscription — auto-create trial for parents
   if (!subscription) {
-    return <Navigate to="/pricing" replace />;
+    if (user) {
+      // Create trial in background and reload
+      const now = new Date();
+      const trialEnd = new Date(now.getTime() + 3 * 86400000);
+      supabase.from('subscriptions').insert({
+        user_id: user.id,
+        plan_type: 'trial' as any,
+        status: 'trial' as any,
+        number_of_children: 1,
+        trial_start_date: now.toISOString(),
+        trial_end_date: trialEnd.toISOString(),
+        subscription_start_date: now.toISOString(),
+        price_per_month: 0,
+      }).then(() => {
+        window.location.reload();
+      });
+    }
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Menyiapkan akun...</div>
+      </div>
+    );
   }
 
   // Trial expired → redirect to pricing
