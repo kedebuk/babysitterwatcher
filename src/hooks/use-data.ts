@@ -45,7 +45,24 @@ export function useChildren() {
         return allChildren;
       }
 
-      // For other roles, use default query
+      // Viewer role: only get children shared via child_viewers
+      if (effectiveRole === 'viewer') {
+        const { data: viewerRecords } = await supabase
+          .from('child_viewers')
+          .select('child_id')
+          .eq('viewer_user_id', user!.id);
+        if (!viewerRecords?.length) return [];
+        const viewerChildIds = viewerRecords.map(v => v.child_id);
+        const { data, error } = await supabase
+          .from('children')
+          .select('*')
+          .in('id', viewerChildIds)
+          .order('created_at');
+        if (error) throw error;
+        return data || [];
+      }
+
+      // For other roles (babysitter, admin), use default query
       const { data, error } = await supabase.from('children').select('*').order('created_at');
       if (error) throw error;
       return data;

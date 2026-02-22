@@ -13,7 +13,7 @@ export type ActivityType =
 
 export type EventStatus = 'habis' | 'sisa' | null;
 export type EventUnit = 'ml' | 'pcs' | 'dosis' | null;
-export type UserRole = 'parent' | 'babysitter';
+export type UserRole = 'parent' | 'babysitter' | 'viewer';
 
 export interface User {
   id: string;
