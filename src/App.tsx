@@ -26,6 +26,9 @@ import LocationPage from "./pages/LocationPage";
 import Pricing from "./pages/Pricing";
 import OnboardingChildren from "./pages/OnboardingChildren";
 import OnboardingInvite from "./pages/OnboardingInvite";
+import ProfilePage from "./pages/ProfilePage";
+import SubscriptionStatus from "./pages/SubscriptionStatus";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -84,6 +87,9 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/onboarding/children" element={<OnboardingChildren />} />
             <Route path="/onboarding/invite" element={<OnboardingInvite />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/subscription-status" element={<SubscriptionStatus />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/parent/dashboard" element={<ProtectedRoute allowedRole="parent"><SubscriptionGuard><ParentDashboard /></SubscriptionGuard></ProtectedRoute>} />
             <Route path="/parent/children" element={<ProtectedRoute allowedRole="parent"><SubscriptionGuard><ParentChildren /></SubscriptionGuard></ProtectedRoute>} />
             <Route path="/parent/input" element={<ProtectedRoute allowedRole="parent"><SubscriptionGuard><ParentInput /></SubscriptionGuard></ProtectedRoute>} />
