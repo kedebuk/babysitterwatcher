@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import Login from "./pages/Login";
 import AdminSetup from "./pages/AdminSetup";
 import ParentDashboard from "./pages/ParentDashboard";
@@ -22,6 +23,9 @@ import ChooseRole from "./pages/ChooseRole";
 import Chat from "./pages/Chat";
 import Insights from "./pages/Insights";
 import LocationPage from "./pages/LocationPage";
+import Pricing from "./pages/Pricing";
+import OnboardingChildren from "./pages/OnboardingChildren";
+import OnboardingInvite from "./pages/OnboardingInvite";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,19 +39,16 @@ function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; 
   const roles = user.roles || [];
   const hasMultipleRoles = roles.length > 1;
 
-  // Multi-role user needs to choose
   if (hasMultipleRoles && !activeRole) return <Navigate to="/choose-role" replace />;
 
   const effectiveRole = hasMultipleRoles ? activeRole : user.role;
 
   if (effectiveRole === allowedRole) return <>{children}</>;
 
-  // Babysitter must complete profile first
   if (effectiveRole === 'babysitter' && !user.profileComplete) {
     return <Navigate to="/complete-profile" replace />;
   }
 
-  // Redirect to correct dashboard
   const redirectMap = { parent: '/parent/dashboard', babysitter: '/babysitter/today', admin: '/admin/dashboard' };
   return <Navigate to={redirectMap[effectiveRole || user.role!]} replace />;
 }
@@ -80,12 +81,15 @@ const App = () => (
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/choose-role" element={<ChooseRole />} />
             <Route path="/admin-setup" element={<AdminSetup />} />
-            <Route path="/parent/dashboard" element={<ProtectedRoute allowedRole="parent"><ParentDashboard /></ProtectedRoute>} />
-            <Route path="/parent/children" element={<ProtectedRoute allowedRole="parent"><ParentChildren /></ProtectedRoute>} />
-            <Route path="/parent/input" element={<ProtectedRoute allowedRole="parent"><ParentInput /></ProtectedRoute>} />
-            <Route path="/babysitter/today" element={<ProtectedRoute allowedRole="babysitter"><BabysitterToday /></ProtectedRoute>} />
-            <Route path="/babysitter/history" element={<ProtectedRoute allowedRole="babysitter"><BabysitterHistory /></ProtectedRoute>} />
-            <Route path="/chat" element={<>{/* Both parent and babysitter can access */}<Chat /></>} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/onboarding/children" element={<OnboardingChildren />} />
+            <Route path="/onboarding/invite" element={<OnboardingInvite />} />
+            <Route path="/parent/dashboard" element={<ProtectedRoute allowedRole="parent"><SubscriptionGuard><ParentDashboard /></SubscriptionGuard></ProtectedRoute>} />
+            <Route path="/parent/children" element={<ProtectedRoute allowedRole="parent"><SubscriptionGuard><ParentChildren /></SubscriptionGuard></ProtectedRoute>} />
+            <Route path="/parent/input" element={<ProtectedRoute allowedRole="parent"><SubscriptionGuard><ParentInput /></SubscriptionGuard></ProtectedRoute>} />
+            <Route path="/babysitter/today" element={<ProtectedRoute allowedRole="babysitter"><SubscriptionGuard><BabysitterToday /></SubscriptionGuard></ProtectedRoute>} />
+            <Route path="/babysitter/history" element={<ProtectedRoute allowedRole="babysitter"><SubscriptionGuard><BabysitterHistory /></SubscriptionGuard></ProtectedRoute>} />
+            <Route path="/chat" element={<>{}<Chat /></>} />
             <Route path="/insights" element={<Insights />} />
             <Route path="/location" element={<LocationPage />} />
             <Route path="/admin/dashboard" element={<ProtectedRoute allowedRole="admin"><AdminDashboard /></ProtectedRoute>} />
