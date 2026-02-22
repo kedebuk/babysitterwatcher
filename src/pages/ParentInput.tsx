@@ -27,6 +27,8 @@ interface EventRow {
   status: EventStatus;
   photoFile: File | null;
   photoPreview: string | null;
+  afterPhotoFile: File | null;
+  afterPhotoPreview: string | null;
 }
 
 const createEmptyRow = (): EventRow => ({
@@ -39,6 +41,8 @@ const createEmptyRow = (): EventRow => ({
   status: null,
   photoFile: null,
   photoPreview: null,
+  afterPhotoFile: null,
+  afterPhotoPreview: null,
 });
 
 const ParentInput = () => {
@@ -72,14 +76,19 @@ const ParentInput = () => {
     setNewRows(prev => {
       const row = prev.find(r => r.tempId === tempId);
       if (row?.photoPreview) URL.revokeObjectURL(row.photoPreview);
+      if (row?.afterPhotoPreview) URL.revokeObjectURL(row.afterPhotoPreview);
       return prev.filter(r => r.tempId !== tempId);
     });
   };
 
-  const handlePhotoSelect = (tempId: string, file: File) => {
+  const handlePhotoSelect = (tempId: string, file: File, which: 'before' | 'after' = 'before') => {
     const preview = URL.createObjectURL(file);
     setNewRows(prev => prev.map(r => {
       if (r.tempId === tempId) {
+        if (which === 'after') {
+          if (r.afterPhotoPreview) URL.revokeObjectURL(r.afterPhotoPreview);
+          return { ...r, afterPhotoFile: file, afterPhotoPreview: preview };
+        }
         if (r.photoPreview) URL.revokeObjectURL(r.photoPreview);
         return { ...r, photoFile: file, photoPreview: preview };
       }
@@ -87,9 +96,13 @@ const ParentInput = () => {
     }));
   };
 
-  const handleRemovePhoto = (tempId: string) => {
+  const handleRemovePhoto = (tempId: string, which: 'before' | 'after' = 'before') => {
     setNewRows(prev => prev.map(r => {
       if (r.tempId === tempId) {
+        if (which === 'after') {
+          if (r.afterPhotoPreview) URL.revokeObjectURL(r.afterPhotoPreview);
+          return { ...r, afterPhotoFile: null, afterPhotoPreview: null };
+        }
         if (r.photoPreview) URL.revokeObjectURL(r.photoPreview);
         return { ...r, photoFile: null, photoPreview: null };
       }
@@ -137,8 +150,12 @@ const ParentInput = () => {
       for (const row of newRows) {
         if (!row.time) continue;
         let photoUrl: string | undefined;
+        let afterPhotoUrl: string | undefined;
         if (row.photoFile) {
           photoUrl = (await uploadPhoto(row.photoFile)) || undefined;
+        }
+        if (row.afterPhotoFile) {
+          afterPhotoUrl = (await uploadPhoto(row.afterPhotoFile)) || undefined;
         }
         await createEvent.mutateAsync({
           daily_log_id: dailyLog.id,
@@ -149,6 +166,7 @@ const ParentInput = () => {
           unit: row.unit || undefined,
           status: row.status || undefined,
           photo_url: photoUrl,
+          photo_url_after: afterPhotoUrl,
           created_by: user.id,
         });
       }
@@ -236,8 +254,21 @@ const ParentInput = () => {
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
-                        {(event as any).photo_url && (
-                          <img src={(event as any).photo_url} alt="Foto event" className="mt-2 rounded-lg w-20 h-20 object-cover" />
+                        {((event as any).photo_url || (event as any).photo_url_after) && (
+                          <div className="mt-2 flex gap-2">
+                            {(event as any).photo_url && (
+                              <div className="text-center">
+                                <img src={(event as any).photo_url} alt="Sebelum" className="rounded-lg w-20 h-20 object-cover" />
+                                <span className="text-[10px] text-muted-foreground">Sebelum</span>
+                              </div>
+                            )}
+                            {(event as any).photo_url_after && (
+                              <div className="text-center">
+                                <img src={(event as any).photo_url_after} alt="Sesudah" className="rounded-lg w-20 h-20 object-cover" />
+                                <span className="text-[10px] text-muted-foreground">Sesudah</span>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </CardContent>
                     </Card>
@@ -262,17 +293,13 @@ const ParentInput = () => {
               <h2 className="text-sm font-bold mb-2">📝 Catatan Harian</h2>
               <Textarea placeholder="Catatan tambahan..." value={notes} onChange={e => setNotes(e.target.value)} className="min-h-[80px] text-sm" />
             </div>
+
+            <Button className="w-full h-12 text-base font-bold" onClick={handleSave} disabled={createOrGetLog.isPending || createEvent.isPending}>
+              💾 Simpan Log Hari Ini
+            </Button>
           </>
         )}
       </div>
-
-      {children.length > 0 && (
-        <div className="fixed bottom-14 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t max-w-2xl mx-auto">
-          <Button className="w-full h-14 text-base font-bold" onClick={handleSave} disabled={createOrGetLog.isPending || createEvent.isPending}>
-            💾 Simpan Log Hari Ini
-          </Button>
-        </div>
-      )}
 
       <BottomNav role="parent" />
     </div>
@@ -284,10 +311,11 @@ function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto 
   row: EventRow;
   updateRow: (tempId: string, field: keyof EventRow, value: any) => void;
   removeRow: (tempId: string) => void;
-  onPhotoSelect: (tempId: string, file: File) => void;
-  onRemovePhoto: (tempId: string) => void;
+  onPhotoSelect: (tempId: string, file: File, which: 'before' | 'after') => void;
+  onRemovePhoto: (tempId: string, which: 'before' | 'after') => void;
 }) {
-  const fileRef = useRef<HTMLInputElement>(null);
+  const beforeFileRef = useRef<HTMLInputElement>(null);
+  const afterFileRef = useRef<HTMLInputElement>(null);
 
   return (
     <Card className="border-0 shadow-sm animate-slide-up">
@@ -303,10 +331,6 @@ function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto 
               {ACTIVITY_OPTIONS.map(act => <SelectItem key={act} value={act}>{ACTIVITY_ICONS[act]} {ACTIVITY_LABELS[act]}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground shrink-0" onClick={() => fileRef.current?.click()}>
-            <Camera className="h-4 w-4" />
-          </Button>
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { if (e.target.files?.[0]) onPhotoSelect(row.tempId, e.target.files[0]); e.target.value = ''; }} />
           <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive shrink-0" onClick={() => removeRow(row.tempId)}>
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -334,14 +358,41 @@ function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto 
             )}
           </div>
         )}
-        {row.photoPreview && (
-          <div className="relative inline-block">
-            <img src={row.photoPreview} alt="Preview" className="rounded-lg w-20 h-20 object-cover" />
-            <button onClick={() => onRemovePhoto(row.tempId)} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center">
-              <X className="h-3 w-3" />
-            </button>
+        {/* Before & After Photos */}
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1">📷 Foto Sebelum</p>
+            {row.photoPreview ? (
+              <div className="relative inline-block">
+                <img src={row.photoPreview} alt="Sebelum" className="rounded-lg w-20 h-20 object-cover" />
+                <button onClick={() => onRemovePhoto(row.tempId, 'before')} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <Button variant="outline" size="sm" className="h-9 text-xs" onClick={() => beforeFileRef.current?.click()}>
+                <Camera className="mr-1 h-3.5 w-3.5" /> Ambil Foto
+              </Button>
+            )}
+            <input ref={beforeFileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { if (e.target.files?.[0]) onPhotoSelect(row.tempId, e.target.files[0], 'before'); e.target.value = ''; }} />
           </div>
-        )}
+          <div className="flex-1">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1">📷 Foto Sesudah</p>
+            {row.afterPhotoPreview ? (
+              <div className="relative inline-block">
+                <img src={row.afterPhotoPreview} alt="Sesudah" className="rounded-lg w-20 h-20 object-cover" />
+                <button onClick={() => onRemovePhoto(row.tempId, 'after')} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <Button variant="outline" size="sm" className="h-9 text-xs" onClick={() => afterFileRef.current?.click()}>
+                <Camera className="mr-1 h-3.5 w-3.5" /> Ambil Foto
+              </Button>
+            )}
+            <input ref={afterFileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { if (e.target.files?.[0]) onPhotoSelect(row.tempId, e.target.files[0], 'after'); e.target.value = ''; }} />
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

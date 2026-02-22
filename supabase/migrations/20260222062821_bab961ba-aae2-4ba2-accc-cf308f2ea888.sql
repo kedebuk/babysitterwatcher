@@ -1,0 +1,1 @@
+ALTER TABLE public.events ADD COLUMN photo_url_after TEXT;
