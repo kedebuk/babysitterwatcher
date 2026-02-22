@@ -18,7 +18,6 @@ import { useNavigate } from 'react-router-dom';
 import { format, subDays, differenceInDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { StorageImage } from '@/components/StorageImage';
 
 const EMOJI_OPTIONS = ['📦', '🍼', '🧷', '💊', '🧴', '🧻', '🧸', '👶', '🍪', '🥛'];
 const UNIT_OPTIONS = ['pcs', 'ml', 'sachet', 'botol', 'pack', 'dosis', 'lembar', '%'];
@@ -418,7 +417,7 @@ const InventoryPage = () => {
                           {/* Item photo or emoji */}
                           <div className="relative group">
                             {item.photo_url ? (
-                              <StorageImage src={item.photo_url} alt={item.name} className="h-12 w-12 rounded-lg object-cover border" />
+                              <img src={item.photo_url} alt={item.name} className="h-12 w-12 rounded-lg object-cover border" />
                             ) : (
                               <div className="text-3xl">{item.emoji}</div>
                             )}
@@ -555,7 +554,7 @@ const InventoryPage = () => {
                         <>
                           <div className="flex justify-center">
                             {editItem.photo_url ? (
-                              <StorageImage src={editItem.photo_url} alt={editItem.name} className="h-24 w-24 rounded-xl object-cover border" />
+                              <img src={editItem.photo_url} alt={editItem.name} className="h-24 w-24 rounded-xl object-cover border" />
                             ) : (
                               <div className="h-24 w-24 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center text-4xl">
                                 {editItem.emoji}

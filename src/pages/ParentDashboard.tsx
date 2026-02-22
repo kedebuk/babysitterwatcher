@@ -19,7 +19,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PendingInvites from '@/components/PendingInvites';
 import { BottomNav } from '@/components/BottomNav';
-import { StorageImage } from '@/components/StorageImage';
 
 function getTotalByType(events: any[], type: string): number {
   return events.filter(e => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
@@ -255,7 +254,7 @@ const ParentDashboard = () => {
             <div className="flex items-center gap-3">
               {child && (
                 (child as any).photo_url ? (
-                  <StorageImage src={(child as any).photo_url} alt={child.name} className="h-11 w-11 rounded-xl object-cover shrink-0" />
+                  <img src={(child as any).photo_url} alt={child.name} className="h-11 w-11 rounded-xl object-cover shrink-0" />
                 ) : (
                   <div className="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0">{child.avatar_emoji || '👶'}</div>
                 )
@@ -374,7 +373,7 @@ const ParentDashboard = () => {
                             <p className="text-[10px] text-muted-foreground mt-0.5">oleh {profileNames[(event as any).created_by]}</p>
                           )}
                           {(event as any).photo_url && (
-                            <StorageImage src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" />
+                            <img src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" onClick={() => window.open((event as any).photo_url, '_blank')} />
                           )}
                           {((event as any).latitude && (event as any).longitude) ? (
                             <a

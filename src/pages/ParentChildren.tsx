@@ -17,7 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getChineseZodiac, getWesternZodiac } from '@/lib/zodiac';
-import { StorageImage } from '@/components/StorageImage';
 
 const ParentChildren = () => {
   const { user, logout } = useAuth();
@@ -395,7 +394,7 @@ const ParentChildren = () => {
                 <div className="flex items-center gap-4">
                   <div className="relative shrink-0 cursor-pointer" onClick={() => navigate('/parent/dashboard')}>
                     {(child as any).photo_url ? (
-                      <StorageImage src={(child as any).photo_url} alt={child.name} className="h-14 w-14 rounded-2xl object-cover" />
+                      <img src={(child as any).photo_url} alt={child.name} className="h-14 w-14 rounded-2xl object-cover" />
                     ) : (
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-2xl">
                         {child.avatar_emoji || '👶'}
@@ -466,7 +465,7 @@ const ParentChildren = () => {
                     <div key={assignment.id} className="flex items-center justify-between py-1.5">
                       <div className="flex items-center gap-2">
                         {assignment.profiles?.avatar_url ? (
-                          <StorageImage src={assignment.profiles.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+                          <img src={assignment.profiles.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
                         ) : (
                           <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-xs">👩‍🍼</div>
                         )}
@@ -486,7 +485,7 @@ const ParentChildren = () => {
                     <div key={viewer.id} className="flex items-center justify-between py-1.5">
                       <div className="flex items-center gap-2">
                         {viewer.profiles?.avatar_url ? (
-                          <StorageImage src={viewer.profiles.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+                          <img src={viewer.profiles.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
                         ) : (
                           <div className="h-7 w-7 rounded-full bg-accent/10 flex items-center justify-center text-xs">
                             <Eye className="h-3.5 w-3.5 text-accent-foreground" />

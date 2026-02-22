@@ -19,7 +19,6 @@ import PendingInvites from '@/components/PendingInvites';
 import { BottomNav } from '@/components/BottomNav';
 import { EditEventDialog } from '@/components/EditEventDialog';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
-import { StorageImage } from '@/components/StorageImage';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'snack', 'buah', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
@@ -305,7 +304,7 @@ const BabysitterToday = () => {
               {activeChildId && (() => {
                 const c = assignedChildren.find((ch: any) => ch.id === activeChildId);
                 return c?.photo_url ? (
-                  <StorageImage src={c.photo_url} alt={c.name} className="h-11 w-11 rounded-xl object-cover shrink-0" />
+                  <img src={c.photo_url} alt={c.name} className="h-11 w-11 rounded-xl object-cover shrink-0" />
                 ) : (
                   <div className="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0">{c?.avatar_emoji || '👶'}</div>
                 );

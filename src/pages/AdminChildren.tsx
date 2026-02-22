@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, LogOut, Shield, ChevronRight } from 'lucide-react';
 import { format, parseISO, differenceInMonths } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { StorageImage } from '@/components/StorageImage';
 
 const AdminChildren = () => {
   const { logout } = useAuth();
@@ -62,7 +61,7 @@ const AdminChildren = () => {
             <Card key={child.id} className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/admin/children/${child.id}`)}>
               <CardContent className="p-3 flex items-center gap-3">
                 {child.photo_url ? (
-                  <StorageImage src={child.photo_url} alt={child.name} className="h-12 w-12 rounded-2xl object-cover shrink-0" />
+                  <img src={child.photo_url} alt={child.name} className="h-12 w-12 rounded-2xl object-cover shrink-0" />
                 ) : (
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-xl shrink-0">
                     {child.avatar_emoji || '👶'}

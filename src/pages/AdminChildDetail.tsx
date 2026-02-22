@@ -9,7 +9,6 @@ import { format, parseISO, subDays } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType } from "@/types";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { StorageImage } from '@/components/StorageImage';
 
 function getTotalByType(events: any[], type: string): number {
   return events.filter((e) => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
@@ -149,7 +148,7 @@ const AdminChildDetail = () => {
             <h1 className="text-lg font-bold flex items-center gap-2">
               <Shield className="h-5 w-5" />
               {child?.photo_url ? (
-                <StorageImage src={child.photo_url} alt={child.name} className="h-7 w-7 rounded-lg object-cover" />
+                <img src={child.photo_url} alt={child.name} className="h-7 w-7 rounded-lg object-cover" />
               ) : (
                 <span>{child?.avatar_emoji}</span>
               )}
@@ -262,10 +261,11 @@ const AdminChildDetail = () => {
                         </p>
                         {event.detail && <p className="text-xs text-muted-foreground truncate">{event.detail}</p>}
                         {event.photo_url && (
-                          <StorageImage
+                          <img
                             src={event.photo_url}
                             alt="Foto"
                             className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer"
+                            onClick={() => window.open(event.photo_url, "_blank")}
                           />
                         )}
                         {ping && (
