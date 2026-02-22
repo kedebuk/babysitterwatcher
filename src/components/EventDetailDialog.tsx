@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ActivityType, ACTIVITY_LABELS, ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS } from '@/types';
 import { Pencil, MapPin } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { StorageImage } from '@/components/StorageImage';
 
 interface EventDetailDialogProps {
   event: any;
@@ -93,13 +94,13 @@ export function EventDetailDialog({ event, open, onOpenChange, createdByName, on
               <div className="flex gap-3">
                 {event.photo_url && (
                   <div className="text-center">
-                    <img src={event.photo_url} alt="Sebelum" className="rounded-lg w-28 h-28 object-cover border" />
+                    <StorageImage src={event.photo_url} alt="Sebelum" className="rounded-lg w-28 h-28 object-cover border" />
                     <span className="text-[10px] text-muted-foreground mt-1 block">Sebelum</span>
                   </div>
                 )}
                 {event.photo_url_after && (
                   <div className="text-center">
-                    <img src={event.photo_url_after} alt="Sesudah" className="rounded-lg w-28 h-28 object-cover border" />
+                    <StorageImage src={event.photo_url_after} alt="Sesudah" className="rounded-lg w-28 h-28 object-cover border" />
                     <span className="text-[10px] text-muted-foreground mt-1 block">Sesudah</span>
                   </div>
                 )}
