@@ -56,8 +56,8 @@ const AdminUsers = () => {
   const { data: allSubs = [] } = useQuery({
     queryKey: ['admin_all_subscriptions'],
     queryFn: async () => {
-      const { data } = await supabase.from('subscriptions').select('*');
-      return (data || []) as Subscription[];
+      const { data } = await supabase.from('subscriptions' as any).select('*');
+      return (data || []) as unknown as Subscription[];
     },
   });
 

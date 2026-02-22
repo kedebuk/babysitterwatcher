@@ -30,7 +30,7 @@ const OnboardingInvite = () => {
       const expires = new Date();
       expires.setDate(expires.getDate() + 7);
 
-      const { error } = await supabase.from('family_invites').insert({
+      const { error } = await supabase.from('family_invites' as any).insert({
         family_id: user.id,
         invite_code: code,
         invited_by: user.id,
