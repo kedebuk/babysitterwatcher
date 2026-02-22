@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Baby, Calendar, ScrollText, Shield, RefreshCw } from 'lucide-react';
+import { LogOut, Users, Baby, Calendar, ScrollText, Shield, RefreshCw, Settings } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
@@ -126,6 +126,18 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/admin/settings')}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Settings className="h-5 w-5 text-primary" />
+              <div>
+                <p className="text-sm font-semibold">Pengaturan</p>
+                <p className="text-xs text-muted-foreground">WhatsApp admin & lainnya</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
