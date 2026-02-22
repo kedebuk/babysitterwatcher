@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PendingInvites from '@/components/PendingInvites';
 import { BottomNav } from '@/components/BottomNav';
 
@@ -47,10 +47,15 @@ const ParentDashboard = () => {
   const { user, logout, setActiveRole } = useAuth();
   const navigate = useNavigate();
   const deleteEvent = useDeleteEvent();
+  const queryClient = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; daily_log_id: string; label: string } | null>(null);
 
   const activeChildId = selectedChild || children[0]?.id || '';
   const child = children.find(c => c.id === activeChildId);
+
+  const { data: log } = useDailyLog(activeChildId, selectedDate);
+  const { data: events = [] } = useEvents(log?.id);
+  const { data: profileNames = {} } = useProfileNames(events.map((e: any) => e.created_by).filter(Boolean));
 
   // Realtime notifications
   useEffect(() => {
@@ -70,9 +75,23 @@ const ParentDashboard = () => {
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, toast]);
 
-  const { data: log } = useDailyLog(activeChildId, selectedDate);
-  const { data: events = [] } = useEvents(log?.id);
-  const { data: profileNames = {} } = useProfileNames(events.map((e: any) => e.created_by).filter(Boolean));
+  // Realtime: auto-refresh events when babysitter updates
+  useEffect(() => {
+    if (!log?.id) return;
+    const channel = supabase
+      .channel(`realtime-events-${log.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'events',
+        filter: `daily_log_id=eq.${log.id}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['events', log.id] });
+        queryClient.invalidateQueries({ queryKey: ['childLogs'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [log?.id, queryClient]);
 
   const { data: locationPings = [] } = useQuery({
     queryKey: ['location_pings', activeChildId, selectedDate],

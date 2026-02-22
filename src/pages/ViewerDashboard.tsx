@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useChildren, useDailyLog, useEvents, useChildLogs, useProfileNames } from '@/hooks/use-data';
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,9 +30,14 @@ const ViewerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [viewingEvent, setViewingEvent] = useState<any>(null);
+  const queryClient = useQueryClient();
 
   const activeChildId = selectedChild || children[0]?.id || '';
   const child = children.find(c => c.id === activeChildId);
+
+  const { data: log } = useDailyLog(activeChildId, selectedDate);
+  const { data: events = [] } = useEvents(log?.id);
+  const { data: profileNames = {} } = useProfileNames(events.map((e: any) => e.created_by).filter(Boolean));
 
   // Realtime notifications
   useEffect(() => {
@@ -51,9 +57,23 @@ const ViewerDashboard = () => {
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, toast]);
 
-  const { data: log } = useDailyLog(activeChildId, selectedDate);
-  const { data: events = [] } = useEvents(log?.id);
-  const { data: profileNames = {} } = useProfileNames(events.map((e: any) => e.created_by).filter(Boolean));
+  // Realtime: auto-refresh events when data updates
+  useEffect(() => {
+    if (!log?.id) return;
+    const channel = supabase
+      .channel(`realtime-viewer-events-${log.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'events',
+        filter: `daily_log_id=eq.${log.id}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['events', log.id] });
+        queryClient.invalidateQueries({ queryKey: ['childLogs'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [log?.id, queryClient]);
 
   // 7 day chart data
   const last7dates = Array.from({ length: 7 }, (_, i) => format(subDays(new Date(), 6 - i), 'yyyy-MM-dd'));
