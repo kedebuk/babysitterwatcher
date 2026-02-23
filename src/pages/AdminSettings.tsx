@@ -75,31 +75,39 @@ const AdminSettings = () => {
   const update = (key: keyof SettingsState, value: string) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
+  
+const handleSave = async () => {
+  setSaving(true);
+  try {
+    const now = new Date().toISOString();
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const now = new Date().toISOString();
+    for (const [key, value] of Object.entries(settings)) {
+      const trimmed = String(value ?? '').trim();
 
-      const payload = Object.entries(settings).map(([key, value]) => ({
-        key,
-        value: String(value ?? '').trim(),
-        updated_at: now,
-      }));
-
-      // upsert = kalau key belum ada, dibuat. kalau sudah ada, diupdate.
-      const { error } = await supabase
+      // 1) coba update dulu
+      const { error: updateError, count } = await supabase
         .from('app_settings' as any)
-        .upsert(payload as any, { onConflict: 'key' } as any);
+        .update({ value: trimmed, updated_at: now } as any, { count: 'exact' } as any)
+        .eq('key', key);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      toast({ title: '✅ Tersimpan', description: 'Pengaturan berhasil diperbarui' });
-    } catch (e: any) {
-      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+      // 2) kalau tidak ada row yang ter-update, insert
+      if (!count || count === 0) {
+        const { error: insertError } = await supabase
+          .from('app_settings' as any)
+          .insert({ key, value: trimmed, updated_at: now } as any);
+
+        if (insertError) throw insertError;
+      }
     }
-    setSaving(false);
-  };
+
+    toast({ title: '✅ Tersimpan', description: 'Pengaturan berhasil diperbarui' });
+  } catch (e: any) {
+    toast({ title: 'Error', description: e.message, variant: 'destructive' });
+  }
+  setSaving(false);
+};;
 
   if (loading) {
     return (
