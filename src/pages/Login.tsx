@@ -46,6 +46,7 @@ const Login = () => {
     }
   };
 
+  // Track Google signup pixel event for new users returning from OAuth
   useEffect(() => {
     if (!authLoading && user) {
       const googleSignupTracked = sessionStorage.getItem('google_signup_tracked');
@@ -60,15 +61,11 @@ const Login = () => {
     }
   }, [authLoading, user, trackEvent]);
 
+  // Redirect if already logged in
   if (!authLoading && user) {
     if (!user.phoneComplete) return <Navigate to="/complete-phone" replace />;
     if ((user.roles?.length ?? 0) > 1) return <Navigate to="/choose-role" replace />;
-    const dest =
-      user.role === 'admin'
-        ? '/admin/dashboard'
-        : user.role === 'parent'
-        ? '/parent/dashboard'
-        : '/babysitter/today';
+    const dest = user.role === 'admin' ? '/admin/dashboard' : user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today';
     return <Navigate to={dest} replace />;
   }
 
@@ -77,7 +74,9 @@ const Login = () => {
     setLoading(true);
     const result = await login(email, password);
     setLoading(false);
-    if (!result.success) {
+    if (result.success) {
+      // Navigation handled by auth state change
+    } else {
       toast({ title: 'Login gagal', description: result.error, variant: 'destructive' });
     }
   };
@@ -92,32 +91,33 @@ const Login = () => {
       toast({ title: 'Error', description: 'Masukkan nomor HP WhatsApp yang valid', variant: 'destructive' });
       return;
     }
-
     setLoading(true);
     const result = await signup(email, password, name, role);
-
     if (result.success) {
+      // Save phone number to profile after signup
       setTimeout(async () => {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (session?.user) {
           await supabase.from('profiles').update({ phone: phone.trim() } as any).eq('id', session.user.id);
         }
       }, 1000);
-
       trackEvent('pixel_event_signup');
       toast({ title: '✅ Akun dibuat!', description: 'Silakan login dengan akun baru Anda' });
     } else {
       toast({ title: 'Daftar gagal', description: result.error, variant: 'destructive' });
     }
-
     setLoading(false);
   };
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
+    const result = await lovable.auth.signInWithOAuth('google', {
       redirect_uri: window.location.origin,
-      extraParams: { prompt: "select_account" },
+      extraParams: {
+        prompt: 'select_account',
+      },
     });
     if (result?.error) {
       toast({ title: 'Google login gagal', description: String(result.error), variant: 'destructive' });
@@ -135,22 +135,196 @@ const Login = () => {
           <h1 className="font-display text-2xl font-bold text-foreground">Eleanor Tracker</h1>
           <p className="text-sm text-muted-foreground">Pantau aktivitas si kecil dengan cinta 💛</p>
         </CardHeader>
-
         <CardContent>
+          {/* DIUBAH: defaultValue jadi signup */}
           <Tabs defaultValue="signup">
             <TabsList className="grid w-full grid-cols-2 mb-4">
+              {/* DIUBAH: urutan tab */}
               <TabsTrigger value="signup">Daftar</TabsTrigger>
               <TabsTrigger value="login">Masuk</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
-              {/* Login content tetap sama seperti sebelumnya */}
+              <form onSubmit={handleLogin} className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="login-email">Email</Label>
+                  <Input
+                    id="login-email"
+                    type="email"
+                    placeholder="email@contoh.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                    className="h-12 text-base"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="login-password">Password</Label>
+                    <button type="button" onClick={() => setShowForgot(true)} className="text-xs text-primary hover:underline">
+                      Lupa password?
+                    </button>
+                  </div>
+                  <Input
+                    id="login-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    className="h-12 text-base"
+                  />
+                </div>
+                <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={loading}>
+                  <LogIn className="mr-2 h-5 w-5" /> Masuk
+                </Button>
+              </form>
+
+              {showForgot && (
+                <div className="mt-4 p-4 bg-muted rounded-xl space-y-3">
+                  <p className="text-sm font-semibold">Reset Password</p>
+                  <p className="text-xs text-muted-foreground">Masukkan email Anda, kami akan kirim link reset password.</p>
+                  <Input
+                    type="email"
+                    placeholder="email@contoh.com"
+                    value={forgotEmail}
+                    onChange={e => setForgotEmail(e.target.value)}
+                    className="h-10 text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setShowForgot(false)} className="flex-1">
+                      Batal
+                    </Button>
+                    <Button size="sm" onClick={handleForgotPassword} disabled={loading} className="flex-1">
+                      {loading ? 'Mengirim...' : 'Kirim Link'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="relative my-4">
+                <Separator />
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                  atau
+                </span>
+              </div>
+              <Button variant="outline" className="w-full h-12 text-base" onClick={handleGoogleLogin} disabled={loading}>
+                <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                    fill="#4285F4"
+                  />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335"
+                  />
+                </svg>
+                Masuk dengan Google
+              </Button>
             </TabsContent>
 
             <TabsContent value="signup">
-              {/* Signup content tetap sama seperti sebelumnya */}
+              <form onSubmit={handleSignup} className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-name">Nama</Label>
+                  <Input
+                    id="signup-name"
+                    placeholder="Nama lengkap"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    required
+                    className="h-12 text-base"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="email@contoh.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                    className="h-12 text-base"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-phone">No. HP WhatsApp</Label>
+                  <Input
+                    id="signup-phone"
+                    type="tel"
+                    placeholder="08xxxxxxxxxx"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    required
+                    className="h-12 text-base"
+                    maxLength={20}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-password">Password</Label>
+                  <Input
+                    id="signup-password"
+                    type="password"
+                    placeholder="Min. 6 karakter"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    className="h-12 text-base"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Role</Label>
+                  <Select value={role} onValueChange={v => setRole(v as 'parent' | 'babysitter')}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="parent">👩 Orang Tua</SelectItem>
+                      <SelectItem value="babysitter">👩‍🍼 Babysitter</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={loading}>
+                  <UserPlus className="mr-2 h-5 w-5" /> Daftar
+                </Button>
+              </form>
+              <div className="relative my-4">
+                <Separator />
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                  atau
+                </span>
+              </div>
+              <Button variant="outline" className="w-full h-12 text-base" onClick={handleGoogleLogin} disabled={loading}>
+                <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                    fill="#4285F4"
+                  />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335"
+                  />
+                </svg>
+                Daftar dengan Google
+              </Button>
             </TabsContent>
-
           </Tabs>
         </CardContent>
       </Card>
