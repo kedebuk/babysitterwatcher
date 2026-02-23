@@ -11,9 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { BottomNav } from '@/components/BottomNav';
-import { Plus, Minus, Package, TrendingDown, AlertTriangle, ArrowLeft, Camera, ImageIcon, Pencil } from 'lucide-react';
+import { Plus, Minus, Package, TrendingDown, AlertTriangle, ArrowLeft, Camera, ImageIcon, Pencil, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, subDays, differenceInDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
@@ -35,15 +36,56 @@ function useInventoryItems(childId: string) {
   return useQuery({
     queryKey: ['inventory_items', childId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get own items
+      const { data: ownItems, error } = await supabase
         .from('inventory_items')
         .select('*')
         .eq('child_id', childId)
         .order('name');
       if (error) throw error;
-      return data;
+
+      // Get shared items (items from other children shared to this child)
+      const { data: shares } = await supabase
+        .from('inventory_item_shares')
+        .select('item_id')
+        .eq('child_id', childId);
+
+      let sharedItems: any[] = [];
+      if (shares && shares.length > 0) {
+        const sharedItemIds = shares.map(s => s.item_id);
+        const { data: sItems } = await supabase
+          .from('inventory_items')
+          .select('*')
+          .in('id', sharedItemIds)
+          .order('name');
+        sharedItems = (sItems || []).map(i => ({ ...i, _isShared: true }));
+      }
+
+      // Merge and deduplicate
+      const allItems = [...(ownItems || [])];
+      for (const si of sharedItems) {
+        if (!allItems.find(i => i.id === si.id)) {
+          allItems.push(si);
+        }
+      }
+      return allItems;
     },
     enabled: !!childId,
+  });
+}
+
+function useItemShares(itemId: string) {
+  return useQuery({
+    queryKey: ['inventory_item_shares', itemId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('inventory_item_shares')
+        .select('*')
+        .eq('item_id', itemId);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!itemId,
   });
 }
 
@@ -81,6 +123,75 @@ function getEstimatedDaysLeft(currentStock: number, usageHistory: any[], itemId:
   return avgPerDay > 0 ? Math.floor(currentStock / avgPerDay) : null;
 }
 
+function ShareItemDialog({ itemId, open, onOpenChange, childList, activeChildId, items, toggleShare }: {
+  itemId: string | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  childList: any[];
+  activeChildId: string;
+  items: any[];
+  toggleShare: any;
+}) {
+  const { data: shares = [] } = useQuery({
+    queryKey: ['inventory_item_shares', itemId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('inventory_item_shares')
+        .select('*')
+        .eq('item_id', itemId!);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!itemId && open,
+  });
+
+  const item = items.find((i: any) => i.id === itemId);
+  const otherChildren = childList.filter((c: any) => c.id !== activeChildId);
+  const sharedChildIds = shares.map((s: any) => s.child_id);
+
+  if (!item) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Share2 className="h-4 w-4" /> Sinkronisasi {item.emoji} {item.name}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Pilih anak lain yang akan menggunakan stok yang sama. Stok akan berkurang bersama saat dipakai oleh siapapun.
+          </p>
+          {otherChildren.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Tidak ada anak lain untuk di-share</p>
+          ) : (
+            <div className="space-y-2">
+              {otherChildren.map((child: any) => {
+                const isShared = sharedChildIds.includes(child.id);
+                return (
+                  <div key={child.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+                    <Checkbox
+                      checked={isShared}
+                      disabled={toggleShare.isPending}
+                      onCheckedChange={(checked) => {
+                        toggleShare.mutate({ itemId: item.id, childId: child.id, add: !!checked });
+                      }}
+                    />
+                    <span className="text-lg">{child.avatar_emoji || '👶'}</span>
+                    <span className="text-sm font-medium">{child.name}</span>
+                    {isShared && <Badge variant="secondary" className="text-[10px] ml-auto">Tersinkron</Badge>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 const InventoryPage = () => {
   const { user } = useAuth();
   const { data: children = [] } = useChildren();
@@ -103,6 +214,7 @@ const InventoryPage = () => {
   const [editingPhoto, setEditingPhoto] = useState(false);
   const [editItemId, setEditItemId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', emoji: '📦', unit: 'pcs', low_stock_threshold: '5' });
+  const [shareItemId, setShareItemId] = useState<string | null>(null);
 
   const { data: items = [], isLoading } = useInventoryItems(activeChildId);
   const { data: usageHistory = [] } = useInventoryUsage(activeChildId);
@@ -231,7 +343,25 @@ const InventoryPage = () => {
     onError: (e: any) => toast({ title: 'Gagal', description: e.message, variant: 'destructive' }),
   });
 
-  // Usage chart data (last 7 days)
+  const toggleShare = useMutation({
+    mutationFn: async ({ itemId, childId, add }: { itemId: string; childId: string; add: boolean }) => {
+      if (add) {
+        const { error } = await supabase.from('inventory_item_shares').insert({ item_id: itemId, child_id: childId } as any);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('inventory_item_shares').delete().eq('item_id', itemId).eq('child_id', childId);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['inventory_item_shares'] });
+      qc.invalidateQueries({ queryKey: ['inventory_items'] });
+      toast({ title: 'Sinkronisasi diperbarui!' });
+    },
+    onError: (e: any) => toast({ title: 'Gagal', description: e.message, variant: 'destructive' }),
+  });
+
+
   const chartData = (() => {
     const last7 = Array.from({ length: 7 }, (_, i) => {
       const d = format(subDays(new Date(), 6 - i), 'yyyy-MM-dd');
@@ -430,8 +560,21 @@ const InventoryPage = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                              <h3 className="font-semibold text-sm">{item.name}</h3>
+                              <div className="flex items-center gap-1.5">
+                                <h3 className="font-semibold text-sm">{item.name}</h3>
+                                {(item as any)._isShared && (
+                                  <Badge variant="secondary" className="text-[9px] px-1 py-0">
+                                    <Share2 className="h-2.5 w-2.5 mr-0.5" />Shared
+                                  </Badge>
+                                )}
+                              </div>
                               <div className="flex gap-1">
+                                {effectiveRole === 'parent' && childList.length > 1 && item.child_id === activeChildId && (
+                                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs"
+                                    onClick={() => setShareItemId(item.id)}>
+                                    <Share2 className="h-3 w-3 mr-1" />Share
+                                  </Button>
+                                )}
                                 <Button variant="ghost" size="sm" className="h-6 px-2 text-xs"
                                   onClick={() => {
                                     setEditForm({ name: item.name, emoji: item.emoji, unit: item.unit, low_stock_threshold: String(item.low_stock_threshold) });
@@ -626,6 +769,17 @@ const InventoryPage = () => {
                   </div>
                 </DialogContent>
               </Dialog>
+
+              {/* Share item dialog */}
+              <ShareItemDialog
+                itemId={shareItemId}
+                open={!!shareItemId}
+                onOpenChange={(open) => !open && setShareItemId(null)}
+                childList={childList}
+                activeChildId={activeChildId}
+                items={items}
+                toggleShare={toggleShare}
+              />
             </TabsContent>
 
             {/* TAB: Dashboard */}
