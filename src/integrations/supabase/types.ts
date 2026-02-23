@@ -345,6 +345,42 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_item_shares: {
+        Row: {
+          child_id: string
+          created_at: string
+          id: string
+          item_id: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          id?: string
+          item_id: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          id?: string
+          item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_item_shares_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_item_shares_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_items: {
         Row: {
           child_id: string
