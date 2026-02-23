@@ -29,8 +29,8 @@ const defaultSettings: SettingsState = {
   admin_whatsapp: '',
   meta_pixel_id: '',
 
-  // kamu bisa ganti default ini kalau mau
-  pixel_event_landing: 'Lead', // atau InitiateCheckout
+  // default event sesuai kebutuhan kamu
+  pixel_event_landing: 'Lead', // bisa kamu ganti ke InitiateCheckout
   pixel_event_signup: 'CompleteRegistration',
   pixel_event_whatsapp: 'Purchase',
 
@@ -75,46 +75,44 @@ const AdminSettings = () => {
   const update = (key: keyof SettingsState, value: string) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
-  
-const handleSave = async () => {
-  setSaving(true);
-  try {
-    const now = new Date().toISOString();
 
-    for (const [key, value] of Object.entries(settings)) {
-      const trimmed = String(value ?? '').trim();
+  // SAVE AMAN: update dulu, kalau tidak ada row yang keupdate, insert
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const now = new Date().toISOString();
 
-      // 1) coba update dulu
-      const { error: updateError, count } = await supabase
-        .from('app_settings' as any)
-        .update({ value: trimmed, updated_at: now } as any, { count: 'exact' } as any)
-        .eq('key', key);
+      for (const [key, value] of Object.entries(settings)) {
+        const trimmed = String(value ?? '').trim();
 
-      if (updateError) throw updateError;
-
-      // 2) kalau tidak ada row yang ter-update, insert
-      if (!count || count === 0) {
-        const { error: insertError } = await supabase
+        // 1) coba update dulu
+        const { data: updatedRows, error: updateError } = await supabase
           .from('app_settings' as any)
-          .insert({ key, value: trimmed, updated_at: now } as any);
+          .update({ value: trimmed, updated_at: now } as any)
+          .eq('key', key)
+          .select('key');
 
-        if (insertError) throw insertError;
+        if (updateError) throw updateError;
+
+        // 2) kalau tidak ada row yang terupdate, insert
+        if (!updatedRows || (updatedRows as any[]).length === 0) {
+          const { error: insertError } = await supabase
+            .from('app_settings' as any)
+            .insert({ key, value: trimmed, updated_at: now } as any);
+
+          if (insertError) throw insertError;
+        }
       }
-    }
 
-    toast({ title: '✅ Tersimpan', description: 'Pengaturan berhasil diperbarui' });
-  } catch (e: any) {
-    toast({ title: 'Error', description: e.message, variant: 'destructive' });
-  }
-  setSaving(false);
-};;
+      toast({ title: '✅ Tersimpan', description: 'Pengaturan berhasil diperbarui' });
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+    setSaving(false);
+  };
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        Memuat...
-      </div>
-    );
+    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Memuat...</div>;
   }
 
   return (
@@ -150,9 +148,7 @@ const handleSave = async () => {
                 value={settings.admin_whatsapp}
                 onChange={e => update('admin_whatsapp', e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">
-                Contoh: 6281234567890 (tanpa + atau spasi)
-              </p>
+              <p className="text-xs text-muted-foreground">Contoh: 6281234567890 (tanpa + atau spasi)</p>
             </div>
           </CardContent>
         </Card>
@@ -174,9 +170,7 @@ const handleSave = async () => {
                 value={settings.meta_pixel_id}
                 onChange={e => update('meta_pixel_id', e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">
-                Dapatkan dari Meta Events Manager → Pixel → Settings
-              </p>
+              <p className="text-xs text-muted-foreground">Dapatkan dari Meta Events Manager → Pixel → Settings</p>
             </div>
 
             <div className="border-t pt-3 space-y-3">
@@ -190,9 +184,7 @@ const handleSave = async () => {
                   value={settings.pixel_event_landing}
                   onChange={e => update('pixel_event_landing', e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Contoh: Lead atau InitiateCheckout (sesuai alur kamu)
-                </p>
+                <p className="text-xs text-muted-foreground">Contoh: Lead atau InitiateCheckout</p>
               </div>
 
               <div className="space-y-2">
@@ -203,9 +195,7 @@ const handleSave = async () => {
                   value={settings.pixel_event_signup}
                   onChange={e => update('pixel_event_signup', e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Contoh: CompleteRegistration, Subscribe
-                </p>
+                <p className="text-xs text-muted-foreground">Contoh: CompleteRegistration</p>
               </div>
 
               <div className="space-y-2">
@@ -216,9 +206,7 @@ const handleSave = async () => {
                   value={settings.pixel_event_whatsapp}
                   onChange={e => update('pixel_event_whatsapp', e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Contoh: Purchase, Contact, InitiateCheckout
-                </p>
+                <p className="text-xs text-muted-foreground">Contoh: Purchase, Contact, InitiateCheckout</p>
               </div>
             </div>
           </CardContent>
@@ -241,9 +229,7 @@ const handleSave = async () => {
                 value={settings.meta_capi_dataset_id}
                 onChange={e => update('meta_capi_dataset_id', e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">
-                Isi sesuai Dataset ID di Meta. Contoh seperti di screenshot kamu.
-              </p>
+              <p className="text-xs text-muted-foreground">Isi sesuai Dataset ID di Meta</p>
             </div>
 
             <div className="space-y-2">
@@ -252,7 +238,7 @@ const handleSave = async () => {
                 <Input
                   id="capi_token"
                   type={showCapiToken ? 'text' : 'password'}
-                  placeholder="EA...."
+                  placeholder="EA..."
                   value={settings.meta_capi_access_token}
                   onChange={e => update('meta_capi_access_token', e.target.value)}
                   className="pr-12"
@@ -266,9 +252,7 @@ const handleSave = async () => {
                   {showCapiToken ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Token ini sensitif. Simpan yang benar sesuai yang kamu kirim.
-              </p>
+              <p className="text-xs text-muted-foreground">Token ini sensitif</p>
             </div>
           </CardContent>
         </Card>
