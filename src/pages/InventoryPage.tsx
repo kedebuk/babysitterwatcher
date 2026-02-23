@@ -569,7 +569,7 @@ const InventoryPage = () => {
                                 )}
                               </div>
                               <div className="flex gap-1">
-                                {effectiveRole === 'parent' && childList.length > 1 && item.child_id === activeChildId && (
+                                {childList.length > 1 && item.child_id === activeChildId && (
                                   <Button variant="ghost" size="sm" className="h-6 px-2 text-xs"
                                     onClick={() => setShareItemId(item.id)}>
                                     <Share2 className="h-3 w-3 mr-1" />Share
