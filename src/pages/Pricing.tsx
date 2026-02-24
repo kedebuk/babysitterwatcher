@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Baby, Sparkles, Clock, CheckCircle, MessageCircle } from 'lucide-react';
+import { Baby, Sparkles, Clock, CheckCircle, MessageCircle, ArrowLeft } from 'lucide-react';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
 
 const TOTAL_SLOTS = 62;
@@ -137,6 +137,10 @@ const Pricing = () => {
     <div className="min-h-screen bg-background pb-24">
       {/* Promo Banner */}
       <div className="relative overflow-hidden bg-gradient-to-br from-[#1A1F36] via-[#2D1B69] to-[#E85555] px-4 py-6 text-white">
+        {/* Back button */}
+        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 mb-2" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
         <div className="flex flex-wrap gap-2 mb-3">
           <Badge className="bg-red-600 text-white border-0 text-xs font-bold">🔥 PROMO TERBATAS</Badge>
           <Badge className="bg-amber-500 text-black border-0 text-xs font-bold">⭐ 1 TAHUN PENUH</Badge>
