@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, LogOut, Shield, CreditCard, Eye, Phone, MapPin, Calendar, Baby, Users } from 'lucide-react';
+import { ArrowLeft, LogOut, Shield, CreditCard, Eye, Phone, MapPin, Calendar, Baby, Users, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -24,6 +25,8 @@ const AdminUsers = () => {
   const [subDialogOpen, setSubDialogOpen] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; email: string } | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [subForm, setSubForm] = useState({
     plan_type: 'trial' as 'trial' | 'standard' | 'premium_promo',
@@ -37,6 +40,41 @@ const AdminUsers = () => {
   });
 
   const adminUpdateSub = useAdminUpdateSubscription();
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: userId },
+      });
+      if (error) throw new Error(error.message || 'Delete failed');
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin_all_profiles'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_roles'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_subscriptions'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_children_for_users'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_assignments_for_users'] });
+      toast({ title: '✅ User berhasil dihapus', description: 'Semua data user telah dibersihkan.' });
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
+    },
+    onError: (err: any) => {
+      toast({ title: 'Gagal menghapus', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const handleDeleteUser = (profile: any) => {
+    setDeleteTarget({ id: profile.id, name: profile.name, email: profile.email });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteUser = () => {
+    if (deleteTarget) {
+      deleteUserMutation.mutate(deleteTarget.id);
+    }
+  };
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['admin_all_profiles'],
@@ -348,6 +386,9 @@ const AdminUsers = () => {
                       <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openSubDialog(profile.id)}>
                         <CreditCard className="h-3 w-3" /> Kelola
                       </Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteUser(profile)}>
+                        <Trash2 className="h-3 w-3" /> Hapus
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -485,6 +526,30 @@ const AdminUsers = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete User Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus User?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Anda yakin ingin menghapus <strong>{deleteTarget?.name}</strong> ({deleteTarget?.email})?
+              <br /><br />
+              Semua data termasuk anak, log aktivitas, langganan, dan akun akan <strong>dihapus permanen</strong> dan tidak bisa dikembalikan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteUserMutation.isPending}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteUser}
+              disabled={deleteUserMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteUserMutation.isPending ? 'Menghapus...' : 'Ya, Hapus User'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
