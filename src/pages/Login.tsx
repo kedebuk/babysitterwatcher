@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
@@ -33,6 +34,14 @@ const Login = () => {
   const { user, loading: authLoading, login, signup } = useAuth();
   const { toast } = useToast();
   const { trackEvent } = usePixel();
+  const { setTheme, theme } = useTheme();
+
+  // Force light theme on login page
+  useEffect(() => {
+    const prev = theme;
+    setTheme('light');
+    return () => { if (prev && prev !== 'light') setTheme(prev); };
+  }, []);
 
   // Event saat user masuk halaman login (Lead / InitiateCheckout) sekali per sesi
   useEffect(() => {

@@ -13,7 +13,7 @@ let pixelInitialized = false;
 function initPixel(pixelId: string) {
   if (pixelInitialized || !pixelId) return;
   
-  // Skip if fbq already exists (e.g. from a previous HMR cycle)
+  // Setup fbq stub if not already present
   if (!window.fbq) {
     const n: any = window.fbq = function () {
       n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
@@ -25,25 +25,14 @@ function initPixel(pixelId: string) {
     n.queue = [];
   }
 
-  // Load the script via document.head for reliability
-  const existing = document.querySelector('script[src*="fbevents.js"]');
-  if (!existing) {
+  // Load fbevents.js once
+  if (!document.querySelector('script[src*="fbevents.js"]')) {
     const script = document.createElement('script');
     script.async = true;
     script.src = 'https://connect.facebook.net/en_US/fbevents.js';
     document.head.appendChild(script);
   }
 
-  // Add noscript img fallback
-  if (!document.querySelector('img[src*="facebook.com/tr"]')) {
-    const img = document.createElement('img');
-    img.height = 1;
-    img.width = 1;
-    img.style.display = 'none';
-    img.src = `https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`;
-    document.body.appendChild(img);
-  }
-  
   window.fbq('init', pixelId);
   window.fbq('track', 'PageView');
   pixelInitialized = true;
