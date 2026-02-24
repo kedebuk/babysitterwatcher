@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, MessageCircle, BarChart3, Server, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Save, MessageCircle, BarChart3, Server, Eye, EyeOff, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { usePixel } from '@/components/MetaPixelProvider';
 
 interface SettingsState {
   // WhatsApp
@@ -41,11 +42,30 @@ const defaultSettings: SettingsState = {
 const AdminSettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { trackEvent, settings: pixelSettings } = usePixel();
 
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showCapiToken, setShowCapiToken] = useState(false);
+
+  const handleTestEvent = (eventKey: string, label: string) => {
+    if (!settings.meta_pixel_id) {
+      toast({ title: '⚠️ Pixel ID kosong', description: 'Simpan Pixel ID terlebih dahulu', variant: 'destructive' });
+      return;
+    }
+    const eventName = settings[eventKey as keyof SettingsState];
+    if (!eventName) {
+      toast({ title: '⚠️ Event kosong', description: `Isi nama event untuk ${label}`, variant: 'destructive' });
+      return;
+    }
+    if (!window.fbq) {
+      toast({ title: '⚠️ Pixel belum aktif', description: 'Simpan pengaturan dulu lalu refresh halaman', variant: 'destructive' });
+      return;
+    }
+    window.fbq('track', eventName);
+    toast({ title: '✅ Event terkirim!', description: `Event "${eventName}" berhasil dikirim ke Meta Pixel` });
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -178,34 +198,52 @@ const AdminSettings = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="event_landing">Event saat user masuk landing depan (halaman Login)</Label>
-                <Input
-                  id="event_landing"
-                  placeholder="Lead"
-                  value={settings.pixel_event_landing}
-                  onChange={e => update('pixel_event_landing', e.target.value)}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="event_landing"
+                    placeholder="Lead"
+                    value={settings.pixel_event_landing}
+                    onChange={e => update('pixel_event_landing', e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button type="button" size="sm" variant="outline" className="shrink-0 gap-1" onClick={() => handleTestEvent('pixel_event_landing', 'Landing')}>
+                    <Zap className="h-3.5 w-3.5" /> Test
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground">Contoh: Lead atau InitiateCheckout</p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="event_signup">Event saat user berhasil daftar (form atau Google)</Label>
-                <Input
-                  id="event_signup"
-                  placeholder="CompleteRegistration"
-                  value={settings.pixel_event_signup}
-                  onChange={e => update('pixel_event_signup', e.target.value)}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="event_signup"
+                    placeholder="CompleteRegistration"
+                    value={settings.pixel_event_signup}
+                    onChange={e => update('pixel_event_signup', e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button type="button" size="sm" variant="outline" className="shrink-0 gap-1" onClick={() => handleTestEvent('pixel_event_signup', 'Signup')}>
+                    <Zap className="h-3.5 w-3.5" /> Test
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground">Contoh: CompleteRegistration</p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="event_wa">Event saat klik tombol WhatsApp</Label>
-                <Input
-                  id="event_wa"
-                  placeholder="Purchase"
-                  value={settings.pixel_event_whatsapp}
-                  onChange={e => update('pixel_event_whatsapp', e.target.value)}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="event_wa"
+                    placeholder="Purchase"
+                    value={settings.pixel_event_whatsapp}
+                    onChange={e => update('pixel_event_whatsapp', e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button type="button" size="sm" variant="outline" className="shrink-0 gap-1" onClick={() => handleTestEvent('pixel_event_whatsapp', 'WhatsApp')}>
+                    <Zap className="h-3.5 w-3.5" /> Test
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground">Contoh: Purchase, Contact, InitiateCheckout</p>
               </div>
             </div>

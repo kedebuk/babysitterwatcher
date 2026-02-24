@@ -67,7 +67,7 @@ const OnboardingChildren = () => {
 
       if (!sub) {
         const trialEnd = new Date();
-        trialEnd.setDate(trialEnd.getDate() + 3);
+        trialEnd.setDate(trialEnd.getDate() + 14);
         const { data: newSub } = await supabase.from('subscriptions').insert({
           user_id: user.id,
           plan_type: 'trial' as any,

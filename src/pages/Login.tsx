@@ -12,7 +12,7 @@ import { Baby, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { lovable } from '@/integrations/lovable/index';
 import { Separator } from '@/components/ui/separator';
-import { useMetaPixel } from '@/hooks/use-meta-pixel';
+import { usePixel } from '@/components/MetaPixelProvider';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -32,7 +32,7 @@ const Login = () => {
 
   const { user, loading: authLoading, login, signup } = useAuth();
   const { toast } = useToast();
-  const { trackEvent } = useMetaPixel();
+  const { trackEvent } = usePixel();
 
   // Event saat user masuk halaman login (Lead / InitiateCheckout) sekali per sesi
   useEffect(() => {

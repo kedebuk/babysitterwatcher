@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
+import { MetaPixelProvider } from "@/components/MetaPixelProvider";
 
 // Lazy load all pages
 const Login = lazy(() => import("./pages/Login"));
@@ -94,6 +95,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AuthProvider>
+          <MetaPixelProvider>
           <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -131,6 +133,7 @@ const App = () => (
             </Routes>
           </Suspense>
           </BrowserRouter>
+          </MetaPixelProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

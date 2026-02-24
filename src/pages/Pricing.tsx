@@ -104,7 +104,7 @@ const Pricing = () => {
     if (!user) { navigate('/login'); return; }
 
     const now = new Date();
-    const trialEnd = new Date(now.getTime() + 3 * 86400000);
+    const trialEnd = new Date(now.getTime() + 14 * 86400000);
     const promoEnd = new Date(now);
     promoEnd.setFullYear(promoEnd.getFullYear() + 1);
 
