@@ -49,22 +49,47 @@ const AdminSettings = () => {
   const [loading, setLoading] = useState(true);
   const [showCapiToken, setShowCapiToken] = useState(false);
 
-  const handleTestEvent = (eventKey: string, label: string) => {
-    if (!settings.meta_pixel_id) {
-      toast({ title: '⚠️ Pixel ID kosong', description: 'Simpan Pixel ID terlebih dahulu', variant: 'destructive' });
-      return;
-    }
+  const [testingCapi, setTestingCapi] = useState(false);
+
+  const handleTestEvent = async (eventKey: string, label: string) => {
     const eventName = settings[eventKey as keyof SettingsState];
     if (!eventName) {
       toast({ title: '⚠️ Event kosong', description: `Isi nama event untuk ${label}`, variant: 'destructive' });
       return;
     }
-    if (!window.fbq) {
+
+    // Browser pixel test
+    if (settings.meta_pixel_id && window.fbq) {
+      window.fbq('track', eventName);
+      toast({ title: '✅ Pixel terkirim!', description: `Event "${eventName}" dikirim via browser pixel` });
+    } else if (settings.meta_pixel_id) {
       toast({ title: '⚠️ Pixel belum aktif', description: 'Simpan pengaturan dulu lalu refresh halaman', variant: 'destructive' });
-      return;
     }
-    window.fbq('track', eventName);
-    toast({ title: '✅ Event terkirim!', description: `Event "${eventName}" berhasil dikirim ke Meta Pixel` });
+
+    // CAPI test
+    if (settings.meta_capi_dataset_id && settings.meta_capi_access_token) {
+      setTestingCapi(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('meta-capi', {
+          body: {
+            event_name: eventName,
+            event_source_url: window.location.href,
+            user_data: {},
+          },
+        });
+        if (error) throw error;
+        if (data?.error) {
+          toast({ title: '❌ CAPI gagal', description: data.error, variant: 'destructive' });
+        } else {
+          toast({ title: '✅ CAPI terkirim!', description: `Event "${eventName}" dikirim via server-side CAPI` });
+        }
+      } catch (e: any) {
+        toast({ title: '❌ CAPI error', description: e.message, variant: 'destructive' });
+      }
+      setTestingCapi(false);
+    } else if (!settings.meta_pixel_id) {
+      toast({ title: '⚠️ Belum ada konfigurasi', description: 'Isi Pixel ID atau CAPI Dataset ID + Token', variant: 'destructive' });
+    }
   };
 
   useEffect(() => {
@@ -292,6 +317,17 @@ const AdminSettings = () => {
               </div>
               <p className="text-xs text-muted-foreground">Token ini sensitif</p>
             </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full gap-2"
+              disabled={testingCapi || !settings.meta_capi_dataset_id || !settings.meta_capi_access_token}
+              onClick={() => handleTestEvent('pixel_event_landing', 'CAPI Test')}
+            >
+              <Zap className="h-4 w-4" />
+              {testingCapi ? 'Mengirim...' : 'Test CAPI (kirim event Landing)'}
+            </Button>
           </CardContent>
         </Card>
 
