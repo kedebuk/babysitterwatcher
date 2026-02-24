@@ -44,7 +44,7 @@ export function useMetaPixel() {
       const { data } = await supabase
         .from('app_settings' as any)
         .select('key, value')
-        .in('key', ['meta_pixel_id', 'pixel_event_signup', 'pixel_event_whatsapp']);
+        .in('key', ['meta_pixel_id', 'pixel_event_landing', 'pixel_event_signup', 'pixel_event_whatsapp']);
       
       if (data) {
         const map: Record<string, string> = {};

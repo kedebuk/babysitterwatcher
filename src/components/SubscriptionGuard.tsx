@@ -72,7 +72,7 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
     if (user) {
       // Create trial in background and reload
       const now = new Date();
-      const trialEnd = new Date(now.getTime() + 3 * 86400000);
+      const trialEnd = new Date(now.getTime() + 14 * 86400000);
       supabase.from('subscriptions').insert({
         user_id: user.id,
         plan_type: 'trial' as any,
