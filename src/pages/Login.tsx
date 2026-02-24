@@ -152,7 +152,7 @@ const Login = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden light" data-theme="light" style={{ colorScheme: 'light' }}>
       {/* Animasi ringan background (tanpa library tambahan) */}
       <style>{`
         @keyframes floaty {

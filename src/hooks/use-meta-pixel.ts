@@ -13,26 +13,41 @@ let pixelInitialized = false;
 function initPixel(pixelId: string) {
   if (pixelInitialized || !pixelId) return;
   
-  const f = window;
-  const b = document;
-  if (f.fbq) return;
-  const n: any = f.fbq = function () {
-    n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-  };
-  if (!f._fbq) f._fbq = n;
-  n.push = n;
-  n.loaded = true;
-  n.version = '2.0';
-  n.queue = [];
-  const t = b.createElement('script');
-  t.async = true;
-  t.src = 'https://connect.facebook.net/en_US/fbevents.js';
-  const s = b.getElementsByTagName('script')[0];
-  s.parentNode?.insertBefore(t, s);
+  // Skip if fbq already exists (e.g. from a previous HMR cycle)
+  if (!window.fbq) {
+    const n: any = window.fbq = function () {
+      n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+    };
+    if (!window._fbq) window._fbq = n;
+    n.push = n;
+    n.loaded = true;
+    n.version = '2.0';
+    n.queue = [];
+  }
+
+  // Load the script via document.head for reliability
+  const existing = document.querySelector('script[src*="fbevents.js"]');
+  if (!existing) {
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://connect.facebook.net/en_US/fbevents.js';
+    document.head.appendChild(script);
+  }
+
+  // Add noscript img fallback
+  if (!document.querySelector('img[src*="facebook.com/tr"]')) {
+    const img = document.createElement('img');
+    img.height = 1;
+    img.width = 1;
+    img.style.display = 'none';
+    img.src = `https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`;
+    document.body.appendChild(img);
+  }
   
   window.fbq('init', pixelId);
   window.fbq('track', 'PageView');
   pixelInitialized = true;
+  console.log('[Meta Pixel] Initialized with ID:', pixelId);
 }
 
 async function sendCapi(eventName: string, userData?: Record<string, any>, customData?: Record<string, any>) {
