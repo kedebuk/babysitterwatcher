@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogOut, BarChart3, UserPlus, Trash2, Mail, Eye, Pencil, Camera, Archive, ArchiveRestore, LogOutIcon } from 'lucide-react';
+import { Plus, LogOut, BarChart3, UserPlus, Trash2, Mail, Eye, Pencil, Camera, Archive, ArchiveRestore, LogOutIcon, ArrowLeft } from 'lucide-react';
 import { format, parseISO, differenceInMonths } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -365,14 +365,16 @@ const ParentChildren = () => {
     <div className="min-h-screen pb-6">
       <div className="sticky top-0 z-10 bg-primary px-4 py-3 text-primary-foreground">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold">Anak Saya</h1>
-            <p className="text-xs opacity-80">{user?.name}</p>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/parent/dashboard')}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-lg font-bold">Anak Saya</h1>
+              <p className="text-xs opacity-80">{user?.name}</p>
+            </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/parent/dashboard')}>
-              <BarChart3 className="h-5 w-5" />
-            </Button>
             <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={logout}>
               <LogOut className="h-5 w-5" />
             </Button>
