@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Bell, BellOff, CheckCheck, Trash2 } from 'lucide-react';
+import { ArrowLeft, Bell, BellOff, CheckCheck, MapPin, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
@@ -120,6 +120,11 @@ const NotificationsPage = () => {
                     </p>
                   </div>
                   <div className="flex gap-1 shrink-0">
+                    {notif.message?.includes('lokasi') && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate('/location')}>
+                        <MapPin className="h-3.5 w-3.5 text-primary" />
+                      </Button>
+                    )}
                     {!notif.is_read && (
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => markAsRead(notif.id)}>
                         <CheckCheck className="h-3.5 w-3.5 text-primary" />
