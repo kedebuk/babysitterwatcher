@@ -1,22 +1,54 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useChildren, useDailyLog, useEvents, useChildLogs, useProfileNames } from '@/hooks/use-data';
-import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType } from '@/types';
+import { useChildren, useDailyLog, useEvents, useCreateOrGetDailyLog, useCreateEvent, useDeleteEvent, useChildLogs, useProfileNames } from '@/hooks/use-data';
+import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType, EventUnit, EventStatus } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, subDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, MoreVertical, LogOut, RefreshCw, User, Bell, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MoreVertical, LogOut, RefreshCw, User, Bell, Users, Plus, Trash2, Clock, Camera, X, Pencil, Package, MapPin, MessageCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PendingInvites from '@/components/PendingInvites';
-import { BottomNav } from '@/components/BottomNav';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
+import { EditEventDialog } from '@/components/EditEventDialog';
+
+const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'snack', 'buah', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
+
+interface EventRow {
+  tempId: string;
+  time: string;
+  type: ActivityType;
+  detail: string;
+  amount: string;
+  unit: EventUnit;
+  status: EventStatus;
+  photoFile: File | null;
+  photoPreview: string | null;
+  afterPhotoFile: File | null;
+  afterPhotoPreview: string | null;
+}
+
+const createEmptyRow = (): EventRow => ({
+  tempId: crypto.randomUUID(),
+  time: format(new Date(), 'HH:mm'),
+  type: 'susu',
+  detail: '',
+  amount: '',
+  unit: 'ml',
+  status: null,
+  photoFile: null,
+  photoPreview: null,
+  afterPhotoFile: null,
+  afterPhotoPreview: null,
+});
 
 function getTotalByType(events: any[], type: string): number {
   return events.filter(e => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
@@ -26,10 +58,12 @@ const ViewerDashboard = () => {
   const { data: children = [], isLoading: loadingChildren } = useChildren();
   const [selectedChild, setSelectedChild] = useState('');
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const { user, logout, setActiveRole } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [viewingEvent, setViewingEvent] = useState<any>(null);
+  const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [showInput, setShowInput] = useState(false);
   const queryClient = useQueryClient();
 
   const activeChildId = selectedChild || children[0]?.id || '';
@@ -38,6 +72,12 @@ const ViewerDashboard = () => {
   const { data: log } = useDailyLog(activeChildId, selectedDate);
   const { data: events = [] } = useEvents(log?.id);
   const { data: profileNames = {} } = useProfileNames(events.map((e: any) => e.created_by).filter(Boolean));
+  const createOrGetLog = useCreateOrGetDailyLog();
+  const createEvent = useCreateEvent();
+  const deleteEvent = useDeleteEvent();
+
+  const [newRows, setNewRows] = useState<EventRow[]>([createEmptyRow()]);
+  const [notes, setNotes] = useState('');
 
   // Realtime notifications
   useEffect(() => {
@@ -103,6 +143,124 @@ const ViewerDashboard = () => {
     setSelectedDate(format(dt, 'yyyy-MM-dd'));
   };
 
+  // Input handlers
+  const addRow = () => setNewRows(prev => [...prev, createEmptyRow()]);
+  const updateRow = (tempId: string, field: keyof EventRow, value: any) => {
+    setNewRows(prev => prev.map(r => r.tempId === tempId ? { ...r, [field]: value } : r));
+  };
+  const removeRow = (tempId: string) => {
+    setNewRows(prev => {
+      const row = prev.find(r => r.tempId === tempId);
+      if (row?.photoPreview) URL.revokeObjectURL(row.photoPreview);
+      if (row?.afterPhotoPreview) URL.revokeObjectURL(row.afterPhotoPreview);
+      return prev.filter(r => r.tempId !== tempId);
+    });
+  };
+
+  const handlePhotoSelect = (tempId: string, file: File, which: 'before' | 'after' = 'before') => {
+    const preview = URL.createObjectURL(file);
+    setNewRows(prev => prev.map(r => {
+      if (r.tempId === tempId) {
+        if (which === 'after') {
+          if (r.afterPhotoPreview) URL.revokeObjectURL(r.afterPhotoPreview);
+          return { ...r, afterPhotoFile: file, afterPhotoPreview: preview };
+        }
+        if (r.photoPreview) URL.revokeObjectURL(r.photoPreview);
+        return { ...r, photoFile: file, photoPreview: preview };
+      }
+      return r;
+    }));
+  };
+
+  const handleRemovePhoto = (tempId: string, which: 'before' | 'after' = 'before') => {
+    setNewRows(prev => prev.map(r => {
+      if (r.tempId === tempId) {
+        if (which === 'after') {
+          if (r.afterPhotoPreview) URL.revokeObjectURL(r.afterPhotoPreview);
+          return { ...r, afterPhotoFile: null, afterPhotoPreview: null };
+        }
+        if (r.photoPreview) URL.revokeObjectURL(r.photoPreview);
+        return { ...r, photoFile: null, photoPreview: null };
+      }
+      return r;
+    }));
+  };
+
+  const uploadPhoto = async (file: File): Promise<string | null> => {
+    const ext = file.name.split('.').pop();
+    const path = `${activeChildId}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from('event-photos').upload(path, file);
+    if (error) throw error;
+    const { data } = supabase.storage.from('event-photos').getPublicUrl(path);
+    return data.publicUrl;
+  };
+
+  const handleSave = async () => {
+    if (!activeChildId || !user) return;
+    try {
+      let latitude: number | undefined;
+      let longitude: number | undefined;
+      if (navigator.geolocation) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 });
+          });
+          latitude = pos.coords.latitude;
+          longitude = pos.coords.longitude;
+        } catch { /* GPS not available */ }
+      }
+
+      const dailyLog = await createOrGetLog.mutateAsync({
+        child_id: activeChildId,
+        log_date: selectedDate,
+        notes: notes || undefined,
+        created_by: user.id,
+      });
+
+      for (const row of newRows) {
+        if (!row.time) continue;
+        let photoUrl: string | undefined;
+        let afterPhotoUrl: string | undefined;
+        if (row.photoFile) {
+          photoUrl = (await uploadPhoto(row.photoFile)) || undefined;
+        }
+        if (row.afterPhotoFile) {
+          afterPhotoUrl = (await uploadPhoto(row.afterPhotoFile)) || undefined;
+        }
+        await createEvent.mutateAsync({
+          daily_log_id: dailyLog.id,
+          time: row.time + ':00',
+          type: row.type,
+          detail: row.detail || undefined,
+          amount: row.amount ? Number(row.amount) : undefined,
+          unit: row.unit || undefined,
+          status: row.status || undefined,
+          photo_url: photoUrl,
+          photo_url_after: afterPhotoUrl,
+          created_by: user.id,
+          latitude,
+          longitude,
+        });
+      }
+
+      setNewRows([createEmptyRow()]);
+      setNotes('');
+      setShowInput(false);
+      toast({ title: '✅ Tersimpan!', description: 'Log harian berhasil disimpan' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string, logId: string) => {
+    try {
+      await deleteEvent.mutateAsync({ id: eventId, daily_log_id: logId });
+      toast({ title: 'Dihapus', description: 'Event berhasil dihapus' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
   if (loadingChildren) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Memuat...</div>;
 
   return (
@@ -111,10 +269,10 @@ const ViewerDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 opacity-80" />
+              <Users className="h-4 w-4 opacity-80" />
               <h1 className="text-lg font-bold">Keluarga</h1>
             </div>
-            <p className="text-xs opacity-80">Halo, {user?.name} 👋 (view only)</p>
+            <p className="text-xs opacity-80">Halo, {user?.name} 👋</p>
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/notifications')}>
@@ -129,6 +287,15 @@ const ViewerDashboard = () => {
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => navigate('/profile')}>
                   <User className="mr-2 h-4 w-4" /> Profil Saya
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/inventory')}>
+                  <Package className="mr-2 h-4 w-4" /> Stok Kebutuhan
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/location')}>
+                  <MapPin className="mr-2 h-4 w-4" /> Lokasi GPS
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/chat')}>
+                  <MessageCircle className="mr-2 h-4 w-4" /> Pesan
                 </DropdownMenuItem>
                 {(user?.roles?.length ?? 0) > 1 && (
                   <>
@@ -240,33 +407,35 @@ const ViewerDashboard = () => {
               </CardContent>
             </Card>
 
+            {/* Timeline with edit/delete */}
             <div>
               <h2 className="font-bold text-sm mb-2">📋 Timeline Harian</h2>
               {events.length === 0 ? (
                 <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">Belum ada data untuk tanggal ini</CardContent></Card>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {events.map(event => (
-                    <Card key={event.id} className="border-0 shadow-sm animate-fade-in cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => setViewingEvent(event)}>
-                      <CardContent className="p-3 flex items-start gap-3">
-                        <div className="text-center min-w-[44px]"><p className="text-xs font-bold text-muted-foreground">{event.time?.substring(0, 5)}</p></div>
-                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                          {ACTIVITY_ICONS[event.type as ActivityType] || '📝'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</p>
-                          {event.detail && <p className="text-xs text-muted-foreground truncate">{event.detail}</p>}
-                          {event.amount && <p className="text-xs text-muted-foreground">{event.amount} {event.unit}{event.status ? ` — ${event.status}` : ''}</p>}
-                          {event.created_by && profileNames[event.created_by] && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5">oleh {profileNames[event.created_by]}</p>
+                    <Card key={event.id} className="border-0 shadow-sm cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setViewingEvent(event)}>
+                      <CardContent className="p-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-xs font-bold text-muted-foreground min-w-[36px]">{event.time?.substring(0, 5)}</span>
+                          <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
+                            {ACTIVITY_ICONS[event.type as ActivityType] || '📝'}
+                          </span>
+                          <span className="text-xs flex-1 truncate">{event.detail || ACTIVITY_LABELS[event.type as ActivityType] || event.type}</span>
+                          {event.amount && <span className="text-xs font-bold">{event.amount} {event.unit}</span>}
+                          {(event as any).created_by && profileNames[(event as any).created_by] && (
+                            <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                              {profileNames[(event as any).created_by]}
+                            </span>
                           )}
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setEditingEvent(event); }}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id, event.daily_log_id); }}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
-                        {(event.photo_url || event.photo_url_after) && (
-                          <div className="flex gap-1">
-                            {event.photo_url && <img src={event.photo_url} alt="" className="h-10 w-10 rounded-lg object-cover" />}
-                            {event.photo_url_after && <img src={event.photo_url_after} alt="" className="h-10 w-10 rounded-lg object-cover" />}
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -282,18 +451,152 @@ const ViewerDashboard = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Input section - toggleable */}
+            {!showInput ? (
+              <Button className="w-full h-12 text-base font-bold" onClick={() => setShowInput(true)}>
+                <Plus className="mr-2 h-5 w-5" /> Tambah Aktivitas
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-bold">➕ Tambah Event</h2>
+                  <Button variant="ghost" size="sm" onClick={() => setShowInput(false)}>
+                    <X className="h-4 w-4 mr-1" /> Tutup
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {newRows.map(row => (
+                    <EventRowCard key={row.tempId} row={row} updateRow={updateRow} removeRow={removeRow} onPhotoSelect={handlePhotoSelect} onRemovePhoto={handleRemovePhoto} />
+                  ))}
+                </div>
+                <Button variant="outline" className="w-full h-12 border-dashed" onClick={addRow}>
+                  <Plus className="mr-2 h-5 w-5" /> Tambah Baris
+                </Button>
+                <div>
+                  <h2 className="text-sm font-bold mb-2">📝 Catatan Harian</h2>
+                  <Textarea placeholder="Catatan tambahan..." value={notes} onChange={e => setNotes(e.target.value)} className="min-h-[80px] text-sm" />
+                </div>
+                <Button className="w-full h-12 text-base font-bold" onClick={handleSave} disabled={createOrGetLog.isPending || createEvent.isPending}>
+                  💾 Simpan Log
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>
 
-      <EventDetailDialog
-        event={viewingEvent}
-        open={!!viewingEvent}
-        onOpenChange={(open) => !open && setViewingEvent(null)}
-        createdByName={viewingEvent?.created_by ? profileNames[viewingEvent.created_by] : undefined}
-      />
+      {viewingEvent && (
+        <EventDetailDialog
+          event={viewingEvent}
+          open={!!viewingEvent}
+          onOpenChange={(open) => { if (!open) setViewingEvent(null); }}
+          createdByName={viewingEvent?.created_by ? profileNames[viewingEvent.created_by] : undefined}
+          onEdit={() => { setEditingEvent(viewingEvent); setViewingEvent(null); }}
+        />
+      )}
+      {editingEvent && (
+        <EditEventDialog
+          event={editingEvent}
+          open={!!editingEvent}
+          onOpenChange={(open) => { if (!open) setEditingEvent(null); }}
+          childId={activeChildId}
+        />
+      )}
     </div>
   );
 };
+
+// Event row component for input form
+function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto }: {
+  row: EventRow;
+  updateRow: (tempId: string, field: keyof EventRow, value: any) => void;
+  removeRow: (tempId: string) => void;
+  onPhotoSelect: (tempId: string, file: File, which: 'before' | 'after') => void;
+  onRemovePhoto: (tempId: string, which: 'before' | 'after') => void;
+}) {
+  const beforeFileRef = useRef<HTMLInputElement>(null);
+  const afterFileRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <Card className="border-0 shadow-sm animate-slide-up">
+      <CardContent className="p-3 space-y-2">
+        <div className="flex gap-2 items-center">
+          <div className="relative flex-shrink-0">
+            <Clock className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input type="time" value={row.time} onChange={e => updateRow(row.tempId, 'time', e.target.value)} className="w-[100px] h-10 pl-7 text-sm" />
+          </div>
+          <Select value={row.type} onValueChange={v => updateRow(row.tempId, 'type', v)}>
+            <SelectTrigger className="flex-1 h-10"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ACTIVITY_OPTIONS.map(act => <SelectItem key={act} value={act}>{ACTIVITY_ICONS[act]} {ACTIVITY_LABELS[act]}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive shrink-0" onClick={() => removeRow(row.tempId)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+        <Input placeholder="Detail (mis: susu 30 ml habis)" value={row.detail} onChange={e => updateRow(row.tempId, 'detail', e.target.value)} className="h-10 text-sm" />
+        {(row.type === 'susu' || row.type === 'mpasi' || row.type === 'vitamin' || row.type === 'snack' || row.type === 'buah') && (
+          <div className="flex gap-2">
+            <Input type="number" placeholder="Jumlah" value={row.amount} onChange={e => updateRow(row.tempId, 'amount', e.target.value)} className="flex-1 h-10 text-sm" />
+            <Select value={row.unit || 'ml'} onValueChange={v => updateRow(row.tempId, 'unit', v)}>
+              <SelectTrigger className="w-[80px] h-10"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ml">ml</SelectItem>
+                <SelectItem value="gram">gram</SelectItem>
+                <SelectItem value="pcs">pcs</SelectItem>
+                <SelectItem value="dosis">dosis</SelectItem>
+              </SelectContent>
+            </Select>
+            {row.type === 'susu' && (
+              <Select value={row.status || ''} onValueChange={v => updateRow(row.tempId, 'status', v as EventStatus)}>
+                <SelectTrigger className="w-[90px] h-10"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="habis">Habis</SelectItem>
+                  <SelectItem value="sisa">Sisa</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1">📷 Foto Sebelum</p>
+            {row.photoPreview ? (
+              <div className="relative inline-block">
+                <img src={row.photoPreview} alt="Sebelum" className="rounded-lg w-20 h-20 object-cover" />
+                <button onClick={() => onRemovePhoto(row.tempId, 'before')} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <Button variant="outline" size="sm" className="h-9 text-xs" onClick={() => beforeFileRef.current?.click()}>
+                <Camera className="mr-1 h-3.5 w-3.5" /> Ambil Foto
+              </Button>
+            )}
+            <input ref={beforeFileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { if (e.target.files?.[0]) onPhotoSelect(row.tempId, e.target.files[0], 'before'); e.target.value = ''; }} />
+          </div>
+          <div className="flex-1">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1">📷 Foto Sesudah</p>
+            {row.afterPhotoPreview ? (
+              <div className="relative inline-block">
+                <img src={row.afterPhotoPreview} alt="Sesudah" className="rounded-lg w-20 h-20 object-cover" />
+                <button onClick={() => onRemovePhoto(row.tempId, 'after')} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <Button variant="outline" size="sm" className="h-9 text-xs" onClick={() => afterFileRef.current?.click()}>
+                <Camera className="mr-1 h-3.5 w-3.5" /> Ambil Foto
+              </Button>
+            )}
+            <input ref={afterFileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { if (e.target.files?.[0]) onPhotoSelect(row.tempId, e.target.files[0], 'after'); e.target.value = ''; }} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default ViewerDashboard;
