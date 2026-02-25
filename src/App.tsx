@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import { MetaPixelProvider } from "@/components/MetaPixelProvider";
+import { BrandProvider } from "@/contexts/BrandContext";
 
 // Lazy load all pages
 const Login = lazy(() => import("./pages/Login"));
@@ -96,6 +97,7 @@ const App = () => (
         <Sonner />
         <AuthProvider>
           <MetaPixelProvider>
+          <BrandProvider>
           <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -133,6 +135,7 @@ const App = () => (
             </Routes>
           </Suspense>
           </BrowserRouter>
+          </BrandProvider>
           </MetaPixelProvider>
         </AuthProvider>
       </TooltipProvider>

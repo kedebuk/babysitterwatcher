@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Baby, Sparkles, Clock, CheckCircle, MessageCircle, ArrowLeft } from 'lucide-react';
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
+import { useBrand } from '@/contexts/BrandContext';
 
 const TOTAL_SLOTS = 62;
 
@@ -74,6 +75,7 @@ function useSlots() {
 
 const Pricing = () => {
   const { user } = useAuth();
+  const { brandName } = useBrand();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: plans = [], isLoading: plansLoading } = usePricingPlans();
@@ -338,7 +340,7 @@ const Pricing = () => {
         {adminWa && (
           <div className="flex justify-center">
             <a
-              href={`https://wa.me/${adminWa}?text=${encodeURIComponent('Halo Admin, saya ingin konfirmasi pembelian paket Eleanor Tracker.')}`}
+              href={`https://wa.me/${adminWa}?text=${encodeURIComponent(`Halo Admin, saya ingin konfirmasi pembelian paket ${brandName}.`)}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackEvent('pixel_event_whatsapp')}

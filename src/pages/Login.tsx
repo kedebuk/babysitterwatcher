@@ -12,10 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Baby, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { lovable } from '@/integrations/lovable/index';
+import { useBrand } from '@/contexts/BrandContext';
 import { Separator } from '@/components/ui/separator';
 import { usePixel } from '@/components/MetaPixelProvider';
 
 const Login = () => {
+  const { brandName, brandLogoUrl } = useBrand();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -216,10 +218,14 @@ const Login = () => {
       <div className="relative flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-sm border-0 shadow-xl bg-white/80 backdrop-blur-md animate-fade-in">
           <CardHeader className="text-center pb-2">
-            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10">
-              <Baby className="h-8 w-8 text-primary" />
-            </div>
-            <h1 className="font-display text-2xl font-bold text-foreground">Eleanor Tracker</h1>
+            {brandLogoUrl ? (
+              <img src={brandLogoUrl} alt={brandName} className="mx-auto mb-3 h-16 w-16 rounded-3xl object-contain" />
+            ) : (
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10">
+                <Baby className="h-8 w-8 text-primary" />
+              </div>
+            )}
+            <h1 className="font-display text-2xl font-bold text-foreground">{brandName}</h1>
             <p className="text-sm text-muted-foreground">Pantau aktivitas si kecil dengan cinta 💛</p>
           </CardHeader>
 
