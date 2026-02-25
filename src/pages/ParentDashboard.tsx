@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PendingInvites from '@/components/PendingInvites';
 import { BottomNav } from '@/components/BottomNav';
+import { DailyTrivia } from '@/components/DailyTrivia';
 
 function getTotalByType(events: any[], type: string): number {
   return events.filter(e => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
@@ -272,6 +273,8 @@ const ParentDashboard = () => {
               <p className="font-semibold text-sm">{format(parseISO(selectedDate), 'EEEE, d MMMM yyyy', { locale: idLocale })}</p>
               <Button variant="ghost" size="icon" onClick={() => changeDate(1)}><ChevronRight className="h-5 w-5" /></Button>
             </div>
+
+            {child?.dob && <DailyTrivia childName={child.name} dob={child.dob} date={selectedDate} />}
 
             <div className="grid grid-cols-3 gap-3">
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
