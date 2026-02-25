@@ -46,9 +46,20 @@ const Chat = () => {
     queryKey: ['chat_children', user?.id, role],
     queryFn: async (): Promise<ChildOption[]> => {
       if (!user) return [];
-      if (role === 'parent') {
-        const { data } = await supabase.from('children').select('id, name, avatar_emoji').eq('parent_id', user.id);
-        return (data || []).map(c => ({ id: c.id, name: c.name, avatar_emoji: c.avatar_emoji || '👶' }));
+      if (role === 'parent' || role === 'viewer') {
+        const { data: own } = await supabase.from('children').select('id, name, avatar_emoji').eq('parent_id', user.id);
+        const { data: cv } = await supabase.from('child_viewers').select('child_id').eq('viewer_user_id', user.id);
+        const vcIds = (cv || []).map(v => v.child_id);
+        let viewerChildren: any[] = [];
+        if (vcIds.length > 0) {
+          const { data } = await supabase.from('children').select('id, name, avatar_emoji').in('id', vcIds);
+          viewerChildren = data || [];
+        }
+        const all: ChildOption[] = (own || []).map(c => ({ id: c.id, name: c.name, avatar_emoji: c.avatar_emoji || '👶' }));
+        for (const vc of viewerChildren) {
+          if (!all.find(c => c.id === vc.id)) all.push({ id: vc.id, name: vc.name, avatar_emoji: vc.avatar_emoji || '👶' });
+        }
+        return all;
       }
       if (role === 'babysitter') {
         const { data: assignments } = await supabase.from('assignments').select('child_id, children(id, name, avatar_emoji)');
@@ -57,12 +68,6 @@ const Chat = () => {
           name: a.children?.name || '',
           avatar_emoji: a.children?.avatar_emoji || '👶',
         }));
-      }
-      if (role === 'viewer') {
-        const { data: cv } = await supabase.from('child_viewers').select('child_id').eq('viewer_user_id', user.id);
-        if (!cv?.length) return [];
-        const { data } = await supabase.from('children').select('id, name, avatar_emoji').in('id', cv.map(v => v.child_id));
-        return (data || []).map(c => ({ id: c.id, name: c.name, avatar_emoji: c.avatar_emoji || '👶' }));
       }
       return [];
     },
@@ -77,25 +82,54 @@ const Chat = () => {
       const result: ChatContact[] = [];
       const seen = new Set<string>();
 
-      if (role === 'parent') {
-        const { data: children } = await supabase.from('children').select('id, name, avatar_emoji').eq('parent_id', user.id);
-        if (!children?.length) return [];
-        const childIds = children.map(c => c.id);
+      if (role === 'parent' || role === 'viewer') {
+        // Get own children
+        const { data: ownChildren } = await supabase.from('children').select('id, name, avatar_emoji').eq('parent_id', user.id);
+        // Get children where user is viewer
+        const { data: viewerRecs } = await supabase.from('child_viewers').select('child_id').eq('viewer_user_id', user.id);
+        const viewerChildIds = (viewerRecs || []).map(v => v.child_id);
+        let viewerChildren: any[] = [];
+        if (viewerChildIds.length > 0) {
+          const { data } = await supabase.from('children').select('id, name, avatar_emoji').in('id', viewerChildIds);
+          viewerChildren = data || [];
+        }
+        // Merge & deduplicate
+        const allChildren: any[] = [...(ownChildren || [])];
+        for (const vc of viewerChildren) {
+          if (!allChildren.find((c: any) => c.id === vc.id)) allChildren.push(vc);
+        }
+        if (!allChildren.length) return [];
+        const childIds = allChildren.map(c => c.id);
         const childMap: Record<string, string> = {};
-        children.forEach(c => { childMap[c.id] = `${c.avatar_emoji || '👶'} ${c.name}`; });
+        allChildren.forEach(c => { childMap[c.id] = `${c.avatar_emoji || '👶'} ${c.name}`; });
 
         const { data: assignments } = await supabase.from('assignments').select('child_id, babysitter_user_id').in('child_id', childIds);
         const { data: viewers } = await supabase.from('child_viewers').select('child_id, viewer_user_id').in('child_id', childIds);
 
+        // Also get parent owners of viewer children
+        const { data: childDetails } = await supabase.from('children').select('id, parent_id').in('id', childIds);
+        const parentOwnerIds = [...new Set((childDetails || []).map(c => c.parent_id))].filter(id => id !== user.id);
+
         const userIds = [...new Set([
           ...(assignments || []).map(a => a.babysitter_user_id),
           ...(viewers || []).map(v => v.viewer_user_id),
+          ...parentOwnerIds,
         ])].filter(id => id !== user.id);
         if (userIds.length === 0) return [];
 
         const { data: profiles } = await supabase.from('profiles').select('id, name, avatar_url').in('id', userIds);
         const profileMap: Record<string, any> = {};
         (profiles || []).forEach(p => { profileMap[p.id] = p; });
+
+        // Add parent owners
+        (childDetails || []).forEach(c => {
+          if (c.parent_id === user.id) return;
+          const key = `${c.parent_id}-${c.id}`;
+          if (seen.has(key)) return;
+          seen.add(key);
+          const p = profileMap[c.parent_id];
+          if (p) result.push({ id: c.parent_id, name: p.name || 'Orang Tua', avatar_url: p.avatar_url, child_id: c.id, child_name: childMap[c.id] || '', role_label: 'Orang Tua' });
+        });
 
         (assignments || []).forEach(a => {
           const key = `${a.babysitter_user_id}-${a.child_id}`;
@@ -106,7 +140,7 @@ const Chat = () => {
         });
         (viewers || []).forEach(v => {
           const key = `${v.viewer_user_id}-${v.child_id}`;
-          if (seen.has(key)) return;
+          if (seen.has(key) || v.viewer_user_id === user.id) return;
           seen.add(key);
           const p = profileMap[v.viewer_user_id];
           if (p) result.push({ id: v.viewer_user_id, name: p.name || 'Keluarga', avatar_url: p.avatar_url, child_id: v.child_id, child_name: childMap[v.child_id] || '', role_label: 'Keluarga' });
@@ -142,53 +176,6 @@ const Chat = () => {
           const p = profileMap[v.viewer_user_id];
           const child = assignments.find((a: any) => a.child_id === v.child_id)?.children;
           if (p) result.push({ id: v.viewer_user_id, name: p.name || 'Keluarga', avatar_url: p.avatar_url, child_id: v.child_id, child_name: child ? `${child.avatar_emoji || '👶'} ${child.name}` : '', role_label: 'Keluarga' });
-        });
-      } else if (role === 'viewer') {
-        const { data: cv } = await supabase.from('child_viewers').select('child_id').eq('viewer_user_id', user.id);
-        if (!cv?.length) return [];
-        const childIds = cv.map(v => v.child_id);
-        const { data: children } = await supabase.from('children').select('id, name, avatar_emoji, parent_id').in('id', childIds);
-        if (!children?.length) return [];
-        const childMap: Record<string, any> = {};
-        children.forEach(c => { childMap[c.id] = c; });
-
-        const parentIds = [...new Set(children.map(c => c.parent_id))];
-        const { data: assignments } = await supabase.from('assignments').select('child_id, babysitter_user_id').in('child_id', childIds);
-        const { data: otherViewers } = await supabase.from('child_viewers').select('child_id, viewer_user_id').in('child_id', childIds);
-
-        const userIds = [...new Set([
-          ...parentIds,
-          ...(assignments || []).map(a => a.babysitter_user_id),
-          ...(otherViewers || []).map(v => v.viewer_user_id),
-        ])].filter(id => id !== user.id);
-        if (userIds.length === 0) return [];
-
-        const { data: profiles } = await supabase.from('profiles').select('id, name, avatar_url').in('id', userIds);
-        const profileMap: Record<string, any> = {};
-        (profiles || []).forEach(p => { profileMap[p.id] = p; });
-
-        children.forEach(c => {
-          const p = profileMap[c.parent_id];
-          if (p) {
-            const key = `${c.parent_id}-${c.id}`;
-            if (!seen.has(key)) { seen.add(key); result.push({ id: c.parent_id, name: p.name || 'Orang Tua', avatar_url: p.avatar_url, child_id: c.id, child_name: `${c.avatar_emoji || '👶'} ${c.name}`, role_label: 'Orang Tua' }); }
-          }
-        });
-        (assignments || []).forEach(a => {
-          const key = `${a.babysitter_user_id}-${a.child_id}`;
-          if (seen.has(key)) return;
-          seen.add(key);
-          const p = profileMap[a.babysitter_user_id];
-          const c = childMap[a.child_id];
-          if (p && c) result.push({ id: a.babysitter_user_id, name: p.name || 'Babysitter', avatar_url: p.avatar_url, child_id: a.child_id, child_name: `${c.avatar_emoji || '👶'} ${c.name}`, role_label: 'Babysitter' });
-        });
-        (otherViewers || []).forEach(v => {
-          const key = `${v.viewer_user_id}-${v.child_id}`;
-          if (seen.has(key) || v.viewer_user_id === user.id) return;
-          seen.add(key);
-          const p = profileMap[v.viewer_user_id];
-          const c = childMap[v.child_id];
-          if (p && c) result.push({ id: v.viewer_user_id, name: p.name || 'Keluarga', avatar_url: p.avatar_url, child_id: v.child_id, child_name: `${c.avatar_emoji || '👶'} ${c.name}`, role_label: 'Keluarga' });
         });
       }
       return result;
