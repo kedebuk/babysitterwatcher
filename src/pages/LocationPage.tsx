@@ -56,9 +56,16 @@ const LocationPage = () => {
         const { data } = await supabase.from('children').select('*').in('id', childIds);
         return data || [];
       } else if (role === 'parent') {
-        // Get own children
+        // Get own children + children where invited as viewer
         const { data: ownChildren } = await supabase.from('children').select('*').eq('parent_id', user!.id);
-        return ownChildren || [];
+        const { data: viewerRecs } = await supabase.from('child_viewers').select('child_id').eq('viewer_user_id', user!.id);
+        const viewerChildIds = (viewerRecs || []).map(v => v.child_id).filter(id => !(ownChildren || []).some((c: any) => c.id === id));
+        let viewerChildren: any[] = [];
+        if (viewerChildIds.length) {
+          const { data } = await supabase.from('children').select('*').in('id', viewerChildIds);
+          viewerChildren = data || [];
+        }
+        return [...(ownChildren || []), ...viewerChildren];
       } else {
         const { data } = await supabase.from('children').select('*').eq('parent_id', user!.id);
         return data || [];
