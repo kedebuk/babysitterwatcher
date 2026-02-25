@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useChildren, useDailyLog, useEvents, useCreateOrGetDailyLog, useCreateEvent, useDeleteEvent, useChildLogs, useProfileNames } from '@/hooks/use-data';
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType, EventUnit, EventStatus } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,6 +59,16 @@ const ViewerDashboard = () => {
   const [selectedChild, setSelectedChild] = useState('');
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const { user, logout } = useAuth();
+
+  // Check can_input permission per child
+  const { data: viewerPermissions = [] } = useQuery({
+    queryKey: ['viewer_permissions', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from('child_viewers').select('child_id, can_input').eq('viewer_user_id', user!.id);
+      return data || [];
+    },
+    enabled: !!user,
+  });
   const navigate = useNavigate();
   const { toast } = useToast();
   const [viewingEvent, setViewingEvent] = useState<any>(null);
@@ -68,6 +78,7 @@ const ViewerDashboard = () => {
 
   const activeChildId = selectedChild || children[0]?.id || '';
   const child = children.find(c => c.id === activeChildId);
+  const canInput = viewerPermissions.find(p => p.child_id === activeChildId)?.can_input ?? false;
 
   const { data: log } = useDailyLog(activeChildId, selectedDate);
   const { data: events = [] } = useEvents(log?.id);
@@ -429,12 +440,16 @@ const ViewerDashboard = () => {
                               {profileNames[(event as any).created_by]}
                             </span>
                           )}
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setEditingEvent(event); }}>
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id, event.daily_log_id); }}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                          {canInput && (
+                            <>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setEditingEvent(event); }}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id, event.daily_log_id); }}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -453,11 +468,11 @@ const ViewerDashboard = () => {
             )}
 
             {/* Input section - toggleable */}
-            {!showInput ? (
+            {canInput && !showInput ? (
               <Button className="w-full h-12 text-base font-bold" onClick={() => setShowInput(true)}>
                 <Plus className="mr-2 h-5 w-5" /> Tambah Aktivitas
               </Button>
-            ) : (
+            ) : canInput && showInput ? (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-bold">➕ Tambah Event</h2>
@@ -481,7 +496,7 @@ const ViewerDashboard = () => {
                   💾 Simpan Log
                 </Button>
               </div>
-            )}
+            ) : null}
           </>
         )}
       </div>
@@ -492,7 +507,7 @@ const ViewerDashboard = () => {
           open={!!viewingEvent}
           onOpenChange={(open) => { if (!open) setViewingEvent(null); }}
           createdByName={viewingEvent?.created_by ? profileNames[viewingEvent.created_by] : undefined}
-          onEdit={() => { setEditingEvent(viewingEvent); setViewingEvent(null); }}
+          onEdit={canInput ? () => { setEditingEvent(viewingEvent); setViewingEvent(null); } : undefined}
         />
       )}
       {editingEvent && (

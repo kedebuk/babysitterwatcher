@@ -96,18 +96,21 @@ export type Database = {
       }
       child_viewers: {
         Row: {
+          can_input: boolean
           child_id: string
           created_at: string
           id: string
           viewer_user_id: string
         }
         Insert: {
+          can_input?: boolean
           child_id: string
           created_at?: string
           id?: string
           viewer_user_id: string
         }
         Update: {
+          can_input?: boolean
           child_id?: string
           created_at?: string
           id?: string
