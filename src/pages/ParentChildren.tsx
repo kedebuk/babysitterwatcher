@@ -130,12 +130,10 @@ const ParentChildren = () => {
     try {
       const email = inviteEmail.trim().toLowerCase();
 
-      // Check if user already exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id, name, email')
-        .eq('email', email)
-        .maybeSingle();
+      // Check if user already exists (using SECURITY DEFINER function to bypass RLS)
+      const { data: lookupResult } = await supabase
+        .rpc('lookup_user_by_email', { _email: email });
+      const existingProfile = lookupResult && lookupResult.length > 0 ? lookupResult[0] : null;
 
       if (existingProfile) {
         // Check if already assigned/connected
