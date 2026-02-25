@@ -1,19 +1,19 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Auth check
@@ -57,8 +57,6 @@ serve(async (req) => {
     const roleLabel = inviteRole === "parent" ? "Keluarga (Viewer)" : "Babysitter";
     const registrationUrl = signupUrl || `${supabaseUrl.replace('.supabase.co', '.lovable.app')}/login`;
 
-    // Send email using Supabase Auth admin API (SMTP)
-    // We'll use the built-in email sending via edge function
     const emailHtml = `
 <!DOCTYPE html>
 <html>
@@ -106,14 +104,39 @@ serve(async (req) => {
 </body>
 </html>`;
 
-    // Use Resend or SMTP - since we don't have Resend, we'll use Supabase's inbuilt auth.admin
-    // Actually, we need to send a custom email. Let's use the supabase auth admin inviteUserByEmail
-    // which sends an email to the user. But that creates a user. We want custom email.
-    
-    // For now, use supabase.auth.admin.inviteUserByEmail for non-existing users
-    // For existing users, they already get in-app notification
-    
-    // Check if user exists
+    // Send email via Resend
+    if (resendApiKey) {
+      const resendRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: `${brandName} <onboarding@resend.dev>`,
+          to: [email],
+          subject: `📩 Undangan bergabung di ${brandName} — ${childName}`,
+          html: emailHtml,
+        }),
+      });
+
+      const resendData = await resendRes.json();
+      
+      if (!resendRes.ok) {
+        console.error("Resend error:", resendData);
+        return new Response(JSON.stringify({ error: resendData.message || "Failed to send email", detail: resendData }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log("Email sent via Resend:", resendData);
+      return new Response(JSON.stringify({ success: true, method: "resend", id: resendData.id }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Fallback: no Resend key, use auth invite for new users
     const { data: existingProfile } = await supabase
       .from("profiles")
       .select("id")
@@ -121,7 +144,6 @@ serve(async (req) => {
       .maybeSingle();
 
     if (!existingProfile) {
-      // User doesn't exist - send invite via Supabase Auth (creates a placeholder user with invite)
       const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
         data: {
           name: email.split("@")[0],
@@ -131,15 +153,12 @@ serve(async (req) => {
         redirectTo: signupUrl || undefined,
       });
 
-      if (inviteError) {
-        // If user already invited via auth, that's OK
-        if (!inviteError.message.includes("already been registered")) {
-          console.error("Invite error:", inviteError);
-          return new Response(JSON.stringify({ error: inviteError.message }), {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
+      if (inviteError && !inviteError.message.includes("already been registered")) {
+        console.error("Invite error:", inviteError);
+        return new Response(JSON.stringify({ error: inviteError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       return new Response(JSON.stringify({ success: true, method: "auth_invite" }), {
@@ -147,7 +166,6 @@ serve(async (req) => {
       });
     }
 
-    // User exists - they already get in-app notification, just confirm
     return new Response(JSON.stringify({ success: true, method: "in_app_notification" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
