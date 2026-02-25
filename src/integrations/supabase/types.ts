@@ -825,6 +825,14 @@ export type Database = {
             }
             Returns: undefined
           }
+      lookup_user_by_email: {
+        Args: { _email: string }
+        Returns: {
+          email: string
+          id: string
+          name: string
+        }[]
+      }
     }
     Enums: {
       activity_type:
