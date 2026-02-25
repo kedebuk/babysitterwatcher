@@ -1,25 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, MessageCircle, BarChart3, Server, Eye, EyeOff, Zap } from 'lucide-react';
+import { ArrowLeft, Save, MessageCircle, BarChart3, Server, Eye, EyeOff, Zap, Palette, Upload, Image, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { usePixel } from '@/components/MetaPixelProvider';
+import { useBrand } from '@/contexts/BrandContext';
 
 interface SettingsState {
   // WhatsApp
   admin_whatsapp: string;
 
+  // Brand
+  brand_name: string;
+  brand_logo_url: string;
+  brand_favicon_url: string;
+
   // Meta Pixel
   meta_pixel_id: string;
 
   // Pixel events
-  pixel_event_landing: string; // saat user masuk landing/login
-  pixel_event_signup: string; // saat user berhasil daftar / Google auth
-  pixel_event_whatsapp: string; // saat klik tombol WhatsApp
+  pixel_event_landing: string;
+  pixel_event_signup: string;
+  pixel_event_whatsapp: string;
 
   // Meta CAPI
   meta_capi_dataset_id: string;
@@ -28,13 +34,13 @@ interface SettingsState {
 
 const defaultSettings: SettingsState = {
   admin_whatsapp: '',
+  brand_name: 'Eleanor Tracker',
+  brand_logo_url: '',
+  brand_favicon_url: '',
   meta_pixel_id: '',
-
-  // default event sesuai kebutuhan kamu
-  pixel_event_landing: 'Lead', // bisa kamu ganti ke InitiateCheckout
+  pixel_event_landing: 'Lead',
   pixel_event_signup: 'CompleteRegistration',
   pixel_event_whatsapp: 'Purchase',
-
   meta_capi_dataset_id: '',
   meta_capi_access_token: '',
 };
@@ -43,11 +49,16 @@ const AdminSettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { trackEvent, settings: pixelSettings } = usePixel();
+  const { refresh: refreshBrand } = useBrand();
 
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showCapiToken, setShowCapiToken] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const faviconInputRef = useRef<HTMLInputElement>(null);
 
   const [testingCapi, setTestingCapi] = useState(false);
 
@@ -90,6 +101,30 @@ const AdminSettings = () => {
     } else if (!settings.meta_pixel_id) {
       toast({ title: '⚠️ Belum ada konfigurasi', description: 'Isi Pixel ID atau CAPI Dataset ID + Token', variant: 'destructive' });
     }
+  };
+
+  const handleUploadImage = async (file: File, type: 'logo' | 'favicon') => {
+    const setUploading = type === 'logo' ? setUploadingLogo : setUploadingFavicon;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const filePath = `${type}.${ext}`;
+      await supabase.storage.from('brand-assets').remove([filePath]);
+      const { error: uploadError } = await supabase.storage
+        .from('brand-assets')
+        .upload(filePath, file, { upsert: true, cacheControl: '0' });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage
+        .from('brand-assets')
+        .getPublicUrl(filePath);
+      const publicUrl = urlData.publicUrl + '?t=' + Date.now();
+      const settingKey = type === 'logo' ? 'brand_logo_url' : 'brand_favicon_url';
+      update(settingKey as keyof SettingsState, publicUrl);
+      toast({ title: '✅ Upload berhasil', description: `${type === 'logo' ? 'Logo' : 'Favicon'} berhasil diupload` });
+    } catch (e: any) {
+      toast({ title: '❌ Upload gagal', description: e.message, variant: 'destructive' });
+    }
+    setUploading(false);
   };
 
   useEffect(() => {
@@ -149,6 +184,7 @@ const AdminSettings = () => {
         }
       }
 
+      await refreshBrand();
       toast({ title: '✅ Tersimpan', description: 'Pengaturan berhasil diperbarui' });
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
@@ -177,6 +213,85 @@ const AdminSettings = () => {
       </div>
 
       <div className="px-4 py-4 space-y-4 max-w-lg mx-auto">
+        {/* Brand / Identitas */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Palette className="h-5 w-5 text-primary" /> Identitas Brand
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="brand_name">Nama Brand / Aplikasi</Label>
+              <Input
+                id="brand_name"
+                placeholder="Eleanor Tracker"
+                value={settings.brand_name}
+                onChange={e => update('brand_name', e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Nama ini akan muncul di seluruh halaman website</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Logo Brand</Label>
+              <div className="flex items-center gap-3">
+                {settings.brand_logo_url ? (
+                  <div className="relative h-14 w-14 rounded-xl border bg-muted flex items-center justify-center overflow-hidden">
+                    <img src={settings.brand_logo_url} alt="Logo" className="h-full w-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => update('brand_logo_url', '')}
+                      className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-14 w-14 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                    <Image className="h-6 w-6 text-muted-foreground/50" />
+                  </div>
+                )}
+                <div>
+                  <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleUploadImage(f, 'logo'); }} />
+                  <Button type="button" variant="outline" size="sm" disabled={uploadingLogo} onClick={() => logoInputRef.current?.click()}>
+                    <Upload className="h-4 w-4 mr-1" /> {uploadingLogo ? 'Uploading...' : 'Upload Logo'}
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">Rekomendasi: 200x200px, PNG/JPG</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Favicon (Ikon Tab Browser)</Label>
+              <div className="flex items-center gap-3">
+                {settings.brand_favicon_url ? (
+                  <div className="relative h-10 w-10 rounded-lg border bg-muted flex items-center justify-center overflow-hidden">
+                    <img src={settings.brand_favicon_url} alt="Favicon" className="h-full w-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => update('brand_favicon_url', '')}
+                      className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-10 w-10 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                    <Image className="h-5 w-5 text-muted-foreground/50" />
+                  </div>
+                )}
+                <div>
+                  <input ref={faviconInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleUploadImage(f, 'favicon'); }} />
+                  <Button type="button" variant="outline" size="sm" disabled={uploadingFavicon} onClick={() => faviconInputRef.current?.click()}>
+                    <Upload className="h-4 w-4 mr-1" /> {uploadingFavicon ? 'Uploading...' : 'Upload Favicon'}
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">Rekomendasi: 32x32 atau 64x64px, PNG/ICO</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* WhatsApp Admin */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
