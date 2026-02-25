@@ -63,7 +63,7 @@ const LocationPage = () => {
       const { data } = await supabase.from('assignments').select('babysitter_user_id').eq('child_id', activeChildId);
       return (data || []).map((a: any) => a.babysitter_user_id);
     },
-    enabled: !!activeChildId && role === 'parent',
+    enabled: !!activeChildId && (role === 'parent' || role === 'viewer'),
   });
 
   const requestBabysitterLocation = async () => {
@@ -209,7 +209,7 @@ const LocationPage = () => {
           </Button>
         )}
 
-        {role === 'parent' && (
+        {(role === 'parent' || role === 'viewer') && (
           <div className="flex gap-2">
             <Button
               variant="default"
