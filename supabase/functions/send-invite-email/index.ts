@@ -43,13 +43,16 @@ serve(async (req) => {
       });
     }
 
-    // Get brand name from app_settings
-    const { data: brandSetting } = await supabase
+    // Get brand name and logo from app_settings
+    const { data: brandSettings } = await supabase
       .from("app_settings")
-      .select("value")
-      .eq("key", "brand_name")
-      .maybeSingle();
-    const brandName = brandSetting?.value || "Eleanor Tracker";
+      .select("key, value")
+      .in("key", ["brand_name", "brand_logo_url"]);
+    
+    const settingsMap: Record<string, string> = {};
+    (brandSettings || []).forEach((s: any) => { settingsMap[s.key] = s.value; });
+    const brandName = settingsMap["brand_name"] || "Eleanor Tracker";
+    const brandLogoUrl = settingsMap["brand_logo_url"] || "";
 
     const roleLabel = inviteRole === "parent" ? "Keluarga (Viewer)" : "Babysitter";
     const registrationUrl = signupUrl || `${supabaseUrl.replace('.supabase.co', '.lovable.app')}/login`;
@@ -66,10 +69,13 @@ serve(async (req) => {
     .container { max-width: 480px; margin: 40px auto; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
     .header { background: linear-gradient(135deg, #f97316, #fb923c); padding: 32px 24px; text-align: center; color: #fff; }
     .header h1 { margin: 0; font-size: 22px; }
+    .header img { max-height: 48px; margin-bottom: 12px; border-radius: 8px; }
     .body { padding: 24px; }
     .body p { color: #444; line-height: 1.6; margin: 12px 0; }
     .highlight { background: #fff7ed; border-left: 4px solid #f97316; padding: 12px 16px; border-radius: 8px; margin: 16px 0; }
     .highlight strong { color: #ea580c; }
+    .inviter { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 16px; border-radius: 8px; margin: 12px 0; }
+    .inviter strong { color: #16a34a; }
     .cta { display: block; background: #f97316; color: #fff !important; text-decoration: none; text-align: center; padding: 14px 24px; border-radius: 12px; font-weight: 600; font-size: 16px; margin: 24px 0; }
     .footer { text-align: center; padding: 16px 24px; color: #999; font-size: 12px; }
   </style>
@@ -77,11 +83,15 @@ serve(async (req) => {
 <body>
   <div class="container">
     <div class="header">
+      ${brandLogoUrl ? `<img src="${brandLogoUrl}" alt="${brandName}" />` : ''}
       <h1>📩 Undangan dari ${brandName}</h1>
     </div>
     <div class="body">
       <p>Halo! 👋</p>
-      <p><strong>${inviterName || "Seseorang"}</strong> mengundang Anda untuk bergabung di ${brandName} sebagai <strong>${roleLabel}</strong> untuk anak:</p>
+      <div class="inviter">
+        ✉️ Diundang oleh: <strong>${inviterName || "Seseorang"}</strong>
+      </div>
+      <p>Anda diundang untuk bergabung di <strong>${brandName}</strong> sebagai <strong>${roleLabel}</strong> untuk anak:</p>
       <div class="highlight">
         <strong>👶 ${childName}</strong>
       </div>
