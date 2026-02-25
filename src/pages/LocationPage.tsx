@@ -55,6 +55,10 @@ const LocationPage = () => {
         const childIds = viewerRecs.map(v => v.child_id);
         const { data } = await supabase.from('children').select('*').in('id', childIds);
         return data || [];
+      } else if (role === 'parent') {
+        // Get own children
+        const { data: ownChildren } = await supabase.from('children').select('*').eq('parent_id', user!.id);
+        return ownChildren || [];
       } else {
         const { data } = await supabase.from('children').select('*').eq('parent_id', user!.id);
         return data || [];
@@ -109,7 +113,7 @@ const LocationPage = () => {
 
       return people;
     },
-    enabled: !!activeChildId && !!user && role !== 'babysitter',
+    enabled: !!activeChildId && !!user && (role === 'parent' || role === 'viewer'),
   });
 
   // Reset selected people when child changes
@@ -271,19 +275,17 @@ const LocationPage = () => {
           </SelectContent>
         </Select>
 
-        {role === 'babysitter' && (
-          <Button
-            className={`w-full h-12 text-base font-bold ${sharing ? 'bg-destructive hover:bg-destructive/90' : ''}`}
-            onClick={sharing ? stopSharing : startSharing}
-            disabled={!activeChildId}
-          >
-            {sharing ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Matikan Lokasi</>
-            ) : (
-              <><Navigation className="mr-2 h-4 w-4" /> Bagikan Lokasi</>
-            )}
-          </Button>
-        )}
+        <Button
+          className={`w-full h-12 text-base font-bold ${sharing ? 'bg-destructive hover:bg-destructive/90' : ''}`}
+          onClick={sharing ? stopSharing : startSharing}
+          disabled={!activeChildId}
+        >
+          {sharing ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Nonaktifkan Lokasi Saya</>
+          ) : (
+            <><Navigation className="mr-2 h-4 w-4" /> Aktifkan Lokasi Saya</>
+          )}
+        </Button>
 
         {(role === 'parent' || role === 'viewer') && connectedPeople.length > 0 && (
           <Card className="border shadow-sm">
