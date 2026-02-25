@@ -76,8 +76,7 @@ const LocationPage = () => {
 
   const [selectedChild, setSelectedChild] = useState('');
   const activeChildId = selectedChild || assignedChildren[0]?.id || '';
-  const [sharing, setSharing] = useState(false);
-  const [watchId, setWatchId] = useState<number | null>(null);
+  const [sendingLocation, setSendingLocation] = useState(false);
   const [requesting, setRequesting] = useState(false);
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
 
@@ -195,14 +194,14 @@ const LocationPage = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeChildId, qc]);
 
-  const startSharing = useCallback(() => {
+  const sendMyLocation = useCallback(async () => {
     if (!activeChildId || !user) return;
     if (!navigator.geolocation) {
       toast({ title: 'Error', description: 'GPS tidak didukung di perangkat ini', variant: 'destructive' });
       return;
     }
-
-    const id = navigator.geolocation.watchPosition(
+    setSendingLocation(true);
+    navigator.geolocation.getCurrentPosition(
       async (pos) => {
         await supabase.from('location_pings').insert({
           user_id: user.id,
@@ -211,30 +210,16 @@ const LocationPage = () => {
           longitude: pos.coords.longitude,
           accuracy: pos.coords.accuracy,
         });
+        toast({ title: '📍 Lokasi terkirim', description: 'Posisi Anda berhasil dikirim.' });
+        setSendingLocation(false);
       },
       (err) => {
         toast({ title: 'GPS Error', description: err.message, variant: 'destructive' });
+        setSendingLocation(false);
       },
-      { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 }
+      { enableHighAccuracy: true, timeout: 15000 }
     );
-    setWatchId(id);
-    setSharing(true);
-    toast({ title: '📍 Lokasi aktif', description: 'Lokasi Anda sedang dibagikan' });
   }, [activeChildId, user, toast]);
-
-  const stopSharing = useCallback(() => {
-    if (watchId !== null) {
-      navigator.geolocation.clearWatch(watchId);
-      setWatchId(null);
-    }
-    setSharing(false);
-    toast({ title: 'Lokasi dimatikan' });
-  }, [watchId, toast]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => { if (watchId !== null) navigator.geolocation.clearWatch(watchId); };
-  }, [watchId]);
 
   const backPath = role === 'parent' ? '/parent/dashboard' : role === 'viewer' ? '/viewer/dashboard' : '/babysitter/today';
 
@@ -283,14 +268,14 @@ const LocationPage = () => {
         </Select>
 
         <Button
-          className={`w-full h-12 text-base font-bold ${sharing ? 'bg-destructive hover:bg-destructive/90' : ''}`}
-          onClick={sharing ? stopSharing : startSharing}
-          disabled={!activeChildId}
+          className="w-full h-12 text-base font-bold"
+          onClick={sendMyLocation}
+          disabled={!activeChildId || sendingLocation}
         >
-          {sharing ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Nonaktifkan Lokasi Saya</>
+          {sendingLocation ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Mengirim Lokasi...</>
           ) : (
-            <><Navigation className="mr-2 h-4 w-4" /> Aktifkan Lokasi Saya</>
+            <><Navigation className="mr-2 h-4 w-4" /> Kirim Lokasi Saya</>
           )}
         </Button>
 
