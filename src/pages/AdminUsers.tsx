@@ -30,6 +30,9 @@ const AdminUsers = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; email: string } | null>(null);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [restoreTarget, setRestoreTarget] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false);
+  const [hardDeleteTarget, setHardDeleteTarget] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [hardDeleteConfirm, setHardDeleteConfirm] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [subForm, setSubForm] = useState({
     plan_type: 'trial' as 'trial' | 'standard' | 'premium_promo',
@@ -99,6 +102,12 @@ const AdminUsers = () => {
     setRestoreDialogOpen(true);
   };
 
+  const handleHardDeleteUser = (profile: any) => {
+    setHardDeleteTarget({ id: profile.id, name: profile.name, email: profile.email });
+    setHardDeleteConfirm('');
+    setHardDeleteDialogOpen(true);
+  };
+
   const confirmDeleteUser = () => {
     if (deleteTarget) {
       deleteUserMutation.mutate(deleteTarget.id);
@@ -108,6 +117,36 @@ const AdminUsers = () => {
   const confirmRestoreUser = () => {
     if (restoreTarget) {
       restoreUserMutation.mutate(restoreTarget.id);
+    }
+  };
+
+  const hardDeleteMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke('hard-delete-user', {
+        body: { user_id: userId },
+      });
+      if (error) throw new Error(error.message || 'Hard delete failed');
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin_all_profiles'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_roles'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_subscriptions'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_children_for_users'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_assignments_for_users'] });
+      toast({ title: '🗑️ User dihapus permanen', description: 'Semua data user telah dihapus.' });
+      setHardDeleteDialogOpen(false);
+      setHardDeleteTarget(null);
+    },
+    onError: (err: any) => {
+      toast({ title: 'Gagal menghapus', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const confirmHardDelete = () => {
+    if (hardDeleteTarget && hardDeleteConfirm === hardDeleteTarget.email) {
+      hardDeleteMutation.mutate(hardDeleteTarget.id);
     }
   };
 
@@ -482,9 +521,12 @@ const AdminUsers = () => {
                       </div>
                       <span className="text-xs font-medium px-2 py-1 rounded-full bg-secondary shrink-0">{getRoleBadge(role)}</span>
                     </div>
-                    <div className="flex justify-end pl-12">
+                    <div className="flex justify-end gap-1.5 pl-12">
                       <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleRestoreUser(profile)}>
                         <RotateCcw className="h-3 w-3" /> Restore
+                      </Button>
+                      <Button variant="destructive" size="sm" className="h-7 text-xs gap-1" onClick={() => handleHardDeleteUser(profile)}>
+                        <Trash2 className="h-3 w-3" /> Hapus Permanen
                       </Button>
                     </div>
                   </CardContent>
@@ -655,6 +697,39 @@ const AdminUsers = () => {
             >
               {restoreUserMutation.isPending ? 'Memulihkan...' : 'Ya, Restore User'}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Hard Delete User Confirmation */}
+      <AlertDialog open={hardDeleteDialogOpen} onOpenChange={(o) => { setHardDeleteDialogOpen(o); if (!o) { setHardDeleteTarget(null); setHardDeleteConfirm(''); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>🗑️ Hapus Permanen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Anda yakin ingin menghapus <strong>{hardDeleteTarget?.name}</strong> secara <strong className="text-destructive">PERMANEN</strong>?
+              <br /><br />
+              ⚠️ Semua data user akan dihapus termasuk: profil, anak-anak, log harian, event, assignment, langganan, dan akun login. <strong>Tindakan ini TIDAK BISA dibatalkan.</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label>Ketik <span className="font-bold text-destructive">{hardDeleteTarget?.email}</span> untuk konfirmasi:</Label>
+            <Input
+              placeholder="Ketik email user"
+              value={hardDeleteConfirm}
+              onChange={e => setHardDeleteConfirm(e.target.value)}
+              className="h-11"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={hardDeleteMutation.isPending}>Batal</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={confirmHardDelete}
+              disabled={hardDeleteConfirm !== hardDeleteTarget?.email || hardDeleteMutation.isPending}
+            >
+              {hardDeleteMutation.isPending ? 'Menghapus...' : '🗑️ Hapus Permanen'}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
