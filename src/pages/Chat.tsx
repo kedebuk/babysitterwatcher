@@ -208,13 +208,21 @@ const Chat = () => {
     refetchInterval: 5000,
   });
 
-  // Realtime subscription
+  // Realtime subscription - listen for ALL changes (INSERT + UPDATE for read status)
   useEffect(() => {
     if (!selectedContact || !user) return;
     const channel = supabase
-      .channel(`chat-${selectedContact.child_id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `child_id=eq.${selectedContact.child_id}` }, () => {
-        qc.invalidateQueries({ queryKey: ['chat_messages', selectedContact.id, selectedContact.child_id] });
+      .channel(`chat-${selectedContact.child_id}-${selectedContact.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, (payload: any) => {
+        const row = payload.new || payload.old;
+        if (!row) return;
+        // Only refresh if this message is relevant to this conversation
+        const isRelevant = row.child_id === selectedContact.child_id &&
+          ((row.sender_id === user.id && row.receiver_id === selectedContact.id) ||
+           (row.sender_id === selectedContact.id && row.receiver_id === user.id));
+        if (isRelevant) {
+          qc.invalidateQueries({ queryKey: ['chat_messages', selectedContact.id, selectedContact.child_id] });
+        }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -244,6 +252,12 @@ const Chat = () => {
       child_id: selectedContact.child_id,
       content: text,
     });
+    // Send notification to receiver
+    const senderName = user.name || 'Seseorang';
+    await supabase.from('notifications').insert({
+      user_id: selectedContact.id,
+      message: `💬 Pesan baru dari ${senderName}: "${text.length > 50 ? text.slice(0, 50) + '...' : text}"`,
+    }).then(() => {});
   };
 
   const backPath = role === 'parent' ? '/parent/dashboard' : '/babysitter/today';
