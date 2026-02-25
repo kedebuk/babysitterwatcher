@@ -274,7 +274,7 @@ const ParentDashboard = () => {
               <Button variant="ghost" size="icon" onClick={() => changeDate(1)}><ChevronRight className="h-5 w-5" /></Button>
             </div>
 
-            {child?.dob && <DailyTrivia childName={child.name} dob={child.dob} date={selectedDate} />}
+            {child?.dob && <DailyTrivia childName={child.name} childId={child.id} dob={child.dob} date={selectedDate} />}
 
             <div className="grid grid-cols-3 gap-3">
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
