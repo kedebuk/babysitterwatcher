@@ -535,25 +535,27 @@ const ParentChildren = () => {
                           <p className="text-xs text-muted-foreground">{viewer.profiles?.email} • Keluarga</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant={viewer.can_input ? "default" : "outline"}
-                          size="sm"
-                          className="h-7 text-[10px] px-2"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            const newVal = !viewer.can_input;
-                            await supabase.from('child_viewers').update({ can_input: newVal }).eq('id', viewer.id);
-                            qc.invalidateQueries({ queryKey: ['child_viewers'] });
-                            toast({ title: newVal ? '✅ Bisa input' : '👁️ View only', description: `${viewer.profiles?.name || 'Keluarga'} ${newVal ? 'sekarang bisa input data' : 'hanya bisa melihat'}` });
-                          }}
-                        >
-                          {viewer.can_input ? '✏️ Bisa Input' : '👁️ View Only'}
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleRemoveViewer(viewer.id); }}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
+                      {child.parent_id === user?.id ? (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant={viewer.can_input ? "default" : "outline"}
+                            size="sm"
+                            className="h-7 text-[10px] px-2"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const newVal = !viewer.can_input;
+                              await supabase.from('child_viewers').update({ can_input: newVal }).eq('id', viewer.id);
+                              qc.invalidateQueries({ queryKey: ['child_viewers'] });
+                              toast({ title: newVal ? '✅ Bisa input' : '👁️ View only', description: `${viewer.profiles?.name || 'Keluarga'} ${newVal ? 'sekarang bisa input data' : 'hanya bisa melihat'}` });
+                            }}
+                          >
+                            {viewer.can_input ? '✏️ Bisa Input' : '👁️ View Only'}
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleRemoveViewer(viewer.id); }}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ) : null}
                     </div>
                   ))}
 
