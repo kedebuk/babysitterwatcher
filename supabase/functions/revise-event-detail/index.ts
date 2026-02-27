@@ -22,16 +22,23 @@ serve(async (req) => {
     const foodTypes = ["mpasi", "snack", "buah"];
     const isFood = foodTypes.includes(type);
 
-    const prompt = `Kamu adalah asisten pencatat aktivitas bayi/balita. Perbaiki dan percantik teks catatan berikut agar lebih rapi, jelas, dan enak dibaca oleh orang tua. Tetap singkat (1-2 kalimat). Gunakan Bahasa Indonesia. Jangan ubah fakta, hanya perbaiki penulisan.
+    const prompt = `Kamu adalah asisten pencatat aktivitas bayi/balita. Lakukan 2 tugas:
 
-Tipe aktivitas: ${type || "catatan"}
-${amount ? `Jumlah: ${amount}${unit || ''}` : ''}
-Catatan asli: "${detail}"
+1. Perbaiki teks catatan agar lebih rapi dan enak dibaca. Tetap singkat (1-2 kalimat). Bahasa Indonesia.
+2. ${isFood ? `ESTIMASI BERAT MAKANAN dalam gram dari deskripsi. Contoh:
+   - "Nasi 130ml habis + dori panggang kecap habis + telur habis" → sekitar 200-250 gram total
+   - "Bola bola ubi ungu 3pcs" → sekitar 90 gram (30g per pcs)
+   - "Bubur ayam 1 mangkok kecil" → sekitar 150 gram
+   - "Pisang 1 buah" → sekitar 80 gram
+   Jika ada angka ml untuk makanan, konversi ke gram (1ml ≈ 1g untuk makanan). Hitung TOTAL semua item.
+   Jika user sudah input jumlah yang masuk akal (>50g untuk makanan utama), gunakan itu.
+   Jumlah user saat ini: ${amount || 'tidak ada'}${unit || ''}` : 'Tidak perlu estimasi berat.'}
 
-${isFood ? `PENTING: Untuk makanan/MPASI, satuan yang benar adalah "gram" bukan "ml". Jika di catatan tertulis "ml" untuk makanan, ubah jadi "gram". Juga berikan koreksi unit dan amount yang benar dalam format JSON.` : ''}
+Tipe: ${type || "catatan"}
+Catatan: "${detail}"
 
-Balas HANYA dalam format JSON (tanpa markdown):
-{"revised": "teks yang sudah diperbaiki"${isFood ? ', "corrected_unit": "gram atau ml", "corrected_amount": angka_atau_null' : ''}}`;
+Balas HANYA JSON (tanpa markdown):
+{"revised": "teks rapi", "corrected_amount": ${isFood ? 'angka_gram_estimasi' : 'null'}, "corrected_unit": ${isFood ? '"gram"' : 'null'}}`;
 
     const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -55,21 +62,18 @@ Balas HANYA dalam format JSON (tanpa markdown):
 
     const result = await aiResponse.json();
     let content = result.choices?.[0]?.message?.content?.trim() || "";
-    
-    // Try to parse JSON response
+
     try {
-      // Remove markdown code fences if present
       content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
       const parsed = JSON.parse(content);
       return new Response(JSON.stringify({
         revised: parsed.revised || detail,
         corrected_unit: parsed.corrected_unit || null,
-        corrected_amount: parsed.corrected_amount || null,
+        corrected_amount: parsed.corrected_amount != null ? Number(parsed.corrected_amount) : null,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } catch {
-      // If not JSON, use as plain text
       return new Response(JSON.stringify({ revised: content || detail }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
