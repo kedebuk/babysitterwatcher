@@ -283,6 +283,26 @@ const ParentDashboard = () => {
 
             {child?.dob && <DailyTrivia childName={child.name} childId={child.id} dob={child.dob} date={selectedDate} />}
 
+            <Card
+              className="border-0 shadow-sm cursor-pointer transition-all hover:shadow-md bg-gradient-to-r from-primary/5 to-accent/10"
+              onClick={() => navigate('/insights')}
+            >
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-base">🧠</div>
+                    <span className="text-sm font-bold text-foreground">Insight Harian {child?.name?.split(' ')[0]}</span>
+                    <span className="text-xs">✨📊</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-primary/60">tap baca</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 ml-10">Analisis pola tidur, makan & aktivitas AI</p>
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-3 gap-3">
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
