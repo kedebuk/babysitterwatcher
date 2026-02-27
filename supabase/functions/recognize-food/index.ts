@@ -66,7 +66,7 @@ Balas HANYA JSON (tanpa markdown):
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "qwen/qwen3-4b:free",
+        model: "openrouter/free",
         messages: [{
           role: "user",
           content: [

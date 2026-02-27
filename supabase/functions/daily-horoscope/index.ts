@@ -70,7 +70,7 @@ Tulis dalam Bahasa Indonesia, maks 4-5 kalimat pendek. Gaya bahasa: lucu, hangat
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "qwen/qwen3-4b:free",
+        model: "openrouter/free",
         messages: [{ role: "user", content: prompt }],
         stream: false,
       }),
