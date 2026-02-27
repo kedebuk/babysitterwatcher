@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.restore-user]
 verify_jwt = false
+
+[functions.recognize-food]
+verify_jwt = false
