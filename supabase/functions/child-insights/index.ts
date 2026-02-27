@@ -88,7 +88,7 @@ Gunakan emoji untuk mempercantik. Jangan berikan disclaimer medis berlebihan.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "qwen/qwen3-4b:free",
+        model: "openrouter/free",
         messages: [{ role: "user", content: prompt }],
         stream: false,
       }),
