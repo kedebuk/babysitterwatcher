@@ -47,6 +47,7 @@ const ParentDashboard = () => {
   const [selectedChild, setSelectedChild] = useState('');
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const { toast } = useToast();
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const { user, logout, setActiveRole } = useAuth();
   const navigate = useNavigate();
   const deleteEvent = useDeleteEvent();
@@ -289,16 +290,17 @@ const ParentDashboard = () => {
                 </div>
                 <p className="text-2xl font-bold">{totalSusu} <span className="text-sm font-normal text-muted-foreground">ml</span></p>
               </CardContent></Card>
-               <Card className="border-0 shadow-sm"><CardContent className="p-3">
+               <Card className="border-0 shadow-sm cursor-pointer" onClick={() => setExpandedCard(expandedCard === 'makan' ? null : 'makan')}>
+                <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-makan text-sm">🥣</div>
                   <span className="text-xs text-muted-foreground">Total Makan</span>
                 </div>
                 <p className="text-2xl font-bold">{totalMakan} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
-                {mpasiEvents.length > 0 && (
-                  <div className="mt-1.5 space-y-0.5">
+                {expandedCard === 'makan' && mpasiEvents.length > 0 && (
+                  <div className="mt-2 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
                     {mpasiEvents.map((e, i) => (
-                      <p key={i} className="text-[10px] text-muted-foreground truncate">🍽️ {e.detail || 'MPASI'}{e.amount ? ` (${e.amount}${e.unit || 'g'})` : ''}</p>
+                      <p key={i} className="text-xs text-muted-foreground">🍽️ {e.detail || 'MPASI'}{e.amount ? ` — ${e.amount}${e.unit || 'g'}` : ''}</p>
                     ))}
                   </div>
                 )}
@@ -317,30 +319,32 @@ const ParentDashboard = () => {
                 </div>
                 <p className="text-lg font-bold">{vitaminEvent ? `✅ ${vitaminEvent.time?.substring(0, 5)}` : '❌ Belum'}</p>
               </CardContent></Card>
-               <Card className="border-0 shadow-sm"><CardContent className="p-3">
+               <Card className="border-0 shadow-sm cursor-pointer" onClick={() => setExpandedCard(expandedCard === 'snack' ? null : 'snack')}>
+                <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-snack text-sm">🍪</div>
                   <span className="text-xs text-muted-foreground">Snack</span>
                 </div>
                 <p className="text-2xl font-bold">{totalSnack} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
-                {snackEvents.length > 0 && (
-                  <div className="mt-1.5 space-y-0.5">
+                {expandedCard === 'snack' && snackEvents.length > 0 && (
+                  <div className="mt-2 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
                     {snackEvents.map((e, i) => (
-                      <p key={i} className="text-[10px] text-muted-foreground truncate">🍪 {e.detail || 'Snack'}{e.amount ? ` (${e.amount}${e.unit || 'g'})` : ''}</p>
+                      <p key={i} className="text-xs text-muted-foreground">🍪 {e.detail || 'Snack'}{e.amount ? ` — ${e.amount}${e.unit || 'g'}` : ''}</p>
                     ))}
                   </div>
                 )}
               </CardContent></Card>
-               <Card className="border-0 shadow-sm"><CardContent className="p-3">
+               <Card className="border-0 shadow-sm cursor-pointer" onClick={() => setExpandedCard(expandedCard === 'buah' ? null : 'buah')}>
+                <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-buah text-sm">🍎</div>
                   <span className="text-xs text-muted-foreground">Buah</span>
                 </div>
                 <p className="text-2xl font-bold">{totalBuah} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
-                {buahEvents.length > 0 && (
-                  <div className="mt-1.5 space-y-0.5">
+                {expandedCard === 'buah' && buahEvents.length > 0 && (
+                  <div className="mt-2 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
                     {buahEvents.map((e, i) => (
-                      <p key={i} className="text-[10px] text-muted-foreground truncate">🍉 {e.detail || 'Buah'}{e.amount ? ` (${e.amount}${e.unit || 'g'})` : ''}</p>
+                      <p key={i} className="text-xs text-muted-foreground">🍉 {e.detail || 'Buah'}{e.amount ? ` — ${e.amount}${e.unit || 'g'}` : ''}</p>
                     ))}
                   </div>
                 )}
