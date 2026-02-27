@@ -188,11 +188,21 @@ const BabysitterToday = () => {
         if (row.afterPhotoFile) {
           afterPhotoUrl = (await uploadPhoto(row.afterPhotoFile)) || undefined;
         }
+        // Auto-revise detail text via AI
+        let revisedDetail = row.detail || undefined;
+        if (row.detail && row.detail.trim().length >= 3) {
+          try {
+            const { data: revData } = await supabase.functions.invoke('revise-event-detail', {
+              body: { detail: row.detail, type: row.type, amount: row.amount, unit: row.unit },
+            });
+            if (revData?.revised) revisedDetail = revData.revised;
+          } catch { /* fallback to original */ }
+        }
         await createEvent.mutateAsync({
           daily_log_id: dailyLog.id,
           time: row.time + ':00',
           type: row.type,
-          detail: row.detail || undefined,
+          detail: revisedDetail,
           amount: row.amount ? Number(row.amount) : undefined,
           unit: row.unit || undefined,
           status: row.status || undefined,
