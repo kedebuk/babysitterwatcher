@@ -88,7 +88,10 @@ export function DailyTrivia({ childName, childId, dob, date }: DailyTriviaProps)
               {trivia.western.emoji} {trivia.chinese.emoji}
             </span>
           </div>
-          {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+          <div className="flex items-center gap-1">
+            {!open && <span className="text-[10px] text-primary/60">tap baca</span>}
+            {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+          </div>
         </div>
 
         {open && (
