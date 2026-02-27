@@ -150,6 +150,11 @@ const ParentDashboard = () => {
   const vitaminEvent = events.find(e => e.type === 'vitamin');
   const mandiEvents = events.filter(e => e.type === 'mandi' || e.type === 'lap_badan');
 
+  // Food detail lists
+  const mpasiEvents = events.filter(e => e.type === 'mpasi');
+  const snackEvents = events.filter(e => e.type === 'snack');
+  const buahEvents = events.filter(e => e.type === 'buah');
+
   const changeDate = (d: number) => {
     const dt = new Date(selectedDate);
     dt.setDate(dt.getDate() + d);
@@ -284,12 +289,19 @@ const ParentDashboard = () => {
                 </div>
                 <p className="text-2xl font-bold">{totalSusu} <span className="text-sm font-normal text-muted-foreground">ml</span></p>
               </CardContent></Card>
-              <Card className="border-0 shadow-sm"><CardContent className="p-3">
+               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-makan text-sm">🥣</div>
                   <span className="text-xs text-muted-foreground">Total Makan</span>
                 </div>
                 <p className="text-2xl font-bold">{totalMakan} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
+                {mpasiEvents.length > 0 && (
+                  <div className="mt-1.5 space-y-0.5">
+                    {mpasiEvents.map((e, i) => (
+                      <p key={i} className="text-[10px] text-muted-foreground truncate">🍽️ {e.detail || 'MPASI'}{e.amount ? ` (${e.amount}${e.unit || 'g'})` : ''}</p>
+                    ))}
+                  </div>
+                )}
               </CardContent></Card>
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
@@ -305,19 +317,33 @@ const ParentDashboard = () => {
                 </div>
                 <p className="text-lg font-bold">{vitaminEvent ? `✅ ${vitaminEvent.time?.substring(0, 5)}` : '❌ Belum'}</p>
               </CardContent></Card>
-              <Card className="border-0 shadow-sm"><CardContent className="p-3">
+               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-snack text-sm">🍪</div>
                   <span className="text-xs text-muted-foreground">Snack</span>
                 </div>
                 <p className="text-2xl font-bold">{totalSnack} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
+                {snackEvents.length > 0 && (
+                  <div className="mt-1.5 space-y-0.5">
+                    {snackEvents.map((e, i) => (
+                      <p key={i} className="text-[10px] text-muted-foreground truncate">🍪 {e.detail || 'Snack'}{e.amount ? ` (${e.amount}${e.unit || 'g'})` : ''}</p>
+                    ))}
+                  </div>
+                )}
               </CardContent></Card>
-              <Card className="border-0 shadow-sm"><CardContent className="p-3">
+               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-buah text-sm">🍎</div>
                   <span className="text-xs text-muted-foreground">Buah</span>
                 </div>
                 <p className="text-2xl font-bold">{totalBuah} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
+                {buahEvents.length > 0 && (
+                  <div className="mt-1.5 space-y-0.5">
+                    {buahEvents.map((e, i) => (
+                      <p key={i} className="text-[10px] text-muted-foreground truncate">🍉 {e.detail || 'Buah'}{e.amount ? ` (${e.amount}${e.unit || 'g'})` : ''}</p>
+                    ))}
+                  </div>
+                )}
               </CardContent></Card>
             </div>
 
