@@ -70,7 +70,7 @@ Tulis dalam Bahasa Indonesia, maks 4-5 kalimat pendek. Gaya bahasa: lucu, hangat
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.0-flash-exp:free",
+        model: "google/gemini-2.0-flash-001",
         messages: [{ role: "user", content: prompt }],
         stream: false,
       }),
