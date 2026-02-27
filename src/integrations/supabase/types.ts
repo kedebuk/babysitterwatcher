@@ -348,6 +348,42 @@ export type Database = {
         }
         Relationships: []
       }
+      food_memory: {
+        Row: {
+          avg_weight_gram: number | null
+          created_at: string
+          description: string | null
+          food_name: string
+          id: string
+          parent_id: string
+          photo_url: string | null
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          avg_weight_gram?: number | null
+          created_at?: string
+          description?: string | null
+          food_name: string
+          id?: string
+          parent_id: string
+          photo_url?: string | null
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          avg_weight_gram?: number | null
+          created_at?: string
+          description?: string | null
+          food_name?: string
+          id?: string
+          parent_id?: string
+          photo_url?: string | null
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
       inventory_item_shares: {
         Row: {
           child_id: string

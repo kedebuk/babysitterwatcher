@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { BottomNav } from '@/components/BottomNav';
 import { EditEventDialog } from '@/components/EditEventDialog';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
+import { FoodScanButton } from '@/components/FoodScanButton';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'snack', 'buah', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
@@ -301,7 +302,7 @@ const ParentInput = () => {
               <h2 className="text-sm font-bold mb-2">➕ Tambah Event</h2>
               <div className="space-y-3">
                 {newRows.map(row => (
-                  <EventRowCard key={row.tempId} row={row} updateRow={updateRow} removeRow={removeRow} onPhotoSelect={handlePhotoSelect} onRemovePhoto={handleRemovePhoto} />
+                  <EventRowCard key={row.tempId} row={row} updateRow={updateRow} removeRow={removeRow} onPhotoSelect={handlePhotoSelect} onRemovePhoto={handleRemovePhoto} parentId={user?.id || ''} />
                 ))}
               </div>
               <Button variant="outline" className="w-full h-12 mt-3 border-dashed" onClick={addRow}>
@@ -344,12 +345,13 @@ const ParentInput = () => {
 };
 
 // Extracted event row component
-function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto }: {
+function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto, parentId }: {
   row: EventRow;
   updateRow: (tempId: string, field: keyof EventRow, value: any) => void;
   removeRow: (tempId: string) => void;
   onPhotoSelect: (tempId: string, file: File, which: 'before' | 'after') => void;
   onRemovePhoto: (tempId: string, which: 'before' | 'after') => void;
+  parentId: string;
 }) {
   const beforeFileRef = useRef<HTMLInputElement>(null);
   const afterFileRef = useRef<HTMLInputElement>(null);
@@ -395,6 +397,17 @@ function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto 
               </Select>
             )}
           </div>
+        )}
+        {/* Food Scan Button */}
+        {(row.type === 'mpasi' || row.type === 'snack' || row.type === 'buah') && (
+          <FoodScanButton
+            parentId={parentId}
+            onResult={(detail, amount, unit) => {
+              updateRow(row.tempId, 'detail', detail);
+              if (amount) updateRow(row.tempId, 'amount', amount);
+              if (unit) updateRow(row.tempId, 'unit', unit);
+            }}
+          />
         )}
         {/* Before & After Photos */}
         <div className="flex gap-3">
