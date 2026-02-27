@@ -27,7 +27,6 @@ serve(async (req) => {
       });
     }
 
-    // Get today's events
     const logDate = date || new Date().toISOString().split("T")[0];
     const { data: logs } = await supabase
       .from("daily_logs")
@@ -61,17 +60,17 @@ Aktivitas hari ini: ${eventSummary}
 
 Tulis dalam Bahasa Indonesia, maks 4-5 kalimat pendek. Gaya bahasa: lucu, hangat, penuh emoji, seperti ramalan di majalah tapi versi bayi. Jangan terlalu serius. Jadikan aktivitas hari ini bagian dari "ramalan". Mulai dengan emoji zodiak lalu langsung cerita.`;
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY not configured");
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.0-flash-exp:free",
         messages: [{ role: "user", content: prompt }],
         stream: false,
       }),
@@ -81,11 +80,6 @@ Tulis dalam Bahasa Indonesia, maks 4-5 kalimat pendek. Gaya bahasa: lucu, hangat
       if (aiResponse.status === 429) {
         return new Response(JSON.stringify({ error: "Terlalu banyak permintaan, coba lagi nanti." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: "Kredit AI habis." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await aiResponse.text();
