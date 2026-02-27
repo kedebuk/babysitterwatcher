@@ -240,12 +240,16 @@ const ViewerDashboard = () => {
         }
         // Auto-revise detail text via AI
         let revisedDetail = row.detail || undefined;
+        let finalAmount = row.amount ? Number(row.amount) : undefined;
+        let finalUnit = row.unit || undefined;
         if (row.detail && row.detail.trim().length >= 3) {
           try {
             const { data: revData } = await supabase.functions.invoke('revise-event-detail', {
               body: { detail: row.detail, type: row.type, amount: row.amount, unit: row.unit },
             });
             if (revData?.revised) revisedDetail = revData.revised;
+            if (revData?.corrected_amount) finalAmount = Number(revData.corrected_amount);
+            if (revData?.corrected_unit) finalUnit = revData.corrected_unit;
           } catch { /* fallback to original */ }
         }
         await createEvent.mutateAsync({
@@ -253,8 +257,8 @@ const ViewerDashboard = () => {
           time: row.time + ':00',
           type: row.type,
           detail: revisedDetail,
-          amount: row.amount ? Number(row.amount) : undefined,
-          unit: row.unit || undefined,
+          amount: finalAmount,
+          unit: finalUnit,
           status: row.status || undefined,
           photo_url: photoUrl,
           photo_url_after: afterPhotoUrl,
