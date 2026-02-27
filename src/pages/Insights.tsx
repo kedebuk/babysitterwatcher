@@ -4,11 +4,13 @@ import { useChildren } from '@/hooks/use-data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Brain, Loader2 } from 'lucide-react';
+import { ArrowLeft, Brain, Loader2, Download, Copy, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
+import { format } from 'date-fns';
+import { id as idLocale } from 'date-fns/locale';
 
 const Insights = () => {
   const { user } = useAuth();
@@ -20,6 +22,7 @@ const Insights = () => {
   const [loading, setLoading] = useState(false);
 
   const activeChildId = selectedChild || children[0]?.id || '';
+  const child = children.find((c: any) => c.id === activeChildId);
 
   const handleAnalyze = async () => {
     if (!activeChildId) return;
@@ -39,6 +42,40 @@ const Insights = () => {
     }
   };
 
+  const todayStr = format(new Date(), 'EEEE, d MMMM yyyy', { locale: idLocale });
+  const childName = child?.name || 'Anak';
+
+  const getPlainText = () => {
+    const header = `🧠 Insight Harian ${childName}\n📅 ${todayStr}\n\n`;
+    // Strip markdown bold/italic for plain text
+    const plain = insight
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/#{1,3}\s/g, '');
+    return header + plain;
+  };
+
+  const handleCopyClipboard = () => {
+    navigator.clipboard.writeText(getPlainText());
+    toast({ title: '✅ Disalin!', description: 'Insight sudah di-copy ke clipboard' });
+  };
+
+  const handleShareWhatsApp = () => {
+    const text = encodeURIComponent(getPlainText());
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  };
+
+  const handleDownloadNote = () => {
+    const blob = new Blob([getPlainText()], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `insight-${childName.replace(/\s+/g, '-').toLowerCase()}-${format(new Date(), 'yyyy-MM-dd')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: '✅ Terunduh!', description: 'File insight berhasil diunduh' });
+  };
+
   const backPath = user?.role === 'parent' ? '/parent/dashboard' : '/babysitter/today';
 
   return (
@@ -49,7 +86,7 @@ const Insights = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Brain className="h-5 w-5" />
-          <h1 className="text-lg font-bold">Insight Cerdas</h1>
+          <h1 className="text-lg font-bold">Insight Harian</h1>
         </div>
       </div>
 
@@ -66,11 +103,25 @@ const Insights = () => {
         </Button>
 
         {insight && (
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-4 prose prose-sm max-w-none text-sm">
-              <ReactMarkdown>{insight}</ReactMarkdown>
-            </CardContent>
-          </Card>
+          <>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4 prose prose-sm max-w-none text-sm">
+                <ReactMarkdown>{insight}</ReactMarkdown>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-3 gap-2">
+              <Button variant="outline" className="h-11 text-xs font-semibold gap-1.5" onClick={handleDownloadNote}>
+                <Download className="h-4 w-4" /> Download
+              </Button>
+              <Button variant="outline" className="h-11 text-xs font-semibold gap-1.5" onClick={handleCopyClipboard}>
+                <Copy className="h-4 w-4" /> Salin
+              </Button>
+              <Button className="h-11 text-xs font-semibold gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleShareWhatsApp}>
+                <Share2 className="h-4 w-4" /> WhatsApp
+              </Button>
+            </div>
+          </>
         )}
 
         {!insight && !loading && (
