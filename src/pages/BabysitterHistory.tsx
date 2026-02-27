@@ -1,4 +1,5 @@
 import { ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS, ActivityType } from '@/types';
+import { getSmartIcon } from '@/lib/smart-icon';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -83,7 +84,7 @@ const BabysitterHistory = () => {
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {log.events.slice(0, 8).map((event: any) => (
                     <span key={event.id} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                      {ACTIVITY_ICONS[event.type as ActivityType] || '📝'} {event.time?.substring(0, 5)}
+                      {event.type === 'catatan' ? getSmartIcon(event.type, event.detail) : (ACTIVITY_ICONS[event.type as ActivityType] || '📝')} {event.time?.substring(0, 5)}
                     </span>
                   ))}
                   {log.events.length > 8 && <span className="text-xs text-muted-foreground px-2">+{log.events.length - 8} lagi</span>}

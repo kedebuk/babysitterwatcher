@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useChildren, useDailyLog, useEvents, useCreateOrGetDailyLog, useCreateEvent, useDeleteEvent, useChildLogs, useProfileNames } from '@/hooks/use-data';
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType, EventUnit, EventStatus } from '@/types';
+import { getSmartIcon } from '@/lib/smart-icon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -445,7 +446,7 @@ const ViewerDashboard = () => {
                         <div className="flex items-center gap-2.5">
                           <span className="text-xs font-bold text-muted-foreground min-w-[36px]">{event.time?.substring(0, 5)}</span>
                           <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                            {ACTIVITY_ICONS[event.type as ActivityType] || '📝'}
+                            {event.type === 'catatan' ? getSmartIcon(event.type, event.detail) : (ACTIVITY_ICONS[event.type as ActivityType] || '📝')}
                           </span>
                           <span className="text-xs flex-1 truncate">{event.detail || ACTIVITY_LABELS[event.type as ActivityType] || event.type}</span>
                           {event.amount && <span className="text-xs font-bold">{event.amount} {event.unit}</span>}

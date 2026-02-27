@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useChildren, useDailyLog, useEvents, useChildLogs, useProfileNames, useDeleteEvent } from '@/hooks/use-data';
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType } from '@/types';
+import { getSmartIcon } from '@/lib/smart-icon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -29,7 +30,7 @@ function generateWhatsAppText(childName: string, date: string, events: any[], no
   const dayName = format(parseISO(date), 'EEEE, d MMMM yyyy', { locale: idLocale });
   let text = `📋 Jadwal ${childName}\n${dayName}\n\n`;
   events.forEach(event => {
-    const icon = ACTIVITY_ICONS[event.type as ActivityType] || '📝';
+    const icon = event.type === 'catatan' ? getSmartIcon(event.type, event.detail, ACTIVITY_ICONS[event.type as ActivityType]) : (ACTIVITY_ICONS[event.type as ActivityType] || '📝');
     text += `${event.time?.substring(0, 5)} ${icon} ${event.detail || ACTIVITY_LABELS[event.type as ActivityType] || event.type}\n`;
   });
   const totalSusu = getTotalByType(events, 'susu');
@@ -409,7 +410,7 @@ const ParentDashboard = () => {
                       <CardContent className="p-3 flex items-start gap-3">
                         <div className="text-center min-w-[44px]"><p className="text-xs font-bold text-muted-foreground">{event.time?.substring(0, 5)}</p></div>
                         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                          {ACTIVITY_ICONS[event.type as ActivityType] || '📝'}
+                          {event.type === 'catatan' ? getSmartIcon(event.type, event.detail, ACTIVITY_ICONS[event.type as ActivityType]) : (ACTIVITY_ICONS[event.type as ActivityType] || '📝')}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</p>
