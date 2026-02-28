@@ -43,13 +43,14 @@ export function BottomNav({ role }: BottomNavProps) {
     queryFn: async () => {
       const { count } = await supabase
         .from('messages')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('receiver_id', user!.id)
         .eq('is_read', false);
       return count || 0;
     },
     enabled: !!user,
-    refetchInterval: 10000,
+    refetchInterval: 30000,
+    staleTime: 15000,
   });
 
   // Unread notifications count
@@ -58,13 +59,14 @@ export function BottomNav({ role }: BottomNavProps) {
     queryFn: async () => {
       const { count } = await supabase
         .from('notifications')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('user_id', user!.id)
         .eq('is_read', false);
       return count || 0;
     },
     enabled: !!user,
-    refetchInterval: 10000,
+    refetchInterval: 30000,
+    staleTime: 15000,
   });
 
   const getBadgeCount = (key?: string) => {

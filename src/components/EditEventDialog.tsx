@@ -146,7 +146,7 @@ export function EditEventDialog({ event, open, onOpenChange, childId }: EditEven
               <p className="text-[11px] font-medium text-muted-foreground mb-1">📷 Foto Sebelum</p>
               {displayBeforePhoto ? (
                 <div className="relative inline-block">
-                  <img src={displayBeforePhoto} alt="Sebelum" className="rounded-lg w-20 h-20 object-cover" />
+                  <img src={displayBeforePhoto} alt="Sebelum" loading="lazy" decoding="async" width={80} height={80} className="rounded-lg w-20 h-20 object-cover" />
                   <button onClick={() => { setPhotoUrl(null); setNewBeforeFile(null); if (beforePreview) { URL.revokeObjectURL(beforePreview); setBeforePreview(null); } }} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center">
                     <X className="h-3 w-3" />
                   </button>
@@ -162,7 +162,7 @@ export function EditEventDialog({ event, open, onOpenChange, childId }: EditEven
               <p className="text-[11px] font-medium text-muted-foreground mb-1">📷 Foto Sesudah</p>
               {displayAfterPhoto ? (
                 <div className="relative inline-block">
-                  <img src={displayAfterPhoto} alt="Sesudah" className="rounded-lg w-20 h-20 object-cover" />
+                  <img src={displayAfterPhoto} alt="Sesudah" loading="lazy" decoding="async" width={80} height={80} className="rounded-lg w-20 h-20 object-cover" />
                   <button onClick={() => { setAfterPhotoUrl(null); setNewAfterFile(null); if (afterPreview) { URL.revokeObjectURL(afterPreview); setAfterPreview(null); } }} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center">
                     <X className="h-3 w-3" />
                   </button>

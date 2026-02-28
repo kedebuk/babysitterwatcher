@@ -42,7 +42,16 @@ const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const ViewerDashboard = lazy(() => import("./pages/ViewerDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,       // 30s before refetch
+      gcTime: 5 * 60_000,      // 5 min garbage collection
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center">

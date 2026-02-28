@@ -47,7 +47,7 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-accent/5" />
         <div className="relative mx-auto max-w-3xl space-y-8">
           {brandLogoUrl ? (
-            <img src={brandLogoUrl} alt={brandName} className="h-20 w-20 rounded-3xl object-contain" />
+            <img src={brandLogoUrl} alt={brandName} loading="eager" decoding="async" width={80} height={80} className="h-20 w-20 rounded-3xl object-contain" />
           ) : (
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10">
               <Heart className="h-10 w-10 text-primary" fill="hsl(var(--primary))" opacity={0.8} />

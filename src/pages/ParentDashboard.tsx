@@ -104,7 +104,7 @@ const ParentDashboard = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from('location_pings')
-        .select('*')
+        .select('id, latitude, longitude, user_id, created_at')
         .eq('child_id', activeChildId)
         .gte('created_at', selectedDate + 'T00:00:00')
         .lte('created_at', selectedDate + 'T23:59:59')
@@ -262,7 +262,7 @@ const ParentDashboard = () => {
             <div className="flex items-center gap-3">
               {child && (
                 (child as any).photo_url ? (
-                  <img src={(child as any).photo_url} alt={child.name} className="h-11 w-11 rounded-xl object-cover shrink-0" />
+                  <img src={(child as any).photo_url} alt={child.name} loading="lazy" decoding="async" width={44} height={44} className="h-11 w-11 rounded-xl object-cover shrink-0" />
                 ) : (
                   <div className="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0">{child.avatar_emoji || '👶'}</div>
                 )

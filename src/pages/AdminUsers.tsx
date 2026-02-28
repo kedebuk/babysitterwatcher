@@ -153,7 +153,7 @@ const AdminUsers = () => {
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['admin_all_profiles'],
     queryFn: async () => {
-      const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      const { data } = await supabase.from('profiles').select('id, name, email, phone, avatar_url, created_at, deleted_at, is_disabled, dob, address').order('created_at', { ascending: false });
       return data || [];
     },
   });
@@ -164,7 +164,7 @@ const AdminUsers = () => {
   const { data: roles = [] } = useQuery({
     queryKey: ['admin_all_roles'],
     queryFn: async () => {
-      const { data } = await supabase.from('user_roles').select('*');
+      const { data } = await supabase.from('user_roles').select('user_id, role');
       return data || [];
     },
   });
@@ -172,7 +172,7 @@ const AdminUsers = () => {
   const { data: allSubs = [] } = useQuery({
     queryKey: ['admin_all_subscriptions'],
     queryFn: async () => {
-      const { data } = await supabase.from('subscriptions' as any).select('*');
+      const { data } = await supabase.from('subscriptions' as any).select('id, user_id, plan_type, status, billing_cycle, number_of_children, price_per_month, trial_start_date, trial_end_date, subscription_start_date, subscription_end_date, premium_promo_end_date, admin_override, admin_override_note');
       return (data || []) as unknown as Subscription[];
     },
   });
