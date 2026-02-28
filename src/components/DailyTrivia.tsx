@@ -76,7 +76,7 @@ export function DailyTrivia({ childName, childId, dob, date }: DailyTriviaProps)
 
   return (
     <Card
-      className="border-0 shadow-sm cursor-pointer transition-all hover:shadow-md"
+      className="border-0 shadow-sm cursor-pointer transition-all hover:shadow-md bg-gradient-to-r from-violet-50/80 to-amber-50/60 dark:from-violet-950/30 dark:to-amber-950/20"
       onClick={handleToggle}
     >
       <CardContent className="p-3">

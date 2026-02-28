@@ -154,6 +154,25 @@ const ParentDashboard = () => {
   const vitaminEvent = events.find(e => e.type === 'vitamin');
   const mandiEvents = events.filter(e => e.type === 'mandi' || e.type === 'lap_badan');
 
+  const sleepEvents = events.filter(e => e.type === 'tidur' || e.type === 'bangun');
+  const lastSleepEvent = sleepEvents.length > 0 ? sleepEvents[sleepEvents.length - 1] : null;
+  const isSleeping = lastSleepEvent?.type === 'tidur';
+  const lastSusuEvent = [...events].filter(e => e.type === 'susu').slice(-1)[0] ?? null;
+
+  const today = format(new Date(), 'yyyy-MM-dd');
+  function calcElapsed(timeStr: string): string {
+    if (selectedDate !== today || !timeStr) return '';
+    const [h, m] = timeStr.substring(0, 5).split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return '';
+    const now = new Date();
+    const diffMins = now.getHours() * 60 + now.getMinutes() - (h * 60 + m);
+    if (diffMins <= 0) return '';
+    if (diffMins < 60) return `~${diffMins} mnt lalu`;
+    const hrs = Math.floor(diffMins / 60);
+    const mins = diffMins % 60;
+    return mins > 0 ? `~${hrs}j ${mins}m lalu` : `~${hrs} jam lalu`;
+  }
+
   // Food detail lists
   const mpasiEvents = events.filter(e => e.type === 'mpasi');
   const snackEvents = events.filter(e => e.type === 'snack');
@@ -283,6 +302,20 @@ const ParentDashboard = () => {
               <Button variant="ghost" size="icon" onClick={() => changeDate(1)}><ChevronRight className="h-5 w-5" /></Button>
             </div>
 
+            {lastSleepEvent && (
+              <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${
+                isSleeping
+                  ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
+                  : 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+              }`}>
+                <span className="text-base">{isSleeping ? '😴' : '🌞'}</span>
+                <span>{isSleeping ? 'Sedang Tidur' : 'Sedang Aktif'}</span>
+                <span className="text-xs opacity-60 ml-auto">
+                  sejak {lastSleepEvent.time?.substring(0, 5)}{calcElapsed(lastSleepEvent.time || '') ? ` · ${calcElapsed(lastSleepEvent.time || '')}` : ''}
+                </span>
+              </div>
+            )}
+
             {child?.dob && <DailyTrivia childName={child.name} childId={child.id} dob={child.dob} date={selectedDate} />}
 
             <Card
@@ -301,25 +334,30 @@ const ParentDashboard = () => {
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1 ml-10">Analisis pola tidur, makan & aktivitas AI</p>
+
               </CardContent>
             </Card>
 
             <div className="grid grid-cols-3 gap-3">
-              <Card className="border-0 shadow-sm"><CardContent className="p-3">
+              <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(210, 65%, 55%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-susu text-sm">🍼</div>
                   <span className="text-xs text-muted-foreground">Total Susu</span>
                 </div>
-                <p className="text-2xl font-bold">{totalSusu} <span className="text-sm font-normal text-muted-foreground">ml</span></p>
+                <p className="text-2xl font-bold" style={{ color: totalSusu > 0 ? 'hsl(210, 65%, 55%)' : undefined }}>{totalSusu} <span className="text-sm font-normal text-muted-foreground">ml</span></p>
+                {lastSusuEvent && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Terakhir {lastSusuEvent.time?.substring(0, 5)}{calcElapsed(lastSusuEvent.time || '') ? ` · ${calcElapsed(lastSusuEvent.time || '')}` : ''}
+                  </p>
+                )}
               </CardContent></Card>
-               <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setExpandedCard(expandedCard === 'makan' ? null : 'makan')}>
+               <Card className="border-0 shadow-sm border-l-[3px] cursor-pointer hover:shadow-md transition-shadow" style={{ borderLeftColor: 'hsl(24, 75%, 55%)' }} onClick={() => setExpandedCard(expandedCard === 'makan' ? null : 'makan')}>
                 <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-makan text-sm">🥣</div>
                   <span className="text-xs text-muted-foreground">Total Makan</span>
                 </div>
-                <p className="text-2xl font-bold">{totalMakan} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
+                <p className="text-2xl font-bold" style={{ color: totalMakan > 0 ? 'hsl(24, 75%, 55%)' : undefined }}>{totalMakan} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
                 {mpasiEvents.length > 0 && expandedCard !== 'makan' && (
                   <p className="text-[10px] text-primary/60 mt-1">tap untuk rincian ▾</p>
                 )}
@@ -332,27 +370,27 @@ const ParentDashboard = () => {
                   </div>
                 )}
               </CardContent></Card>
-              <Card className="border-0 shadow-sm"><CardContent className="p-3">
+              <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(145, 50%, 48%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-pup text-sm">💩</div>
                   <span className="text-xs text-muted-foreground">BAB</span>
                 </div>
-                <p className="text-2xl font-bold">{pup} <span className="text-sm font-normal text-muted-foreground">/ {pee}x</span></p>
+                <p className="text-2xl font-bold" style={{ color: pup > 0 ? 'hsl(145, 50%, 48%)' : undefined }}>{pup} <span className="text-sm font-normal text-muted-foreground">/ {pee}x</span></p>
               </CardContent></Card>
-              <Card className="border-0 shadow-sm"><CardContent className="p-3">
+              <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(340, 55%, 55%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-vitamin text-sm">💊</div>
                   <span className="text-xs text-muted-foreground">Vitamin</span>
                 </div>
-                <p className="text-lg font-bold">{vitaminEvent ? `✅ ${vitaminEvent.time?.substring(0, 5)}` : '❌ Belum'}</p>
+                <p className={`text-lg font-bold ${vitaminEvent ? '' : 'text-muted-foreground/60'}`} style={vitaminEvent ? { color: 'hsl(340, 55%, 55%)' } : undefined}>{vitaminEvent ? `${vitaminEvent.time?.substring(0, 5)}` : 'Belum'}</p>
               </CardContent></Card>
-               <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setExpandedCard(expandedCard === 'snack' ? null : 'snack')}>
+               <Card className="border-0 shadow-sm border-l-[3px] cursor-pointer hover:shadow-md transition-shadow" style={{ borderLeftColor: 'hsl(45, 70%, 50%)' }} onClick={() => setExpandedCard(expandedCard === 'snack' ? null : 'snack')}>
                 <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-snack text-sm">🍪</div>
                   <span className="text-xs text-muted-foreground">Snack</span>
                 </div>
-                <p className="text-2xl font-bold">{totalSnack} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
+                <p className="text-2xl font-bold" style={{ color: totalSnack > 0 ? 'hsl(45, 70%, 50%)' : undefined }}>{totalSnack} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
                 {snackEvents.length > 0 && expandedCard !== 'snack' && (
                   <p className="text-[10px] text-primary/60 mt-1">tap untuk rincian ▾</p>
                 )}
@@ -365,13 +403,13 @@ const ParentDashboard = () => {
                   </div>
                 )}
               </CardContent></Card>
-               <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setExpandedCard(expandedCard === 'buah' ? null : 'buah')}>
+               <Card className="border-0 shadow-sm border-l-[3px] cursor-pointer hover:shadow-md transition-shadow" style={{ borderLeftColor: 'hsl(120, 55%, 45%)' }} onClick={() => setExpandedCard(expandedCard === 'buah' ? null : 'buah')}>
                 <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-buah text-sm">🍎</div>
                   <span className="text-xs text-muted-foreground">Buah</span>
                 </div>
-                <p className="text-2xl font-bold">{totalBuah} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
+                <p className="text-2xl font-bold" style={{ color: totalBuah > 0 ? 'hsl(120, 55%, 45%)' : undefined }}>{totalBuah} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
                 {buahEvents.length > 0 && expandedCard !== 'buah' && (
                   <p className="text-[10px] text-primary/60 mt-1">tap untuk rincian ▾</p>
                 )}
@@ -472,26 +510,28 @@ const ParentDashboard = () => {
                               <p className="text-xs text-muted-foreground">{event.unit}</p>
                             </div>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-primary"
-                            onClick={() => setEditEvent(event)}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            onClick={() => setDeleteTarget({
-                              id: event.id,
-                              daily_log_id: event.daily_log_id,
-                              label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})`,
-                            })}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                          <div className="flex items-center gap-0.5">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-primary"
+                              onClick={() => setEditEvent(event)}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={() => setDeleteTarget({
+                                id: event.id,
+                                daily_log_id: event.daily_log_id,
+                                label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})`,
+                              })}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>

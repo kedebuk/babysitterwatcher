@@ -230,10 +230,10 @@ const Login = () => {
           </CardHeader>
 
           <CardContent>
-            <Tabs defaultValue="signup">
+            <Tabs defaultValue="login">
               <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="signup">Daftar</TabsTrigger>
                 <TabsTrigger value="login">Masuk</TabsTrigger>
+                <TabsTrigger value="signup">Daftar</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
