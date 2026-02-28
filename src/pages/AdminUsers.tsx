@@ -458,9 +458,22 @@ const AdminUsers = () => {
 
                     {role !== 'admin' && (
                       <div className="flex items-center justify-between pl-12">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           {getSubBadge(sub)}
                           {sub && <span className="text-[10px] text-muted-foreground">{sub.number_of_children} anak</span>}
+                          {sub && sub.status === 'trial' && sub.trial_end_date && (
+                            <span className="text-[10px] text-blue-600 dark:text-blue-400">
+                              s/d {new Date(sub.trial_end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
+                          )}
+                          {sub && sub.status === 'active' && sub.subscription_end_date && (
+                            <span className="text-[10px] text-green-600 dark:text-green-400">
+                              s/d {new Date(sub.subscription_end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
+                          )}
+                          {sub && sub.status === 'active' && !sub.subscription_end_date && (
+                            <span className="text-[10px] text-green-600 dark:text-green-400">∞ Tanpa batas</span>
+                          )}
                         </div>
                         <div className="flex items-center gap-1">
                           <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openProfileDialog(profile)}>
