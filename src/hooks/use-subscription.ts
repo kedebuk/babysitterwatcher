@@ -38,7 +38,7 @@ export function usePricingPlans() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('pricing_plans' as any)
-        .select('*')
+        .select('id, plan_name, child_order, monthly_price_idr, discount_pct, quarterly_extra_discount_pct, is_active')
         .eq('is_active', true)
         .order('child_order');
       if (error) throw error;

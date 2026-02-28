@@ -94,13 +94,13 @@ export function EventDetailDialog({ event, open, onOpenChange, createdByName, on
               <div className="flex gap-3">
                 {event.photo_url && (
                   <div className="text-center">
-                    <img src={event.photo_url} alt="Sebelum" className="rounded-lg w-28 h-28 object-cover border" />
+                    <img src={event.photo_url} alt="Sebelum" loading="lazy" decoding="async" width={112} height={112} className="rounded-lg w-28 h-28 object-cover border" />
                     <span className="text-[10px] text-muted-foreground mt-1 block">Sebelum</span>
                   </div>
                 )}
                 {event.photo_url_after && (
                   <div className="text-center">
-                    <img src={event.photo_url_after} alt="Sesudah" className="rounded-lg w-28 h-28 object-cover border" />
+                    <img src={event.photo_url_after} alt="Sesudah" loading="lazy" decoding="async" width={112} height={112} className="rounded-lg w-28 h-28 object-cover border" />
                     <span className="text-[10px] text-muted-foreground mt-1 block">Sesudah</span>
                   </div>
                 )}

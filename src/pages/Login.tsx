@@ -219,7 +219,7 @@ const Login = () => {
         <Card className="w-full max-w-sm border-0 shadow-xl bg-white/80 backdrop-blur-md animate-fade-in">
           <CardHeader className="text-center pb-2">
             {brandLogoUrl ? (
-              <img src={brandLogoUrl} alt={brandName} className="mx-auto mb-3 h-16 w-16 rounded-3xl object-contain" />
+              <img src={brandLogoUrl} alt={brandName} loading="eager" decoding="async" width={64} height={64} className="mx-auto mb-3 h-16 w-16 rounded-3xl object-contain" />
             ) : (
               <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10">
                 <Baby className="h-8 w-8 text-primary" />

@@ -110,7 +110,7 @@ export function FoodScanButton({ parentId, onResult, disabled }: FoodScanButtonP
           </DialogHeader>
           <div className="space-y-3">
             {previewUrl && (
-              <img src={previewUrl} alt="Food" className="rounded-lg w-full h-40 object-cover" />
+              <img src={previewUrl} alt="Food" loading="lazy" decoding="async" className="rounded-lg w-full h-40 object-cover" />
             )}
 
             {scanning ? (

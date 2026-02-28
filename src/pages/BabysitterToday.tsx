@@ -64,7 +64,7 @@ const BabysitterToday = () => {
     queryFn: async () => {
       const { data: assignments } = await supabase
         .from('assignments')
-        .select('child_id, children(*)');
+        .select('child_id, children(id, name, dob, notes, avatar_emoji, photo_url, parent_id)');
       if (!assignments) return [];
       return assignments.map((a: any) => a.children).filter(Boolean);
     },
@@ -320,7 +320,7 @@ const BabysitterToday = () => {
               {activeChildId && (() => {
                 const c = assignedChildren.find((ch: any) => ch.id === activeChildId);
                 return c?.photo_url ? (
-                  <img src={c.photo_url} alt={c.name} className="h-11 w-11 rounded-xl object-cover shrink-0" />
+                  <img src={c.photo_url} alt={c.name} loading="lazy" decoding="async" width={44} height={44} className="h-11 w-11 rounded-xl object-cover shrink-0" />
                 ) : (
                   <div className="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0">{c?.avatar_emoji || '👶'}</div>
                 );

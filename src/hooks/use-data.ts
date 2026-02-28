@@ -13,7 +13,7 @@ export function useChildren() {
         // Get own children
         const { data: ownChildren, error: ownErr } = await supabase
           .from('children')
-          .select('*')
+          .select('id, name, dob, notes, avatar_emoji, photo_url, parent_id, is_archived, created_at')
           .eq('parent_id', user!.id)
           .order('created_at');
         if (ownErr) throw ownErr;
@@ -29,7 +29,7 @@ export function useChildren() {
           const viewerChildIds = viewerRecords.map(v => v.child_id);
           const { data: vChildren } = await supabase
             .from('children')
-            .select('*')
+            .select('id, name, dob, notes, avatar_emoji, photo_url, parent_id, is_archived, created_at')
             .in('id', viewerChildIds)
             .order('created_at');
           viewerChildren = vChildren || [];
@@ -55,7 +55,7 @@ export function useChildren() {
         const viewerChildIds = viewerRecords.map(v => v.child_id);
         const { data, error } = await supabase
           .from('children')
-          .select('*')
+          .select('id, name, dob, notes, avatar_emoji, photo_url, parent_id, is_archived, created_at')
           .in('id', viewerChildIds)
           .order('created_at');
         if (error) throw error;
@@ -63,7 +63,7 @@ export function useChildren() {
       }
 
       // For other roles (babysitter, admin), use default query
-      const { data, error } = await supabase.from('children').select('*').order('created_at');
+      const { data, error } = await supabase.from('children').select('id, name, dob, notes, avatar_emoji, photo_url, parent_id, is_archived, created_at').order('created_at');
       if (error) throw error;
       return data;
     },
@@ -88,7 +88,7 @@ export function useAssignments(childId?: string) {
   return useQuery({
     queryKey: ['assignments', childId],
     queryFn: async () => {
-      let query = supabase.from('assignments').select('*');
+      let query = supabase.from('assignments').select('id, child_id, babysitter_user_id, created_at');
       if (childId) query = query.eq('child_id', childId);
       const { data, error } = await query;
       if (error) throw error;
@@ -110,7 +110,7 @@ export function useDailyLog(childId: string, date: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('daily_logs')
-        .select('*')
+        .select('id, child_id, log_date, notes, created_by, created_at')
         .eq('child_id', childId)
         .eq('log_date', date)
         .maybeSingle();
@@ -166,7 +166,7 @@ export function useEvents(dailyLogId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select('id, daily_log_id, time, type, detail, amount, unit, status, photo_url, photo_url_after, created_by, latitude, longitude, created_at')
         .eq('daily_log_id', dailyLogId!)
         .order('time');
       if (error) throw error;
@@ -219,7 +219,7 @@ export function useChildLogs(childId: string, dates: string[]) {
     queryFn: async () => {
       const { data: logs, error: logsError } = await supabase
         .from('daily_logs')
-        .select('*')
+        .select('id, child_id, log_date, notes')
         .eq('child_id', childId)
         .in('log_date', dates);
       if (logsError) throw logsError;
@@ -228,7 +228,7 @@ export function useChildLogs(childId: string, dates: string[]) {
       const logIds = logs.map(l => l.id);
       const { data: events, error: eventsError } = await supabase
         .from('events')
-        .select('*')
+        .select('id, daily_log_id, time, type, detail, amount, unit, status, created_by')
         .in('daily_log_id', logIds)
         .order('time');
       if (eventsError) throw eventsError;
