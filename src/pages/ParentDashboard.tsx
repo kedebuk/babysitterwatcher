@@ -27,6 +27,26 @@ function getTotalByType(events: any[], type: string): number {
   return events.filter(e => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
 }
 
+function calcSleepHours(evts: any[], isMalam: boolean): number {
+  const sorted = [...evts]
+    .filter(e => e.type === 'tidur' || e.type === 'bangun')
+    .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+  let mins = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i].type !== 'tidur') continue;
+    const h = parseInt(sorted[i].time?.substring(0, 2) || '0');
+    const isNight = h >= 18 || h < 10;
+    if (isNight !== isMalam) continue;
+    const nextWake = sorted.slice(i + 1).find((e: any) => e.type === 'bangun');
+    if (!nextWake) continue;
+    const [sh, sm] = sorted[i].time.substring(0, 5).split(':').map(Number);
+    const [eh, em] = nextWake.time.substring(0, 5).split(':').map(Number);
+    const dur = (eh * 60 + em) - (sh * 60 + sm);
+    if (dur > 0) mins += dur;
+  }
+  return Math.round(mins / 6) / 10;
+}
+
 function generateWhatsAppText(childName: string, date: string, events: any[], notes?: string) {
   const dayName = format(parseISO(date), 'EEEE, d MMMM yyyy', { locale: idLocale });
   let text = `📋 Jadwal ${childName}\n${dayName}\n\n`;
@@ -63,6 +83,10 @@ const ParentDashboard = () => {
 
   const { data: log } = useDailyLog(activeChildId, selectedDate);
   const { data: events = [] } = useEvents(log?.id);
+
+  const prevDate = format(subDays(parseISO(selectedDate), 1), 'yyyy-MM-dd');
+  const { data: prevLog } = useDailyLog(activeChildId, prevDate);
+  const { data: prevEvents = [] } = useEvents(prevLog?.id);
   const { data: profileNames = {} } = useProfileNames(events.map((e: any) => e.created_by).filter(Boolean));
 
   // Realtime notifications
@@ -142,6 +166,8 @@ const ParentDashboard = () => {
       susu: getTotalByType(evts, 'susu'),
       makan: getTotalByType(evts, 'mpasi') + getTotalByType(evts, 'snack') + getTotalByType(evts, 'buah'),
       pup: evts.filter((e: any) => e.type === 'pup').length,
+      tidurMalam: calcSleepHours(evts, true),
+      tidurSiang: calcSleepHours(evts, false),
     };
   });
 
@@ -155,7 +181,13 @@ const ParentDashboard = () => {
   const mandiEvents = events.filter(e => e.type === 'mandi' || e.type === 'lap_badan');
 
   const sleepEvents = events.filter(e => e.type === 'tidur' || e.type === 'bangun');
-  const lastSleepEvent = sleepEvents.length > 0 ? sleepEvents[sleepEvents.length - 1] : null;
+  const prevSleepEvents = (prevEvents as any[]).filter(e => e.type === 'tidur' || e.type === 'bangun');
+  // Carry over: if no sleep event today, use last from previous day (only if it was 'tidur')
+  const lastSleepEvent = sleepEvents.length > 0
+    ? sleepEvents[sleepEvents.length - 1]
+    : prevSleepEvents.length > 0 && prevSleepEvents[prevSleepEvents.length - 1].type === 'tidur'
+      ? { ...prevSleepEvents[prevSleepEvents.length - 1], _carryOver: true }
+      : null;
   const isSleeping = lastSleepEvent?.type === 'tidur';
   const lastSusuEvent = [...events].filter(e => e.type === 'susu').slice(-1)[0] ?? null;
 
@@ -311,7 +343,7 @@ const ParentDashboard = () => {
                 <span className="text-base">{isSleeping ? '😴' : '🌞'}</span>
                 <span>{isSleeping ? 'Sedang Tidur' : 'Sedang Aktif'}</span>
                 <span className="text-xs opacity-60 ml-auto">
-                  sejak {lastSleepEvent.time?.substring(0, 5)}{calcElapsed(lastSleepEvent.time || '') ? ` · ${calcElapsed(lastSleepEvent.time || '')}` : ''}
+                  {(lastSleepEvent as any)?._carryOver ? 'semalam ' : 'sejak '}{lastSleepEvent.time?.substring(0, 5)}{!((lastSleepEvent as any)?._carryOver) && calcElapsed(lastSleepEvent.time || '') ? ` · ${calcElapsed(lastSleepEvent.time || '')}` : ''}
                 </span>
               </div>
             )}
@@ -435,18 +467,44 @@ const ParentDashboard = () => {
             )}
 
             <Card className="border-0 shadow-sm">
-              <CardHeader className="pb-2 px-3 pt-3"><CardTitle className="text-sm font-semibold">📈 Grafik 7 Hari Terakhir</CardTitle></CardHeader>
+              <CardHeader className="pb-1 px-3 pt-3">
+                <CardTitle className="text-sm font-semibold">📈 Grafik 7 Hari Terakhir</CardTitle>
+                <p className="text-[10px] text-muted-foreground">Susu (ml) · Makan (gram) · BAB</p>
+              </CardHeader>
               <CardContent className="p-2">
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width="100%" height={180}>
                   <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
                     <Bar dataKey="susu" name="Susu (ml)" fill="hsl(210, 75%, 55%)" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="makan" name="Makan" fill="hsl(25, 85%, 55%)" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="pup" name="BAB" fill="hsl(145, 55%, 45%)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-sm bg-gradient-to-br from-indigo-50/60 to-purple-50/40 dark:from-indigo-950/30 dark:to-purple-950/20">
+              <CardHeader className="pb-1 px-3 pt-3">
+                <CardTitle className="text-sm font-semibold">😴 Pola Tidur 7 Hari</CardTitle>
+                <p className="text-[10px] text-muted-foreground">Durasi dalam jam · Malam (≥18:00 atau &lt;10:00) · Siang (10:00–17:59)</p>
+              </CardHeader>
+              <CardContent className="p-2">
+                <ResponsiveContainer width="100%" height={160}>
+                  <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} unit="j" />
+                    <Tooltip
+                      contentStyle={{ fontSize: 12, borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                      formatter={(value: any) => [`${value} jam`, undefined]}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="tidurMalam" name="Tidur Malam" fill="hsl(245, 65%, 60%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="tidurSiang" name="Tidur Siang" fill="hsl(45, 85%, 60%)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
