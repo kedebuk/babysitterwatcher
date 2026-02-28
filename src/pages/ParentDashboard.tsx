@@ -10,7 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, subDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin, MoreVertical, RefreshCw, UserCheck, Trash2, CreditCard, User, Package } from 'lucide-react';
+import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageCircle, Brain, MapPin, MoreVertical, RefreshCw, UserCheck, Trash2, CreditCard, User, Package, Pencil } from 'lucide-react';
+import { EditEventDialog } from '@/components/EditEventDialog';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -54,6 +55,7 @@ const ParentDashboard = () => {
   const deleteEvent = useDeleteEvent();
   const queryClient = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; daily_log_id: string; label: string } | null>(null);
+  const [editEvent, setEditEvent] = useState<any>(null);
   const [detailEvent, setDetailEvent] = useState<any>(null);
 
   const activeChildId = selectedChild || children[0]?.id || '';
@@ -473,6 +475,14 @@ const ParentDashboard = () => {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                            onClick={() => setEditEvent(event)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-7 w-7 text-muted-foreground hover:text-destructive"
                             onClick={() => setDeleteTarget({
                               id: event.id,
@@ -507,6 +517,15 @@ const ParentDashboard = () => {
         onOpenChange={(open) => !open && setDetailEvent(null)}
         createdByName={detailEvent?.created_by ? profileNames[detailEvent.created_by] : undefined}
       />
+
+      {editEvent && (
+        <EditEventDialog
+          event={editEvent}
+          open={!!editEvent}
+          onOpenChange={(open) => !open && setEditEvent(null)}
+          childId={activeChildId}
+        />
+      )}
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
