@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, Baby } from 'lucide-react';
+import { ArrowRight, Baby, ArrowLeft } from 'lucide-react';
 
 const OnboardingChildren = () => {
   const { user } = useAuth();
@@ -67,7 +67,7 @@ const OnboardingChildren = () => {
 
       if (!sub) {
         const trialEnd = new Date();
-        trialEnd.setDate(trialEnd.getDate() + 3);
+        trialEnd.setDate(trialEnd.getDate() + 14);
         const { data: newSub } = await supabase.from('subscriptions').insert({
           user_id: user.id,
           plan_type: 'trial' as any,
@@ -118,7 +118,10 @@ const OnboardingChildren = () => {
     <div className="min-h-screen bg-background px-4 py-6 max-w-lg mx-auto">
       {/* Step indicator */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary">
+        <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary shrink-0">
           <Baby className="h-5 w-5" />
         </div>
         <div>

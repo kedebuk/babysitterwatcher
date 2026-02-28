@@ -5,14 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, LogOut, Shield, CreditCard, Eye, Phone, MapPin, Calendar, Baby, Users } from 'lucide-react';
+import { ArrowLeft, LogOut, Shield, CreditCard, Eye, Phone, MapPin, Calendar, Baby, Users, Trash2, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminUpdateSubscription, type Subscription } from '@/hooks/use-subscription';
 
 const AdminUsers = () => {
@@ -24,6 +26,13 @@ const AdminUsers = () => {
   const [subDialogOpen, setSubDialogOpen] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [restoreTarget, setRestoreTarget] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false);
+  const [hardDeleteTarget, setHardDeleteTarget] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [hardDeleteConfirm, setHardDeleteConfirm] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [subForm, setSubForm] = useState({
     plan_type: 'trial' as 'trial' | 'standard' | 'premium_promo',
@@ -38,18 +47,124 @@ const AdminUsers = () => {
 
   const adminUpdateSub = useAdminUpdateSubscription();
 
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: userId },
+      });
+      if (error) throw new Error(error.message || 'Delete failed');
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin_all_profiles'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_roles'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_subscriptions'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_children_for_users'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_assignments_for_users'] });
+      toast({ title: '✅ User berhasil dihapus', description: 'User dipindahkan ke arsip. Bisa di-restore kapan saja.' });
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
+    },
+    onError: (err: any) => {
+      toast({ title: 'Gagal menghapus', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const restoreUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke('restore-user', {
+        body: { user_id: userId },
+      });
+      if (error) throw new Error(error.message || 'Restore failed');
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin_all_profiles'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_roles'] });
+      toast({ title: '✅ User berhasil di-restore', description: 'User dapat login kembali.' });
+      setRestoreDialogOpen(false);
+      setRestoreTarget(null);
+    },
+    onError: (err: any) => {
+      toast({ title: 'Gagal restore', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const handleDeleteUser = (profile: any) => {
+    setDeleteTarget({ id: profile.id, name: profile.name, email: profile.email });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleRestoreUser = (profile: any) => {
+    setRestoreTarget({ id: profile.id, name: profile.name, email: profile.email });
+    setRestoreDialogOpen(true);
+  };
+
+  const handleHardDeleteUser = (profile: any) => {
+    setHardDeleteTarget({ id: profile.id, name: profile.name, email: profile.email });
+    setHardDeleteConfirm('');
+    setHardDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteUser = () => {
+    if (deleteTarget) {
+      deleteUserMutation.mutate(deleteTarget.id);
+    }
+  };
+
+  const confirmRestoreUser = () => {
+    if (restoreTarget) {
+      restoreUserMutation.mutate(restoreTarget.id);
+    }
+  };
+
+  const hardDeleteMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke('hard-delete-user', {
+        body: { user_id: userId },
+      });
+      if (error) throw new Error(error.message || 'Hard delete failed');
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin_all_profiles'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_roles'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_subscriptions'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_children_for_users'] });
+      qc.invalidateQueries({ queryKey: ['admin_all_assignments_for_users'] });
+      toast({ title: '🗑️ User dihapus permanen', description: 'Semua data user telah dihapus.' });
+      setHardDeleteDialogOpen(false);
+      setHardDeleteTarget(null);
+    },
+    onError: (err: any) => {
+      toast({ title: 'Gagal menghapus', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const confirmHardDelete = () => {
+    if (hardDeleteTarget && hardDeleteConfirm === hardDeleteTarget.email) {
+      hardDeleteMutation.mutate(hardDeleteTarget.id);
+    }
+  };
+
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['admin_all_profiles'],
     queryFn: async () => {
-      const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      const { data } = await supabase.from('profiles').select('id, name, email, phone, avatar_url, created_at, deleted_at, is_disabled, dob, address').order('created_at', { ascending: false });
       return data || [];
     },
   });
 
+  const activeProfiles = useMemo(() => profiles.filter((p: any) => !p.deleted_at), [profiles]);
+  const deletedProfiles = useMemo(() => profiles.filter((p: any) => p.deleted_at), [profiles]);
+
   const { data: roles = [] } = useQuery({
     queryKey: ['admin_all_roles'],
     queryFn: async () => {
-      const { data } = await supabase.from('user_roles').select('*');
+      const { data } = await supabase.from('user_roles').select('user_id, role');
       return data || [];
     },
   });
@@ -57,7 +172,7 @@ const AdminUsers = () => {
   const { data: allSubs = [] } = useQuery({
     queryKey: ['admin_all_subscriptions'],
     queryFn: async () => {
-      const { data } = await supabase.from('subscriptions' as any).select('*');
+      const { data } = await supabase.from('subscriptions' as any).select('id, user_id, plan_type, status, billing_cycle, number_of_children, price_per_month, trial_start_date, trial_end_date, subscription_start_date, subscription_end_date, premium_promo_end_date, admin_override, admin_override_note');
       return (data || []) as unknown as Subscription[];
     },
   });
@@ -294,7 +409,7 @@ const AdminUsers = () => {
             </Button>
             <div>
               <h1 className="text-lg font-bold flex items-center gap-2"><Shield className="h-5 w-5" /> Daftar User</h1>
-              <p className="text-xs opacity-80">{profiles.length} user terdaftar</p>
+              <p className="text-xs opacity-80">{activeProfiles.length} aktif{deletedProfiles.length > 0 ? ` · ${deletedProfiles.length} dihapus` : ''}</p>
             </div>
           </div>
           <Button variant="ghost" size="icon" className="text-destructive-foreground hover:bg-destructive-foreground/20" onClick={logout}>
@@ -303,73 +418,139 @@ const AdminUsers = () => {
         </div>
       </div>
 
-      <div className="px-4 py-4 space-y-2 max-w-3xl mx-auto">
-        {profiles.map((profile: any) => {
-          const role = getUserRole(profile.id);
-          const isDisabled = profile.is_disabled === true;
-          const sub = getUserSub(profile.id);
-          return (
-            <Card key={profile.id} className={`border-0 shadow-sm ${isDisabled ? 'opacity-60' : ''}`}>
-              <CardContent className="p-3 space-y-2">
-                <div className="flex items-center justify-between gap-3">
-                  {profile.avatar_url ? (
-                    <img src={profile.avatar_url} alt={profile.name} className="h-10 w-10 rounded-full object-cover shrink-0" />
-                  ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-bold shrink-0">
-                      {profile.name?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">{profile.name} {isDisabled && <span className="text-xs text-destructive">(nonaktif)</span>}</p>
-                    <p className="text-xs text-muted-foreground">{profile.email}</p>
-                  </div>
-                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-secondary shrink-0">{getRoleBadge(role)}</span>
-                  {role !== 'admin' && (
-                    <Switch
-                      checked={!isDisabled}
-                      onCheckedChange={(checked) => toggleDisable.mutate({ userId: profile.id, disabled: !checked })}
-                    />
-                  )}
-                </div>
+      <div className="px-4 py-4 max-w-3xl mx-auto">
+        <Tabs defaultValue="active" className="w-full">
+          <TabsList className="w-full mb-3">
+            <TabsTrigger value="active" className="flex-1">Aktif ({activeProfiles.length})</TabsTrigger>
+            <TabsTrigger value="deleted" className="flex-1">Dihapus ({deletedProfiles.length})</TabsTrigger>
+          </TabsList>
 
-                {/* Connections: children & babysitters */}
-                {renderConnections(profile, role)}
+          <TabsContent value="active" className="space-y-2">
+            {activeProfiles.map((profile: any) => {
+              const role = getUserRole(profile.id);
+              const isDisabled = profile.is_disabled === true;
+              const sub = getUserSub(profile.id);
+              return (
+                <Card key={profile.id} className={`border-0 shadow-sm ${isDisabled ? 'opacity-60' : ''}`}>
+                  <CardContent className="p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      {profile.avatar_url ? (
+                        <img src={profile.avatar_url} alt={profile.name} className="h-10 w-10 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-bold shrink-0">
+                          {profile.name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm">{profile.name} {isDisabled && <span className="text-xs text-destructive">(nonaktif)</span>}</p>
+                        <p className="text-xs text-muted-foreground">{profile.email}</p>
+                      </div>
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-secondary shrink-0">{getRoleBadge(role)}</span>
+                      {role !== 'admin' && (
+                        <Switch
+                          checked={!isDisabled}
+                          onCheckedChange={(checked) => toggleDisable.mutate({ userId: profile.id, disabled: !checked })}
+                        />
+                      )}
+                    </div>
 
-                {role !== 'admin' && (
-                  <div className="flex items-center justify-between pl-12">
-                    <div className="flex items-center gap-2">
-                      {getSubBadge(sub)}
-                      {sub && <span className="text-[10px] text-muted-foreground">{sub.number_of_children} anak</span>}
+                    {renderConnections(profile, role)}
+
+                    {role !== 'admin' && (
+                      <div className="flex items-center justify-between pl-12">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {getSubBadge(sub)}
+                          {sub && <span className="text-[10px] text-muted-foreground">{sub.number_of_children} anak</span>}
+                          {sub && sub.status === 'trial' && sub.trial_end_date && (
+                            <span className="text-[10px] text-blue-600 dark:text-blue-400">
+                              s/d {new Date(sub.trial_end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
+                          )}
+                          {sub && sub.status === 'active' && sub.subscription_end_date && (
+                            <span className="text-[10px] text-green-600 dark:text-green-400">
+                              s/d {new Date(sub.subscription_end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
+                          )}
+                          {sub && sub.status === 'active' && !sub.subscription_end_date && (
+                            <span className="text-[10px] text-green-600 dark:text-green-400">∞ Tanpa batas</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openProfileDialog(profile)}>
+                            <Eye className="h-3 w-3" /> Detail
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openSubDialog(profile.id)}>
+                            <CreditCard className="h-3 w-3" /> Kelola
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteUser(profile)}>
+                            <Trash2 className="h-3 w-3" /> Hapus
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    {role === 'admin' && (
+                      <div className="flex items-center justify-between pl-12">
+                        <div className="flex items-center gap-2">
+                          {getSubBadge(sub)}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openProfileDialog(profile)}>
+                            <Eye className="h-3 w-3" /> Detail
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openSubDialog(profile.id)}>
+                            <CreditCard className="h-3 w-3" /> Kelola
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+            {activeProfiles.length === 0 && (
+              <p className="text-center text-muted-foreground text-sm py-8">Tidak ada user aktif</p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="deleted" className="space-y-2">
+            {deletedProfiles.map((profile: any) => {
+              const role = getUserRole(profile.id);
+              const deletedDate = new Date(profile.deleted_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+              return (
+                <Card key={profile.id} className="border-0 shadow-sm opacity-70">
+                  <CardContent className="p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      {profile.avatar_url ? (
+                        <img src={profile.avatar_url} alt={profile.name} className="h-10 w-10 rounded-full object-cover shrink-0 grayscale" />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-bold shrink-0">
+                          {profile.name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm line-through">{profile.name}</p>
+                        <p className="text-xs text-muted-foreground">{profile.email}</p>
+                        <p className="text-[10px] text-destructive">Dihapus {deletedDate}</p>
+                      </div>
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-secondary shrink-0">{getRoleBadge(role)}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openProfileDialog(profile)}>
-                        <Eye className="h-3 w-3" /> Detail
+                    <div className="flex justify-end gap-1.5 pl-12">
+                      <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleRestoreUser(profile)}>
+                        <RotateCcw className="h-3 w-3" /> Restore
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openSubDialog(profile.id)}>
-                        <CreditCard className="h-3 w-3" /> Kelola
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                {role === 'admin' && (
-                  <div className="flex items-center justify-between pl-12">
-                    <div className="flex items-center gap-2">
-                      {getSubBadge(sub)}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openProfileDialog(profile)}>
-                        <Eye className="h-3 w-3" /> Detail
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => openSubDialog(profile.id)}>
-                        <CreditCard className="h-3 w-3" /> Kelola
+                      <Button variant="destructive" size="sm" className="h-7 text-xs gap-1" onClick={() => handleHardDeleteUser(profile)}>
+                        <Trash2 className="h-3 w-3" /> Hapus Permanen
                       </Button>
                     </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+                  </CardContent>
+                </Card>
+              );
+            })}
+            {deletedProfiles.length === 0 && (
+              <p className="text-center text-muted-foreground text-sm py-8">Tidak ada user yang dihapus</p>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Profile Detail Dialog */}
@@ -485,6 +666,86 @@ const AdminUsers = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete User Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus User?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Anda yakin ingin menghapus <strong>{deleteTarget?.name}</strong> ({deleteTarget?.email})?
+              <br /><br />
+              User akan diarsipkan dan tidak bisa login. Data tetap tersimpan dan bisa di-<strong>restore</strong> kapan saja.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteUserMutation.isPending}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteUser}
+              disabled={deleteUserMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteUserMutation.isPending ? 'Menghapus...' : 'Ya, Hapus User'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Restore User Confirmation */}
+      <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore User?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Anda yakin ingin me-restore <strong>{restoreTarget?.name}</strong> ({restoreTarget?.email})?
+              <br /><br />
+              User akan bisa login kembali dan semua datanya akan aktif seperti semula.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={restoreUserMutation.isPending}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRestoreUser}
+              disabled={restoreUserMutation.isPending}
+            >
+              {restoreUserMutation.isPending ? 'Memulihkan...' : 'Ya, Restore User'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Hard Delete User Confirmation */}
+      <AlertDialog open={hardDeleteDialogOpen} onOpenChange={(o) => { setHardDeleteDialogOpen(o); if (!o) { setHardDeleteTarget(null); setHardDeleteConfirm(''); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>🗑️ Hapus Permanen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Anda yakin ingin menghapus <strong>{hardDeleteTarget?.name}</strong> secara <strong className="text-destructive">PERMANEN</strong>?
+              <br /><br />
+              ⚠️ Semua data user akan dihapus termasuk: profil, anak-anak, log harian, event, assignment, langganan, dan akun login. <strong>Tindakan ini TIDAK BISA dibatalkan.</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label>Ketik <span className="font-bold text-destructive">{hardDeleteTarget?.email}</span> untuk konfirmasi:</Label>
+            <Input
+              placeholder="Ketik email user"
+              value={hardDeleteConfirm}
+              onChange={e => setHardDeleteConfirm(e.target.value)}
+              className="h-11"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={hardDeleteMutation.isPending}>Batal</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={confirmHardDelete}
+              disabled={hardDeleteConfirm !== hardDeleteTarget?.email || hardDeleteMutation.isPending}
+            >
+              {hardDeleteMutation.isPending ? 'Menghapus...' : '🗑️ Hapus Permanen'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

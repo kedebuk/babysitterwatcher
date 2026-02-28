@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ActivityType, ACTIVITY_LABELS, ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS } from '@/types';
+import { getSmartIcon } from '@/lib/smart-icon';
 import { Pencil, MapPin } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -43,7 +44,7 @@ export function EventDetailDialog({ event, open, onOpenChange, createdByName, on
         <DialogHeader className="px-4 pt-4 pb-2">
           <DialogTitle className="flex items-center gap-2 text-base">
             <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm ${ACTIVITY_BADGE_CLASS[actType] || 'activity-badge-other'}`}>
-              {ACTIVITY_ICONS[actType] || '📝'}
+              {event.type === 'catatan' ? getSmartIcon(event.type, event.detail) : (ACTIVITY_ICONS[actType] || '📝')}
             </span>
             {ACTIVITY_LABELS[actType] || event.type}
             <span className="text-sm font-normal text-muted-foreground ml-auto">{event.time?.substring(0, 5)}</span>
@@ -93,13 +94,13 @@ export function EventDetailDialog({ event, open, onOpenChange, createdByName, on
               <div className="flex gap-3">
                 {event.photo_url && (
                   <div className="text-center">
-                    <img src={event.photo_url} alt="Sebelum" className="rounded-lg w-28 h-28 object-cover border" />
+                    <img src={event.photo_url} alt="Sebelum" loading="lazy" decoding="async" width={112} height={112} className="rounded-lg w-28 h-28 object-cover border" />
                     <span className="text-[10px] text-muted-foreground mt-1 block">Sebelum</span>
                   </div>
                 )}
                 {event.photo_url_after && (
                   <div className="text-center">
-                    <img src={event.photo_url_after} alt="Sesudah" className="rounded-lg w-28 h-28 object-cover border" />
+                    <img src={event.photo_url_after} alt="Sesudah" loading="lazy" decoding="async" width={112} height={112} className="rounded-lg w-28 h-28 object-cover border" />
                     <span className="text-[10px] text-muted-foreground mt-1 block">Sesudah</span>
                   </div>
                 )}

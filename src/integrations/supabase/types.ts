@@ -96,18 +96,21 @@ export type Database = {
       }
       child_viewers: {
         Row: {
+          can_input: boolean
           child_id: string
           created_at: string
           id: string
           viewer_user_id: string
         }
         Insert: {
+          can_input?: boolean
           child_id: string
           created_at?: string
           id?: string
           viewer_user_id: string
         }
         Update: {
+          can_input?: boolean
           child_id?: string
           created_at?: string
           id?: string
@@ -345,6 +348,42 @@ export type Database = {
         }
         Relationships: []
       }
+      food_memory: {
+        Row: {
+          avg_weight_gram: number | null
+          created_at: string
+          description: string | null
+          food_name: string
+          id: string
+          parent_id: string
+          photo_url: string | null
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          avg_weight_gram?: number | null
+          created_at?: string
+          description?: string | null
+          food_name: string
+          id?: string
+          parent_id: string
+          photo_url?: string | null
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          avg_weight_gram?: number | null
+          created_at?: string
+          description?: string | null
+          food_name?: string
+          id?: string
+          parent_id?: string
+          photo_url?: string | null
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
       inventory_item_shares: {
         Row: {
           child_id: string
@@ -526,8 +565,9 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          is_group: boolean
           is_read: boolean
-          receiver_id: string
+          receiver_id: string | null
           sender_id: string
         }
         Insert: {
@@ -535,8 +575,9 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          is_group?: boolean
           is_read?: boolean
-          receiver_id: string
+          receiver_id?: string | null
           sender_id: string
         }
         Update: {
@@ -544,8 +585,9 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          is_group?: boolean
           is_read?: boolean
-          receiver_id?: string
+          receiver_id?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -658,6 +700,7 @@ export type Database = {
           address: string | null
           avatar_url: string | null
           created_at: string
+          deleted_at: string | null
           dob: string | null
           email: string
           id: string
@@ -670,6 +713,7 @@ export type Database = {
           address?: string | null
           avatar_url?: string | null
           created_at?: string
+          deleted_at?: string | null
           dob?: string | null
           email: string
           id: string
@@ -682,6 +726,7 @@ export type Database = {
           address?: string | null
           avatar_url?: string | null
           created_at?: string
+          deleted_at?: string | null
           dob?: string | null
           email?: string
           id?: string
@@ -822,6 +867,14 @@ export type Database = {
             }
             Returns: undefined
           }
+      lookup_user_by_email: {
+        Args: { _email: string }
+        Returns: {
+          email: string
+          id: string
+          name: string
+        }[]
+      }
     }
     Enums: {
       activity_type:

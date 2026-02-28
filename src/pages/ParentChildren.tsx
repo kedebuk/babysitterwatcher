@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogOut, BarChart3, UserPlus, Trash2, Mail, Eye, Pencil, Camera, Archive, ArchiveRestore, LogOutIcon } from 'lucide-react';
+import { Plus, LogOut, BarChart3, UserPlus, Trash2, Mail, Eye, Pencil, Camera, Archive, ArchiveRestore, LogOutIcon, ArrowLeft, RefreshCw } from 'lucide-react';
 import { format, parseISO, differenceInMonths } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -40,6 +40,7 @@ const ParentChildren = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'babysitter' | 'parent'>('babysitter');
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [resendingId, setResendingId] = useState<string | null>(null);
 
   // Edit child dialog
   const [editOpen, setEditOpen] = useState(false);
@@ -129,12 +130,10 @@ const ParentChildren = () => {
     try {
       const email = inviteEmail.trim().toLowerCase();
 
-      // Check if user already exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id, name, email')
-        .eq('email', email)
-        .maybeSingle();
+      // Check if user already exists (using SECURITY DEFINER function to bypass RLS)
+      const { data: lookupResult } = await supabase
+        .rpc('lookup_user_by_email', { _email: email });
+      const existingProfile = lookupResult && lookupResult.length > 0 ? lookupResult[0] : null;
 
       if (existingProfile) {
         // Check if already assigned/connected
@@ -199,6 +198,23 @@ const ParentChildren = () => {
         }
 
         toast({ title: '📩 Undangan tersimpan', description: `${email} akan otomatis terhubung saat mendaftar` });
+
+        // Send email invitation for non-existing users
+        try {
+          const childName = children.find((c: any) => c.id === inviteChildId)?.name || 'Anak';
+          await supabase.functions.invoke('send-invite-email', {
+            body: {
+              email,
+              childName,
+              inviterName: user!.name,
+              inviteRole,
+              signupUrl: `${window.location.origin}/login`,
+            },
+          });
+          toast({ title: '📧 Email terkirim!', description: `Undangan dikirim ke ${email}` });
+        } catch {
+          // Email sending failed but invite is saved
+        }
       }
 
       qc.invalidateQueries({ queryKey: ['all_assignments'] });
@@ -257,6 +273,27 @@ const ParentChildren = () => {
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
+  };
+
+  const handleResendInvite = async (invite: any) => {
+    setResendingId(invite.id);
+    try {
+      const childName = children.find((c: any) => c.id === invite.child_id)?.name || 'Anak';
+      const { error } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          email: invite.invited_email,
+          childName,
+          inviterName: user!.name,
+          inviteRole: invite.invite_role,
+          signupUrl: `${window.location.origin}/login`,
+        },
+      });
+      if (error) throw error;
+      toast({ title: '📧 Email terkirim ulang!', description: `Undangan dikirim ke ${invite.invited_email}` });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Gagal mengirim email', variant: 'destructive' });
+    }
+    setResendingId(null);
   };
 
   const openEditDialog = (child: any) => {
@@ -365,14 +402,16 @@ const ParentChildren = () => {
     <div className="min-h-screen pb-6">
       <div className="sticky top-0 z-10 bg-primary px-4 py-3 text-primary-foreground">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold">Anak Saya</h1>
-            <p className="text-xs opacity-80">{user?.name}</p>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/parent/dashboard')}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-lg font-bold">Anak Saya</h1>
+              <p className="text-xs opacity-80">{user?.name}</p>
+            </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/parent/dashboard')}>
-              <BarChart3 className="h-5 w-5" />
-            </Button>
             <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={logout}>
               <LogOut className="h-5 w-5" />
             </Button>
@@ -496,9 +535,27 @@ const ParentChildren = () => {
                           <p className="text-xs text-muted-foreground">{viewer.profiles?.email} • Keluarga</p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleRemoveViewer(viewer.id); }}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      {child.parent_id === user?.id ? (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant={viewer.can_input ? "default" : "outline"}
+                            size="sm"
+                            className="h-7 text-[10px] px-2"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const newVal = !viewer.can_input;
+                              await supabase.from('child_viewers').update({ can_input: newVal }).eq('id', viewer.id);
+                              qc.invalidateQueries({ queryKey: ['child_viewers'] });
+                              toast({ title: newVal ? '✅ Bisa input' : '👁️ View only', description: `${viewer.profiles?.name || 'Keluarga'} ${newVal ? 'sekarang bisa input data' : 'hanya bisa melihat'}` });
+                            }}
+                          >
+                            {viewer.can_input ? '✏️ Bisa Input' : '👁️ View Only'}
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleRemoveViewer(viewer.id); }}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ) : null}
                     </div>
                   ))}
 
@@ -514,9 +571,21 @@ const ParentChildren = () => {
                           <p className="text-xs text-warning">⏳ Menunggu pendaftaran • {invite.invite_role === 'parent' ? 'Keluarga' : 'Babysitter'}</p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleRemovePendingInvite(invite.id); }}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-primary"
+                          onClick={(e) => { e.stopPropagation(); handleResendInvite(invite); }}
+                          disabled={resendingId === invite.id}
+                          title="Kirim ulang email"
+                        >
+                          <RefreshCw className={`h-3.5 w-3.5 ${resendingId === invite.id ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleRemovePendingInvite(invite.id); }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

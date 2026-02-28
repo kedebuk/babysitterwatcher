@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useChildren, useDailyLog, useEvents, useCreateOrGetDailyLog, useCreateEvent, useDeleteEvent, useProfileNames } from '@/hooks/use-data';
 import { ActivityType, ACTIVITY_LABELS, ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS, EventUnit, EventStatus } from '@/types';
+import { getSmartIcon } from '@/lib/smart-icon';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -19,6 +20,7 @@ import PendingInvites from '@/components/PendingInvites';
 import { BottomNav } from '@/components/BottomNav';
 import { EditEventDialog } from '@/components/EditEventDialog';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
+import { FoodScanButton } from '@/components/FoodScanButton';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'snack', 'buah', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
@@ -62,7 +64,7 @@ const BabysitterToday = () => {
     queryFn: async () => {
       const { data: assignments } = await supabase
         .from('assignments')
-        .select('child_id, children(*)');
+        .select('child_id, children(id, name, dob, notes, avatar_emoji, photo_url, parent_id)');
       if (!assignments) return [];
       return assignments.map((a: any) => a.children).filter(Boolean);
     },
@@ -188,13 +190,27 @@ const BabysitterToday = () => {
         if (row.afterPhotoFile) {
           afterPhotoUrl = (await uploadPhoto(row.afterPhotoFile)) || undefined;
         }
+        // Auto-revise detail text via AI
+        let revisedDetail = row.detail || undefined;
+        let finalAmount = row.amount ? Number(row.amount) : undefined;
+        let finalUnit = row.unit || undefined;
+        if (row.detail && row.detail.trim().length >= 3) {
+          try {
+            const { data: revData } = await supabase.functions.invoke('revise-event-detail', {
+              body: { detail: row.detail, type: row.type, amount: row.amount, unit: row.unit },
+            });
+            if (revData?.revised) revisedDetail = revData.revised;
+            if (revData?.corrected_amount) finalAmount = Number(revData.corrected_amount);
+            if (revData?.corrected_unit) finalUnit = revData.corrected_unit;
+          } catch { /* fallback to original */ }
+        }
         await createEvent.mutateAsync({
           daily_log_id: dailyLog.id,
           time: row.time + ':00',
           type: row.type,
-          detail: row.detail || undefined,
-          amount: row.amount ? Number(row.amount) : undefined,
-          unit: row.unit || undefined,
+          detail: revisedDetail,
+          amount: finalAmount,
+          unit: finalUnit,
           status: row.status || undefined,
           photo_url: photoUrl,
           photo_url_after: afterPhotoUrl,
@@ -304,7 +320,7 @@ const BabysitterToday = () => {
               {activeChildId && (() => {
                 const c = assignedChildren.find((ch: any) => ch.id === activeChildId);
                 return c?.photo_url ? (
-                  <img src={c.photo_url} alt={c.name} className="h-11 w-11 rounded-xl object-cover shrink-0" />
+                  <img src={c.photo_url} alt={c.name} loading="lazy" decoding="async" width={44} height={44} className="h-11 w-11 rounded-xl object-cover shrink-0" />
                 ) : (
                   <div className="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0">{c?.avatar_emoji || '👶'}</div>
                 );
@@ -337,7 +353,7 @@ const BabysitterToday = () => {
                         <div className="flex items-center gap-2.5">
                           <span className="text-xs font-bold text-muted-foreground min-w-[36px]">{event.time?.substring(0, 5)}</span>
                           <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                            {ACTIVITY_ICONS[event.type as ActivityType] || '📝'}
+                            {event.type === 'catatan' ? getSmartIcon(event.type, event.detail) : (ACTIVITY_ICONS[event.type as ActivityType] || '📝')}
                           </span>
                           <span className="text-xs flex-1 truncate">{event.detail || ACTIVITY_LABELS[event.type as ActivityType] || event.type}</span>
                           {event.amount && <span className="text-xs font-bold">{event.amount} {event.unit}</span>}
@@ -364,7 +380,7 @@ const BabysitterToday = () => {
               <h2 className="text-sm font-bold mb-2">➕ Tambah Event</h2>
               <div className="space-y-3">
                 {newRows.map(row => (
-                  <EventRowCard key={row.tempId} row={row} updateRow={updateRow} removeRow={removeRow} onPhotoSelect={handlePhotoSelect} onRemovePhoto={handleRemovePhoto} />
+                  <EventRowCard key={row.tempId} row={row} updateRow={updateRow} removeRow={removeRow} onPhotoSelect={handlePhotoSelect} onRemovePhoto={handleRemovePhoto} parentId={assignedChildren.find((c: any) => c.id === activeChildId)?.parent_id || ''} />
                 ))}
               </div>
               <Button variant="outline" className="w-full h-12 mt-3 border-dashed" onClick={addRow}>
@@ -407,15 +423,17 @@ const BabysitterToday = () => {
 };
 
 // Extracted event row component
-function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto }: {
+function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto, parentId }: {
   row: EventRow;
   updateRow: (tempId: string, field: keyof EventRow, value: any) => void;
   removeRow: (tempId: string) => void;
   onPhotoSelect: (tempId: string, file: File, which: 'before' | 'after') => void;
   onRemovePhoto: (tempId: string, which: 'before' | 'after') => void;
+  parentId: string;
 }) {
   const beforeFileRef = useRef<HTMLInputElement>(null);
   const afterFileRef = useRef<HTMLInputElement>(null);
+  const isFoodType = row.type === 'mpasi' || row.type === 'snack' || row.type === 'buah';
 
   return (
     <Card className="border-0 shadow-sm animate-slide-up">
@@ -458,6 +476,17 @@ function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto 
               </Select>
             )}
           </div>
+        )}
+        {/* Food Scan Button */}
+        {isFoodType && (
+          <FoodScanButton
+            parentId={parentId}
+            onResult={(detail, amount, unit) => {
+              updateRow(row.tempId, 'detail', detail);
+              if (amount) updateRow(row.tempId, 'amount', amount);
+              if (unit) updateRow(row.tempId, 'unit', unit);
+            }}
+          />
         )}
         {/* Before & After Photos */}
         <div className="flex gap-3">

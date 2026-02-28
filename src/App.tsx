@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
+import { MetaPixelProvider } from "@/components/MetaPixelProvider";
+import { BrandProvider } from "@/contexts/BrandContext";
 
 // Lazy load all pages
 const Login = lazy(() => import("./pages/Login"));
@@ -40,7 +42,16 @@ const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const ViewerDashboard = lazy(() => import("./pages/ViewerDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,       // 30s before refetch
+      gcTime: 5 * 60_000,      // 5 min garbage collection
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center">
@@ -94,6 +105,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AuthProvider>
+          <MetaPixelProvider>
+          <BrandProvider>
           <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -131,6 +144,8 @@ const App = () => (
             </Routes>
           </Suspense>
           </BrowserRouter>
+          </BrandProvider>
+          </MetaPixelProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

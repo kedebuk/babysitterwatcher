@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useChildren, useDailyLog, useEvents, useChildLogs, useProfileNames, useDeleteEvent } from '@/hooks/use-data';
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType } from '@/types';
+import { getSmartIcon } from '@/lib/smart-icon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -19,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PendingInvites from '@/components/PendingInvites';
 import { BottomNav } from '@/components/BottomNav';
+import { DailyTrivia } from '@/components/DailyTrivia';
 
 function getTotalByType(events: any[], type: string): number {
   return events.filter(e => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
@@ -28,7 +30,7 @@ function generateWhatsAppText(childName: string, date: string, events: any[], no
   const dayName = format(parseISO(date), 'EEEE, d MMMM yyyy', { locale: idLocale });
   let text = `📋 Jadwal ${childName}\n${dayName}\n\n`;
   events.forEach(event => {
-    const icon = ACTIVITY_ICONS[event.type as ActivityType] || '📝';
+    const icon = event.type === 'catatan' ? getSmartIcon(event.type, event.detail, ACTIVITY_ICONS[event.type as ActivityType]) : (ACTIVITY_ICONS[event.type as ActivityType] || '📝');
     text += `${event.time?.substring(0, 5)} ${icon} ${event.detail || ACTIVITY_LABELS[event.type as ActivityType] || event.type}\n`;
   });
   const totalSusu = getTotalByType(events, 'susu');
@@ -46,6 +48,7 @@ const ParentDashboard = () => {
   const [selectedChild, setSelectedChild] = useState('');
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const { toast } = useToast();
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const { user, logout, setActiveRole } = useAuth();
   const navigate = useNavigate();
   const deleteEvent = useDeleteEvent();
@@ -101,7 +104,7 @@ const ParentDashboard = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from('location_pings')
-        .select('*')
+        .select('id, latitude, longitude, user_id, created_at')
         .eq('child_id', activeChildId)
         .gte('created_at', selectedDate + 'T00:00:00')
         .lte('created_at', selectedDate + 'T23:59:59')
@@ -148,6 +151,11 @@ const ParentDashboard = () => {
   const pee = events.filter(e => e.type === 'pee').length;
   const vitaminEvent = events.find(e => e.type === 'vitamin');
   const mandiEvents = events.filter(e => e.type === 'mandi' || e.type === 'lap_badan');
+
+  // Food detail lists
+  const mpasiEvents = events.filter(e => e.type === 'mpasi');
+  const snackEvents = events.filter(e => e.type === 'snack');
+  const buahEvents = events.filter(e => e.type === 'buah');
 
   const changeDate = (d: number) => {
     const dt = new Date(selectedDate);
@@ -254,7 +262,7 @@ const ParentDashboard = () => {
             <div className="flex items-center gap-3">
               {child && (
                 (child as any).photo_url ? (
-                  <img src={(child as any).photo_url} alt={child.name} className="h-11 w-11 rounded-xl object-cover shrink-0" />
+                  <img src={(child as any).photo_url} alt={child.name} loading="lazy" decoding="async" width={44} height={44} className="h-11 w-11 rounded-xl object-cover shrink-0" />
                 ) : (
                   <div className="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0">{child.avatar_emoji || '👶'}</div>
                 )
@@ -273,6 +281,28 @@ const ParentDashboard = () => {
               <Button variant="ghost" size="icon" onClick={() => changeDate(1)}><ChevronRight className="h-5 w-5" /></Button>
             </div>
 
+            {child?.dob && <DailyTrivia childName={child.name} childId={child.id} dob={child.dob} date={selectedDate} />}
+
+            <Card
+              className="border-0 shadow-sm cursor-pointer transition-all hover:shadow-md bg-gradient-to-r from-primary/5 to-accent/10"
+              onClick={() => navigate('/insights')}
+            >
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-base">🧠</div>
+                    <span className="text-sm font-bold text-foreground">Insight Harian {child?.name?.split(' ')[0]}</span>
+                    <span className="text-xs">✨📊</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-primary/60">tap baca</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 ml-10">Analisis pola tidur, makan & aktivitas AI</p>
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-3 gap-3">
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
@@ -281,12 +311,24 @@ const ParentDashboard = () => {
                 </div>
                 <p className="text-2xl font-bold">{totalSusu} <span className="text-sm font-normal text-muted-foreground">ml</span></p>
               </CardContent></Card>
-              <Card className="border-0 shadow-sm"><CardContent className="p-3">
+               <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setExpandedCard(expandedCard === 'makan' ? null : 'makan')}>
+                <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-makan text-sm">🥣</div>
                   <span className="text-xs text-muted-foreground">Total Makan</span>
                 </div>
                 <p className="text-2xl font-bold">{totalMakan} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
+                {mpasiEvents.length > 0 && expandedCard !== 'makan' && (
+                  <p className="text-[10px] text-primary/60 mt-1">tap untuk rincian ▾</p>
+                )}
+                {expandedCard === 'makan' && mpasiEvents.length > 0 && (
+                  <div className="mt-2 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                    {mpasiEvents.map((e, i) => (
+                      <p key={i} className="text-xs text-muted-foreground">🍽️ {e.detail || 'MPASI'}{e.amount ? ` — ${e.amount}${e.unit || 'g'}` : ''}</p>
+                    ))}
+                    <p className="text-[10px] text-primary/60 mt-1">tap untuk tutup ▴</p>
+                  </div>
+                )}
               </CardContent></Card>
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
@@ -302,19 +344,43 @@ const ParentDashboard = () => {
                 </div>
                 <p className="text-lg font-bold">{vitaminEvent ? `✅ ${vitaminEvent.time?.substring(0, 5)}` : '❌ Belum'}</p>
               </CardContent></Card>
-              <Card className="border-0 shadow-sm"><CardContent className="p-3">
+               <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setExpandedCard(expandedCard === 'snack' ? null : 'snack')}>
+                <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-snack text-sm">🍪</div>
                   <span className="text-xs text-muted-foreground">Snack</span>
                 </div>
                 <p className="text-2xl font-bold">{totalSnack} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
+                {snackEvents.length > 0 && expandedCard !== 'snack' && (
+                  <p className="text-[10px] text-primary/60 mt-1">tap untuk rincian ▾</p>
+                )}
+                {expandedCard === 'snack' && snackEvents.length > 0 && (
+                  <div className="mt-2 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                    {snackEvents.map((e, i) => (
+                      <p key={i} className="text-xs text-muted-foreground">🍪 {e.detail || 'Snack'}{e.amount ? ` — ${e.amount}${e.unit || 'g'}` : ''}</p>
+                    ))}
+                    <p className="text-[10px] text-primary/60 mt-1">tap untuk tutup ▴</p>
+                  </div>
+                )}
               </CardContent></Card>
-              <Card className="border-0 shadow-sm"><CardContent className="p-3">
+               <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setExpandedCard(expandedCard === 'buah' ? null : 'buah')}>
+                <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-buah text-sm">🍎</div>
                   <span className="text-xs text-muted-foreground">Buah</span>
                 </div>
                 <p className="text-2xl font-bold">{totalBuah} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
+                {buahEvents.length > 0 && expandedCard !== 'buah' && (
+                  <p className="text-[10px] text-primary/60 mt-1">tap untuk rincian ▾</p>
+                )}
+                {expandedCard === 'buah' && buahEvents.length > 0 && (
+                  <div className="mt-2 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                    {buahEvents.map((e, i) => (
+                      <p key={i} className="text-xs text-muted-foreground">🍉 {e.detail || 'Buah'}{e.amount ? ` — ${e.amount}${e.unit || 'g'}` : ''}</p>
+                    ))}
+                    <p className="text-[10px] text-primary/60 mt-1">tap untuk tutup ▴</p>
+                  </div>
+                )}
               </CardContent></Card>
             </div>
 
@@ -364,7 +430,7 @@ const ParentDashboard = () => {
                       <CardContent className="p-3 flex items-start gap-3">
                         <div className="text-center min-w-[44px]"><p className="text-xs font-bold text-muted-foreground">{event.time?.substring(0, 5)}</p></div>
                         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                          {ACTIVITY_ICONS[event.type as ActivityType] || '📝'}
+                          {event.type === 'catatan' ? getSmartIcon(event.type, event.detail, ACTIVITY_ICONS[event.type as ActivityType]) : (ACTIVITY_ICONS[event.type as ActivityType] || '📝')}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</p>

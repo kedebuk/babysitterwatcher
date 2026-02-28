@@ -66,7 +66,7 @@ const CompletePhone = () => {
 
         if (!existingSub) {
           const now = new Date();
-          const trialEnd = new Date(now.getTime() + 3 * 86400000);
+          const trialEnd = new Date(now.getTime() + 14 * 86400000);
           await supabase.from('subscriptions').insert({
             user_id: user.id,
             plan_type: 'trial' as any,

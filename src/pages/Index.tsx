@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ClipboardList, MapPin, Camera, BarChart3, MessageCircle, Brain, Baby, Shield, Clock, Heart } from 'lucide-react';
+import { useBrand } from '@/contexts/BrandContext';
 
 const features = [
   {
@@ -37,6 +38,7 @@ const features = [
 
 const Index = () => {
   const navigate = useNavigate();
+  const { brandName, brandLogoUrl } = useBrand();
 
   return (
     <div className="min-h-screen bg-background">
@@ -44,11 +46,15 @@ const Index = () => {
       <section className="relative overflow-hidden px-4 pt-20 pb-24 text-center">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-accent/5" />
         <div className="relative mx-auto max-w-3xl space-y-8">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10">
-            <Heart className="h-10 w-10 text-primary" fill="hsl(var(--primary))" opacity={0.8} />
-          </div>
+          {brandLogoUrl ? (
+            <img src={brandLogoUrl} alt={brandName} loading="eager" decoding="async" width={80} height={80} className="h-20 w-20 rounded-3xl object-contain" />
+          ) : (
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10">
+              <Heart className="h-10 w-10 text-primary" fill="hsl(var(--primary))" opacity={0.8} />
+            </div>
+          )}
           <div className="space-y-3">
-            <p className="text-sm font-semibold uppercase tracking-widest text-primary">Eleanor Tracker</p>
+            <p className="text-sm font-semibold uppercase tracking-widest text-primary">{brandName}</p>
             <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               Pantau Si Kecil,<br />
               <span className="text-primary">Dengan Penuh Cinta</span>
@@ -110,8 +116,8 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="border-t px-4 py-8 text-center">
-        <p className="font-display text-lg font-semibold text-foreground">Eleanor Tracker</p>
-        <p className="mt-1 text-xs text-muted-foreground">© {new Date().getFullYear()} Eleanor Tracker. Made with love for Mamas.</p>
+        <p className="font-display text-lg font-semibold text-foreground">{brandName}</p>
+        <p className="mt-1 text-xs text-muted-foreground">© {new Date().getFullYear()} {brandName}. Made with love for Mamas.</p>
       </footer>
     </div>
   );
