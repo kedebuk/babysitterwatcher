@@ -57,7 +57,8 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       link.rel = 'icon';
       document.head.appendChild(link);
     }
-    link.href = faviconUrl;
+    const separator = faviconUrl.includes('?') ? '&' : '?';
+    link.href = `${faviconUrl}${separator}v=2`;
   }, [faviconUrl]);
 
   return (
