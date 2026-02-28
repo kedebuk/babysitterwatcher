@@ -27,7 +27,7 @@ function getTotalByType(events: any[], type: string): number {
   return events.filter(e => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
 }
 
-function calcSleepHours(evts: any[], isMalam: boolean): number {
+function calcSleepHours(evts: any[], isMalam: boolean, nextDayEvts: any[] = []): number {
   const sorted = [...evts]
     .filter(e => e.type === 'tidur' || e.type === 'bangun')
     .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
@@ -37,12 +37,23 @@ function calcSleepHours(evts: any[], isMalam: boolean): number {
     const h = parseInt(sorted[i].time?.substring(0, 2) || '0');
     const isNight = h >= 18 || h < 10;
     if (isNight !== isMalam) continue;
-    const nextWake = sorted.slice(i + 1).find((e: any) => e.type === 'bangun');
-    if (!nextWake) continue;
     const [sh, sm] = sorted[i].time.substring(0, 5).split(':').map(Number);
-    const [eh, em] = nextWake.time.substring(0, 5).split(':').map(Number);
-    const dur = (eh * 60 + em) - (sh * 60 + sm);
-    if (dur > 0) mins += dur;
+    const nextWakeToday = sorted.slice(i + 1).find((e: any) => e.type === 'bangun');
+    if (nextWakeToday) {
+      const [eh, em] = nextWakeToday.time.substring(0, 5).split(':').map(Number);
+      const dur = (eh * 60 + em) - (sh * 60 + sm);
+      if (dur > 0) mins += dur;
+    } else if (isMalam && nextDayEvts.length > 0) {
+      // Cross-day: cari bangun pertama di hari berikutnya
+      const nextWake = [...nextDayEvts]
+        .filter(e => e.type === 'bangun')
+        .sort((a, b) => (a.time || '').localeCompare(b.time || ''))[0];
+      if (nextWake) {
+        const [eh, em] = nextWake.time.substring(0, 5).split(':').map(Number);
+        const dur = (eh * 60 + em + 24 * 60) - (sh * 60 + sm);
+        if (dur > 0 && dur < 16 * 60) mins += dur;
+      }
+    }
   }
   return Math.round(mins / 6) / 10;
 }
@@ -158,15 +169,17 @@ const ParentDashboard = () => {
   const last7dates = Array.from({ length: 7 }, (_, i) => format(subDays(new Date(), 6 - i), 'yyyy-MM-dd'));
   const { data: logsWithEvents = [] } = useChildLogs(activeChildId, last7dates);
 
-  const chartData = last7dates.map(date => {
+  const chartData = last7dates.map((date, idx) => {
     const logData = logsWithEvents.find((l: any) => l.log_date === date);
     const evts = logData?.events || [];
+    const nextDate = last7dates[idx + 1];
+    const nextEvts = nextDate ? (logsWithEvents.find((l: any) => l.log_date === nextDate)?.events || []) : [];
     return {
       date: format(parseISO(date), 'd MMM', { locale: idLocale }),
       susu: getTotalByType(evts, 'susu'),
       makan: getTotalByType(evts, 'mpasi') + getTotalByType(evts, 'snack') + getTotalByType(evts, 'buah'),
       pup: evts.filter((e: any) => e.type === 'pup').length,
-      tidurMalam: calcSleepHours(evts, true),
+      tidurMalam: calcSleepHours(evts, true, nextEvts),
       tidurSiang: calcSleepHours(evts, false),
     };
   });
