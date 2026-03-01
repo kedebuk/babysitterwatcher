@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import PendingInvites from '@/components/PendingInvites';
 import { BottomNav } from '@/components/BottomNav';
+import { BabysitterMotivation } from '@/components/BabysitterMotivation';
 import { EditEventDialog } from '@/components/EditEventDialog';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
 import { FoodScanButton } from '@/components/FoodScanButton';
@@ -308,6 +309,9 @@ const BabysitterToday = () => {
 
       <div className="px-4 py-3 space-y-4 max-w-2xl mx-auto">
         <PendingInvites />
+        {activeChildId && (
+          <BabysitterMotivation childId={activeChildId} babysitterName={user?.name || ''} date={selectedDate} />
+        )}
         {assignedChildren.length === 0 ? (
           <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">
             Belum ada anak yang ditugaskan. Hubungi orang tua untuk penugasan.
