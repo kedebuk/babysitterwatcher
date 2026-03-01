@@ -65,7 +65,7 @@ const Chat = () => {
         return all;
       }
       if (role === 'babysitter') {
-        const { data: assignments } = await supabase.from('assignments').select('child_id, children(id, name, avatar_emoji)');
+        const { data: assignments } = await supabase.from('assignments').select('child_id, children(id, name, avatar_emoji)').eq('babysitter_user_id', user!.id);
         return (assignments || []).map((a: any) => ({
           id: a.children?.id || a.child_id,
           name: a.children?.name || '',
@@ -149,7 +149,7 @@ const Chat = () => {
           if (p) result.push({ id: v.viewer_user_id, name: p.name || 'Keluarga', avatar_url: p.avatar_url, child_id: v.child_id, child_name: childMap[v.child_id] || '', role_label: 'Keluarga' });
         });
       } else if (role === 'babysitter') {
-        const { data: assignments } = await supabase.from('assignments').select('child_id, children(id, name, parent_id, avatar_emoji)');
+        const { data: assignments } = await supabase.from('assignments').select('child_id, children(id, name, parent_id, avatar_emoji)').eq('babysitter_user_id', user!.id);
         if (!assignments?.length) return [];
         const childIds = assignments.map((a: any) => a.child_id);
         const parentIds = [...new Set(assignments.map((a: any) => a.children?.parent_id).filter(Boolean))];

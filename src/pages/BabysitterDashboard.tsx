@@ -82,7 +82,8 @@ const BabysitterDashboard = () => {
     queryFn: async () => {
       const { data: assignments } = await supabase
         .from('assignments')
-        .select('child_id, children(id, name, dob, notes, avatar_emoji, photo_url, parent_id)');
+        .select('child_id, children(id, name, dob, notes, avatar_emoji, photo_url, parent_id)')
+        .eq('babysitter_user_id', user!.id);
       if (!assignments) return [];
       return assignments.map((a: any) => a.children).filter(Boolean);
     },

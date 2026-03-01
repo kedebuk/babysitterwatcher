@@ -21,7 +21,8 @@ const BabysitterHistory = () => {
       // Get assigned child ids
       const { data: assignments } = await supabase
         .from('assignments')
-        .select('child_id');
+        .select('child_id')
+        .eq('babysitter_user_id', user!.id);
       if (!assignments || assignments.length === 0) return [];
 
       const childIds = assignments.map(a => a.child_id);

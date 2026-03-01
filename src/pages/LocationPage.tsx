@@ -47,7 +47,7 @@ const LocationPage = () => {
     queryKey: ['location_children', user?.id, role],
     queryFn: async () => {
       if (role === 'babysitter') {
-        const { data } = await supabase.from('assignments').select('child_id, children(*)');
+        const { data } = await supabase.from('assignments').select('child_id, children(*)').eq('babysitter_user_id', user!.id);
         return (data || []).map((a: any) => a.children).filter(Boolean);
       } else if (role === 'viewer') {
         const { data: viewerRecs } = await supabase.from('child_viewers').select('child_id').eq('viewer_user_id', user!.id);
