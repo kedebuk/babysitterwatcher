@@ -17,6 +17,7 @@ const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
 const ParentChildren = lazy(() => import("./pages/ParentChildren"));
 const ParentInput = lazy(() => import("./pages/ParentInput"));
 const BabysitterToday = lazy(() => import("./pages/BabysitterToday"));
+const BabysitterDashboard = lazy(() => import("./pages/BabysitterDashboard"));
 const BabysitterHistory = lazy(() => import("./pages/BabysitterHistory"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
@@ -127,6 +128,7 @@ const App = () => (
               <Route path="/parent/children" element={<ProtectedRoute allowedRole="parent"><SubscriptionGuard><ParentChildren /></SubscriptionGuard></ProtectedRoute>} />
               <Route path="/parent/input" element={<ProtectedRoute allowedRole="parent"><SubscriptionGuard><ParentInput /></SubscriptionGuard></ProtectedRoute>} />
               <Route path="/babysitter/today" element={<ProtectedRoute allowedRole="babysitter"><SubscriptionGuard><BabysitterToday /></SubscriptionGuard></ProtectedRoute>} />
+              <Route path="/babysitter/dashboard" element={<ProtectedRoute allowedRole="babysitter"><SubscriptionGuard><BabysitterDashboard /></SubscriptionGuard></ProtectedRoute>} />
               <Route path="/babysitter/history" element={<ProtectedRoute allowedRole="babysitter"><SubscriptionGuard><BabysitterHistory /></SubscriptionGuard></ProtectedRoute>} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/insights" element={<Insights />} />

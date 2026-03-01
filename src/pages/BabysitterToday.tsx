@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -85,6 +86,8 @@ const BabysitterToday = () => {
   const [notes, setNotes] = useState('');
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [viewingEvent, setViewingEvent] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; daily_log_id: string; label: string } | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const totalSusu = events.filter(e => e.type === 'susu' && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
 
@@ -159,6 +162,7 @@ const BabysitterToday = () => {
 
   const handleSave = async () => {
     if (!activeChildId || !user) return;
+    setSaving(true);
     try {
       // Capture GPS once for all events in this save
       let latitude: number | undefined;
@@ -228,15 +232,8 @@ const BabysitterToday = () => {
       toast({ title: '✅ Tersimpan!', description: 'Log harian berhasil disimpan' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    }
-  };
-
-  const handleDeleteEvent = async (eventId: string, logId: string) => {
-    try {
-      await deleteEvent.mutateAsync({ id: eventId, daily_log_id: logId });
-      toast({ title: 'Dihapus', description: 'Event berhasil dihapus' });
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -365,7 +362,7 @@ const BabysitterToday = () => {
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setEditingEvent(event); }}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id, event.daily_log_id); }}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: event.id, daily_log_id: event.daily_log_id, label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})` }); }}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
@@ -393,8 +390,8 @@ const BabysitterToday = () => {
               <Textarea placeholder="Catatan tambahan..." value={notes} onChange={e => setNotes(e.target.value)} className="min-h-[80px] text-sm" />
             </div>
 
-            <Button className="w-full h-12 text-base font-bold" onClick={handleSave} disabled={createOrGetLog.isPending || createEvent.isPending}>
-              💾 Simpan Log Hari Ini
+            <Button className="w-full h-12 text-base font-bold" onClick={handleSave} disabled={saving || createOrGetLog.isPending || createEvent.isPending}>
+              {saving ? 'Menyimpan...' : '💾 Simpan Log Hari Ini'}
             </Button>
           </>
         )}
@@ -417,6 +414,34 @@ const BabysitterToday = () => {
           childId={activeChildId}
         />
       )}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Aktivitas?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus <strong>{deleteTarget?.label}</strong>? Tindakan ini tidak bisa dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteTarget) {
+                  deleteEvent.mutate({ id: deleteTarget.id, daily_log_id: deleteTarget.daily_log_id }, {
+                    onSuccess: () => toast({ title: '✅ Dihapus', description: 'Aktivitas berhasil dihapus' }),
+                    onError: (err: any) => toast({ title: 'Gagal', description: err.message, variant: 'destructive' }),
+                  });
+                  setDeleteTarget(null);
+                }
+              }}
+            >
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <BottomNav role="babysitter" />
     </div>
   );

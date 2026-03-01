@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, subDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, MoreVertical, LogOut, RefreshCw, User, Bell, Users, Plus, Trash2, Clock, Camera, X, Pencil, Package, MapPin, MessageCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MoreVertical, LogOut, RefreshCw, User, Bell, Users, Plus, Trash2, Clock, Camera, X, Pencil, Package, MapPin, MessageCircle, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import PendingInvites from '@/components/PendingInvites';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
 import { EditEventDialog } from '@/components/EditEventDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'snack', 'buah', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
@@ -90,6 +91,8 @@ const ViewerDashboard = () => {
 
   const [newRows, setNewRows] = useState<EventRow[]>([createEmptyRow()]);
   const [notes, setNotes] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; daily_log_id: string; label: string } | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // Realtime notifications
   useEffect(() => {
@@ -209,6 +212,7 @@ const ViewerDashboard = () => {
 
   const handleSave = async () => {
     if (!activeChildId || !user) return;
+    setSaving(true);
     try {
       let latitude: number | undefined;
       let longitude: number | undefined;
@@ -275,15 +279,8 @@ const ViewerDashboard = () => {
       toast({ title: '✅ Tersimpan!', description: 'Log harian berhasil disimpan' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    }
-  };
-
-  const handleDeleteEvent = async (eventId: string, logId: string) => {
-    try {
-      await deleteEvent.mutateAsync({ id: eventId, daily_log_id: logId });
-      toast({ title: 'Dihapus', description: 'Event berhasil dihapus' });
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -460,7 +457,7 @@ const ViewerDashboard = () => {
                               <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setEditingEvent(event); }}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id, event.daily_log_id); }}>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: event.id, daily_log_id: event.daily_log_id, label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})` }); }}>
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </>
@@ -507,8 +504,8 @@ const ViewerDashboard = () => {
                   <h2 className="text-sm font-bold mb-2">📝 Catatan Harian</h2>
                   <Textarea placeholder="Catatan tambahan..." value={notes} onChange={e => setNotes(e.target.value)} className="min-h-[80px] text-sm" />
                 </div>
-                <Button className="w-full h-12 text-base font-bold" onClick={handleSave} disabled={createOrGetLog.isPending || createEvent.isPending}>
-                  💾 Simpan Log
+                <Button className="w-full h-12 text-base font-bold" onClick={handleSave} disabled={saving || createOrGetLog.isPending || createEvent.isPending}>
+                  {saving ? 'Menyimpan...' : '💾 Simpan Log'}
                 </Button>
               </div>
             ) : null}
@@ -533,6 +530,34 @@ const ViewerDashboard = () => {
           childId={activeChildId}
         />
       )}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Aktivitas?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus <strong>{deleteTarget?.label}</strong>? Tindakan ini tidak bisa dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteTarget) {
+                  deleteEvent.mutate({ id: deleteTarget.id, daily_log_id: deleteTarget.daily_log_id }, {
+                    onSuccess: () => toast({ title: '✅ Dihapus', description: 'Aktivitas berhasil dihapus' }),
+                    onError: (err: any) => toast({ title: 'Gagal', description: err.message, variant: 'destructive' }),
+                  });
+                  setDeleteTarget(null);
+                }
+              }}
+            >
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

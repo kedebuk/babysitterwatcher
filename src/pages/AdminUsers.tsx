@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, LogOut, Shield, CreditCard, Eye, Phone, MapPin, Calendar, Baby, Users, Trash2, RotateCcw } from 'lucide-react';
+import { ArrowLeft, LogOut, Shield, CreditCard, Eye, Phone, MapPin, Calendar, Baby, Users, Trash2, RotateCcw, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -158,8 +158,20 @@ const AdminUsers = () => {
     },
   });
 
-  const activeProfiles = useMemo(() => profiles.filter((p: any) => !p.deleted_at), [profiles]);
-  const deletedProfiles = useMemo(() => profiles.filter((p: any) => p.deleted_at), [profiles]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const activeProfiles = useMemo(() => {
+    const active = profiles.filter((p: any) => !p.deleted_at);
+    if (!searchQuery.trim()) return active;
+    const q = searchQuery.toLowerCase();
+    return active.filter((p: any) => p.name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q) || p.phone?.toLowerCase().includes(q));
+  }, [profiles, searchQuery]);
+  const deletedProfiles = useMemo(() => {
+    const deleted = profiles.filter((p: any) => p.deleted_at);
+    if (!searchQuery.trim()) return deleted;
+    const q = searchQuery.toLowerCase();
+    return deleted.filter((p: any) => p.name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q));
+  }, [profiles, searchQuery]);
 
   const { data: roles = [] } = useQuery({
     queryKey: ['admin_all_roles'],
@@ -419,6 +431,15 @@ const AdminUsers = () => {
       </div>
 
       <div className="px-4 py-4 max-w-3xl mx-auto">
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Cari nama, email, atau telepon..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-9 h-10"
+          />
+        </div>
         <Tabs defaultValue="active" className="w-full">
           <TabsList className="w-full mb-3">
             <TabsTrigger value="active" className="flex-1">Aktif ({activeProfiles.length})</TabsTrigger>

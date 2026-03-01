@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, PenLine, MessageCircle, User, History, Bell, Package } from 'lucide-react';
+import { Home, PenLine, MessageCircle, User, History, Bell, Package, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,7 @@ interface NavItem {
   label: string;
   path: string;
   badgeKey?: 'notifications' | 'unread_messages';
+  animated?: boolean;
 }
 
 const PARENT_ITEMS: NavItem[] = [
@@ -21,6 +22,7 @@ const PARENT_ITEMS: NavItem[] = [
 ];
 
 const BABYSITTER_ITEMS: NavItem[] = [
+  { icon: BarChart3, label: 'Dashboard', path: '/babysitter/dashboard', animated: true },
   { icon: PenLine, label: 'Input', path: '/babysitter/today' },
   { icon: Package, label: 'Stok', path: '/inventory' },
   { icon: MessageCircle, label: 'Chat', path: '/chat', badgeKey: 'unread_messages' },
@@ -93,14 +95,22 @@ export function BottomNav({ role }: BottomNavProps) {
               )}
             >
               <div className="relative">
-                <item.icon className={cn('h-5 w-5', isActive && 'stroke-[2.5]')} />
+                {item.animated && !isActive ? (
+                  <div className="relative">
+                    <item.icon className="h-5 w-5 animate-bounce-gentle" />
+                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary animate-ping" />
+                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary" />
+                  </div>
+                ) : (
+                  <item.icon className={cn('h-5 w-5', isActive && 'stroke-[2.5]')} />
+                )}
                 {badgeCount > 0 && (
                   <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold px-1">
                     {badgeCount > 99 ? '99+' : badgeCount}
                   </span>
                 )}
               </div>
-              <span>{item.label}</span>
+              <span className={cn(item.animated && !isActive && 'font-bold text-primary')}>{item.label}</span>
             </button>
           );
         })}

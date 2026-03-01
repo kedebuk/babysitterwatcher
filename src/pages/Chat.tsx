@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Send, Users, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Send, Users, MessageCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
@@ -29,6 +29,8 @@ interface ChildOption {
 
 type ChatMode = 'private' | 'group';
 
+const MSG_PAGE_SIZE = 50;
+
 const Chat = () => {
   const { user, activeRole } = useAuth();
   const navigate = useNavigate();
@@ -38,6 +40,7 @@ const Chat = () => {
   const [selectedContact, setSelectedContact] = useState<ChatContact | null>(null);
   const [groupChildId, setGroupChildId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const role = activeRole || user?.role;
 
@@ -189,9 +192,17 @@ const Chat = () => {
     return contacts.filter(c => c.child_id === selectedChild);
   }, [contacts, selectedChild]);
 
+  // Message limit state
+  const [privateMsgLimit, setPrivateMsgLimit] = useState(MSG_PAGE_SIZE);
+  const [groupMsgLimit, setGroupMsgLimit] = useState(MSG_PAGE_SIZE);
+
+  // Reset limits when switching conversations
+  useEffect(() => { setPrivateMsgLimit(MSG_PAGE_SIZE); }, [selectedContact?.id, selectedContact?.child_id]);
+  useEffect(() => { setGroupMsgLimit(MSG_PAGE_SIZE); }, [groupChildId]);
+
   // Private messages
-  const { data: privateMessages = [] } = useQuery({
-    queryKey: ['chat_messages', selectedContact?.id, selectedContact?.child_id],
+  const { data: privateMessagesRaw = [] } = useQuery({
+    queryKey: ['chat_messages', selectedContact?.id, selectedContact?.child_id, privateMsgLimit],
     queryFn: async () => {
       if (!selectedContact) return [];
       const { data, error } = await supabase
@@ -200,17 +211,20 @@ const Chat = () => {
         .eq('child_id', selectedContact.child_id)
         .eq('is_group', false)
         .or(`and(sender_id.eq.${user!.id},receiver_id.eq.${selectedContact.id}),and(sender_id.eq.${selectedContact.id},receiver_id.eq.${user!.id})`)
-        .order('created_at');
+        .order('created_at', { ascending: false })
+        .limit(privateMsgLimit);
       if (error) throw error;
-      return data || [];
+      return (data || []).reverse();
     },
     enabled: !!selectedContact,
     refetchInterval: 5000,
   });
+  const privateMessages = privateMessagesRaw;
+  const hasMorePrivate = privateMessages.length >= privateMsgLimit;
 
   // Group messages
-  const { data: groupMessages = [] } = useQuery({
-    queryKey: ['group_messages', groupChildId],
+  const { data: groupMessagesRaw = [] } = useQuery({
+    queryKey: ['group_messages', groupChildId, groupMsgLimit],
     queryFn: async () => {
       if (!groupChildId) return [];
       const { data, error } = await supabase
@@ -218,13 +232,16 @@ const Chat = () => {
         .select('*')
         .eq('child_id', groupChildId)
         .eq('is_group', true)
-        .order('created_at');
+        .order('created_at', { ascending: false })
+        .limit(groupMsgLimit);
       if (error) throw error;
-      return data || [];
+      return (data || []).reverse();
     },
     enabled: !!groupChildId,
     refetchInterval: 5000,
   });
+  const groupMessages = groupMessagesRaw;
+  const hasMoreGroup = groupMessages.length >= groupMsgLimit;
 
   // Profile names for group messages
   const groupSenderIds = useMemo(() => [...new Set(groupMessages.map((m: any) => m.sender_id))], [groupMessages]);
@@ -279,33 +296,38 @@ const Chat = () => {
   }, [activeMessages]);
 
   const handleSend = async () => {
-    if (!message.trim() || !user) return;
+    if (!message.trim() || !user || sending) return;
     const text = message.trim();
     setMessage('');
+    setSending(true);
 
-    if (selectedContact) {
-      // Private message
-      await supabase.from('messages').insert({
-        sender_id: user.id,
-        receiver_id: selectedContact.id,
-        child_id: selectedContact.child_id,
-        content: text,
-        is_group: false,
-      });
-      const senderName = user.name || 'Seseorang';
-      await supabase.from('notifications').insert({
-        user_id: selectedContact.id,
-        message: `💬 Pesan baru dari ${senderName}: "${text.length > 50 ? text.slice(0, 50) + '...' : text}"`,
-      }).then(() => {});
-    } else if (groupChildId) {
-      // Group message
-      await supabase.from('messages').insert({
-        sender_id: user.id,
-        receiver_id: null,
-        child_id: groupChildId,
-        content: text,
-        is_group: true,
-      });
+    try {
+      if (selectedContact) {
+        // Private message
+        await supabase.from('messages').insert({
+          sender_id: user.id,
+          receiver_id: selectedContact.id,
+          child_id: selectedContact.child_id,
+          content: text,
+          is_group: false,
+        });
+        const senderName = user.name || 'Seseorang';
+        await supabase.from('notifications').insert({
+          user_id: selectedContact.id,
+          message: `💬 Pesan baru dari ${senderName}: "${text.length > 50 ? text.slice(0, 50) + '...' : text}"`,
+        }).then(() => {});
+      } else if (groupChildId) {
+        // Group message
+        await supabase.from('messages').insert({
+          sender_id: user.id,
+          receiver_id: null,
+          child_id: groupChildId,
+          content: text,
+          is_group: true,
+        });
+      }
+    } finally {
+      setSending(false);
     }
   };
 
@@ -313,8 +335,15 @@ const Chat = () => {
   const inChat = !!selectedContact || !!groupChildId;
 
   // Chat message view (shared for private & group)
-  const renderMessages = (msgs: any[], isGroup: boolean) => (
+  const renderMessages = (msgs: any[], isGroup: boolean, hasMore: boolean, onLoadMore: () => void) => (
     <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 max-w-2xl mx-auto w-full">
+      {hasMore && (
+        <div className="text-center py-2">
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={onLoadMore}>
+            Muat pesan sebelumnya...
+          </Button>
+        </div>
+      )}
       {msgs.map((m: any) => {
         const isMine = m.sender_id === user!.id;
         const senderName = isGroup && !isMine ? (senderProfiles as any)[m.sender_id]?.name || '...' : null;
@@ -366,13 +395,18 @@ const Chat = () => {
           </div>
         </div>
 
-        {renderMessages(selectedContact ? privateMessages : groupMessages, !selectedContact)}
+        {renderMessages(
+          selectedContact ? privateMessages : groupMessages,
+          !selectedContact,
+          selectedContact ? hasMorePrivate : hasMoreGroup,
+          () => selectedContact ? setPrivateMsgLimit(prev => prev + MSG_PAGE_SIZE) : setGroupMsgLimit(prev => prev + MSG_PAGE_SIZE)
+        )}
 
         <div className="sticky bottom-0 bg-background border-t px-4 py-3 max-w-2xl mx-auto w-full">
           <form onSubmit={e => { e.preventDefault(); handleSend(); }} className="flex gap-2">
             <Input value={message} onChange={e => setMessage(e.target.value)} placeholder="Ketik pesan..." className="flex-1 h-11" autoFocus />
-            <Button type="submit" size="icon" className="h-11 w-11 shrink-0" disabled={!message.trim()}>
-              <Send className="h-4 w-4" />
+            <Button type="submit" size="icon" className="h-11 w-11 shrink-0" disabled={!message.trim() || sending}>
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </form>
         </div>
