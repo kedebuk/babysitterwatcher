@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Baby, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { lovable } from '@/integrations/lovable/index';
 import { useBrand } from '@/contexts/BrandContext';
 import { Separator } from '@/components/ui/separator';
 import { usePixel } from '@/components/MetaPixelProvider';
@@ -151,13 +150,16 @@ const Login = () => {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth('google', {
-      redirect_uri: window.location.origin,
-      extraParams: { prompt: 'select_account' },
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: { prompt: 'select_account' },
+      },
     });
 
-    if (result?.error) {
-      toast({ title: 'Google login gagal', description: String(result.error), variant: 'destructive' });
+    if (error) {
+      toast({ title: 'Google login gagal', description: error.message, variant: 'destructive' });
     }
     setLoading(false);
   };
