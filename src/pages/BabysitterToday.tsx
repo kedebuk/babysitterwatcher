@@ -196,16 +196,16 @@ const BabysitterToday = () => {
         if (row.afterPhotoFile) {
           afterPhotoUrl = (await uploadPhoto(row.afterPhotoFile)) || undefined;
         }
-        // Auto-revise detail text via AI
-        let revisedDetail = row.detail || undefined;
+        const revisedDetail = row.detail || undefined;
         let finalAmount = row.amount ? Number(row.amount) : undefined;
         let finalUnit = row.unit || undefined;
-        if (row.detail && row.detail.trim().length >= 3) {
+        // AI: only estimate food weight, do NOT revise detail text
+        const foodTypes = ["mpasi", "snack", "buah"];
+        if (foodTypes.includes(row.type) && row.detail && row.detail.trim().length >= 3) {
           try {
             const { data: revData } = await supabase.functions.invoke('revise-event-detail', {
               body: { detail: row.detail, type: row.type, amount: row.amount, unit: row.unit },
             });
-            if (revData?.revised) revisedDetail = revData.revised;
             if (revData?.corrected_amount) finalAmount = Number(revData.corrected_amount);
             if (revData?.corrected_unit) finalUnit = revData.corrected_unit;
           } catch { /* fallback to original */ }
