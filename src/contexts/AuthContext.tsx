@@ -94,9 +94,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         // Use setTimeout to avoid potential deadlock with Supabase client
         setTimeout(async () => {
-          const appUser = await fetchUserProfile(session.user);
-          setUser(appUser);
-          setLoading(false);
+          try {
+            const appUser = await fetchUserProfile(session.user);
+            setUser(appUser);
+          } catch (err) {
+            console.error('Failed to fetch user profile:', err);
+            setUser(null);
+          } finally {
+            setLoading(false);
+          }
         }, 0);
       } else {
         setUser(null);
@@ -106,11 +112,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Then check initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const appUser = await fetchUserProfile(session.user);
-        setUser(appUser);
+      try {
+        if (session?.user) {
+          const appUser = await fetchUserProfile(session.user);
+          setUser(appUser);
+        }
+      } catch (err) {
+        console.error('Failed to fetch initial profile:', err);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -145,10 +157,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const appUser = await fetchUserProfile(session.user);
-      setUser(appUser);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const appUser = await fetchUserProfile(session.user);
+        setUser(appUser);
+      }
+    } catch (err) {
+      console.error('Failed to refresh user:', err);
     }
   }, [fetchUserProfile]);
 
