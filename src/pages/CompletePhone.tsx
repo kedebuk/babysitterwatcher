@@ -29,8 +29,8 @@ const CompletePhone = () => {
   if (!user) return <Navigate to="/login" replace />;
   if (user.phoneComplete) {
     if (!user.role) return <Navigate to="/select-role" replace />;
-    const dest = user.role === 'admin' ? '/admin/dashboard' : user.role === 'parent' ? '/parent/dashboard' : '/babysitter/today';
-    return <Navigate to={dest} replace />;
+    const redirectMap: Record<string, string> = { parent: '/parent/dashboard', babysitter: '/babysitter/today', admin: '/admin/dashboard', viewer: '/viewer/dashboard' };
+    return <Navigate to={redirectMap[user.role] || '/'} replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,10 +41,11 @@ const CompletePhone = () => {
       return;
     }
     setSaving(true);
+
+    // Use upsert to handle case where profile row might not exist yet
     const { error } = await supabase
       .from('profiles')
-      .update({ phone: trimmed } as any)
-      .eq('id', user.id);
+      .upsert({ id: user.id, phone: trimmed } as any, { onConflict: 'id' });
 
     if (error) {
       toast({ title: 'Gagal menyimpan', description: error.message, variant: 'destructive' });
@@ -54,8 +55,11 @@ const CompletePhone = () => {
 
     await refreshUser();
 
-    // Auto-create 3-day trial for parent users
-    if (user.role === 'parent') {
+    // Capture role before navigating (user.role might be stale in closure)
+    const currentRole = user.role;
+
+    // Auto-create 14-day trial for parent users
+    if (currentRole === 'parent') {
       try {
         const { data: existingSub } = await supabase
           .from('subscriptions')
@@ -82,10 +86,20 @@ const CompletePhone = () => {
       } catch (err) {
         console.error('Failed to create trial:', err);
       }
-      toast({ title: '✅ Nomor HP disimpan! Trial 3 hari aktif 🎉' });
+      toast({ title: '✅ Nomor HP disimpan! Trial 14 hari aktif 🎉' });
       navigate('/parent/dashboard', { replace: true });
     } else {
       toast({ title: '✅ Nomor HP disimpan!' });
+      // Explicitly navigate for ALL roles instead of relying on re-render
+      if (!currentRole) {
+        navigate('/select-role', { replace: true });
+      } else {
+        const dest = currentRole === 'admin' ? '/admin/dashboard'
+          : currentRole === 'babysitter' ? '/babysitter/today'
+          : currentRole === 'viewer' ? '/viewer/dashboard'
+          : '/';
+        navigate(dest, { replace: true });
+      }
     }
     setSaving(false);
   };
