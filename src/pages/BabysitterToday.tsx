@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { Plus, Trash2, LogOut, Clock, History, Camera, X, MessageCircle, MapPin, MoreVertical, RefreshCw, Baby, UserCheck, User, Package, Pencil } from 'lucide-react';
+import { Plus, Trash2, LogOut, Clock, History, Camera, X, MessageCircle, MapPin, MoreVertical, RefreshCw, Baby, UserCheck, User, Package, Pencil, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -164,6 +164,17 @@ const BabysitterToday = () => {
 
   const handleSave = async () => {
     if (!activeChildId || !user) return;
+    // Validate rows
+    const validRows = newRows.filter(r => r.time);
+    if (validRows.length === 0) {
+      toast({ title: '⚠️ Tidak ada event', description: 'Isi minimal satu event dengan waktu untuk disimpan', variant: 'destructive' });
+      return;
+    }
+    const emptyDetailRows = validRows.filter(r => !r.detail && r.type !== 'tidur' && r.type !== 'bangun' && r.type !== 'pup' && r.type !== 'pee');
+    if (emptyDetailRows.length > 0) {
+      toast({ title: '⚠️ Detail kosong', description: 'Isi detail untuk event yang memerlukan keterangan', variant: 'destructive' });
+      return;
+    }
     setSaving(true);
     try {
       // Capture GPS once for all events in this save
@@ -245,7 +256,10 @@ const BabysitterToday = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold">Input Harian</h1>
-            <p className="text-xs opacity-80">Halo, {user?.name} 👋</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-xs opacity-80">Halo, {user?.name} 👋</p>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary-foreground/20 font-medium">Babysitter</span>
+            </div>
           </div>
           <div className="flex gap-2">
             <DropdownMenu>
@@ -364,10 +378,10 @@ const BabysitterToday = () => {
                               {profileNames[(event as any).created_by]}
                             </span>
                           )}
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setEditingEvent(event); }}>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setEditingEvent(event); }}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: event.id, daily_log_id: event.daily_log_id, label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})` }); }}>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: event.id, daily_log_id: event.daily_log_id, label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})` }); }}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
@@ -379,7 +393,35 @@ const BabysitterToday = () => {
             )}
 
             <div>
-              <h2 className="text-sm font-bold mb-2">➕ Tambah Event</h2>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-sm font-bold">➕ Tambah Event</h2>
+                {events.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-primary"
+                    onClick={() => {
+                      const last = events[events.length - 1];
+                      const newRow: EventRow = {
+                        tempId: crypto.randomUUID(),
+                        time: format(new Date(), 'HH:mm'),
+                        type: last.type as ActivityType,
+                        detail: last.detail || '',
+                        amount: last.amount ? String(last.amount) : '',
+                        unit: (last.unit as EventUnit) || 'ml',
+                        status: null,
+                        photoFile: null,
+                        photoPreview: null,
+                        afterPhotoFile: null,
+                        afterPhotoPreview: null,
+                      };
+                      setNewRows(prev => [...prev, newRow]);
+                    }}
+                  >
+                    🔄 Ulangi Terakhir
+                  </Button>
+                )}
+              </div>
               <div className="space-y-3">
                 {newRows.map(row => (
                   <EventRowCard key={row.tempId} row={row} updateRow={updateRow} removeRow={removeRow} onPhotoSelect={handlePhotoSelect} onRemovePhoto={handleRemovePhoto} parentId={assignedChildren.find((c: any) => c.id === activeChildId)?.parent_id || ''} />
@@ -396,7 +438,7 @@ const BabysitterToday = () => {
             </div>
 
             <Button className="w-full h-12 text-base font-bold" onClick={handleSave} disabled={saving || createOrGetLog.isPending || createEvent.isPending}>
-              {saving ? 'Menyimpan...' : '💾 Simpan Log Hari Ini'}
+              {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Menyimpan...</> : '💾 Simpan Log Hari Ini'}
             </Button>
           </>
         )}

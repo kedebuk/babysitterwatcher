@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useChildren, useDailyLog, useEvents, useChildLogs, useProfileNames, useDeleteEvent } from '@/hooks/use-data';
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType } from '@/types';
 import { getSmartIcon } from '@/lib/smart-icon';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -88,6 +90,7 @@ const ParentDashboard = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; daily_log_id: string; label: string } | null>(null);
   const [editEvent, setEditEvent] = useState<any>(null);
   const [detailEvent, setDetailEvent] = useState<any>(null);
+  const [timelineFilter, setTimelineFilter] = useState<string | null>(null);
 
   const activeChildId = selectedChild || children[0]?.id || '';
   const child = children.find(c => c.id === activeChildId);
@@ -193,6 +196,23 @@ const ParentDashboard = () => {
   const vitaminEvent = events.find(e => e.type === 'vitamin');
   const mandiEvents = events.filter(e => e.type === 'mandi' || e.type === 'lap_badan');
 
+  // Trend: compare today vs yesterday
+  const prevTotalSusu = getTotalByType(prevEvents as any[], 'susu');
+  const prevTotalMakan = getTotalByType(prevEvents as any[], 'mpasi') + getTotalByType(prevEvents as any[], 'snack') + getTotalByType(prevEvents as any[], 'buah');
+  const prevPup = (prevEvents as any[]).filter(e => e.type === 'pup').length;
+
+  function TrendBadge({ current, previous, unit }: { current: number; previous: number; unit?: string }) {
+    if (previous === 0 || current === 0) return null;
+    const diff = current - previous;
+    const pct = Math.round((diff / previous) * 100);
+    if (pct === 0) return null;
+    return (
+      <span className={`text-[10px] font-medium ${diff > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+        {diff > 0 ? '↑' : '↓'}{Math.abs(pct)}%
+      </span>
+    );
+  }
+
   const sleepEvents = events.filter(e => e.type === 'tidur' || e.type === 'bangun');
   const prevSleepEvents = (prevEvents as any[]).filter(e => e.type === 'tidur' || e.type === 'bangun');
   // Carry over: if no sleep event today, use last from previous day (only if it was 'tidur')
@@ -236,7 +256,29 @@ const ParentDashboard = () => {
     toast({ title: '✅ Disalin!', description: 'Format WhatsApp sudah di-copy ke clipboard' });
   };
 
-  if (loadingChildren) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Memuat...</div>;
+  if (loadingChildren) return (
+    <div className="min-h-screen pb-20">
+      <div className="sticky top-0 z-10 bg-primary px-4 py-3 text-primary-foreground">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-5 w-24 bg-primary-foreground/20" />
+            <Skeleton className="h-3 w-32 mt-1 bg-primary-foreground/10" />
+          </div>
+          <Skeleton className="h-9 w-9 rounded-lg bg-primary-foreground/20" />
+        </div>
+      </div>
+      <div className="px-4 py-3 space-y-4 max-w-2xl mx-auto">
+        <Skeleton className="h-11 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <div className="grid grid-cols-3 gap-3">
+          {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
+        </div>
+        <Skeleton className="h-48 w-full rounded-lg" />
+        <Skeleton className="h-40 w-full rounded-lg" />
+      </div>
+      <BottomNav role="parent" />
+    </div>
+  );
 
   return (
     <div className="min-h-screen pb-20">
@@ -244,7 +286,10 @@ const ParentDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold">Dashboard</h1>
-            <p className="text-xs opacity-80">Halo, {user?.name} 👋</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-xs opacity-80">Halo, {user?.name} 👋</p>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary-foreground/20 font-medium">Parent</span>
+            </div>
           </div>
           <div className="flex gap-1">
             <ThemeToggle className="text-primary-foreground hover:bg-primary-foreground/20" />
@@ -390,6 +435,7 @@ const ParentDashboard = () => {
                   <span className="text-xs text-muted-foreground">Total Susu</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalSusu > 0 ? 'hsl(210, 65%, 55%)' : undefined }}>{totalSusu} <span className="text-sm font-normal text-muted-foreground">ml</span></p>
+                <TrendBadge current={totalSusu} previous={prevTotalSusu} />
                 {lastSusuEvent && (
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     Terakhir {lastSusuEvent.time?.substring(0, 5)}{calcElapsed(lastSusuEvent.time || '') ? ` · ${calcElapsed(lastSusuEvent.time || '')}` : ''}
@@ -403,6 +449,7 @@ const ParentDashboard = () => {
                   <span className="text-xs text-muted-foreground">Total Makan</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalMakan > 0 ? 'hsl(24, 75%, 55%)' : undefined }}>{totalMakan} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
+                <TrendBadge current={totalMakan} previous={prevTotalMakan} />
                 {mpasiEvents.length > 0 && expandedCard !== 'makan' && (
                   <p className="text-[10px] text-primary/60 mt-1">tap untuk rincian ▾</p>
                 )}
@@ -421,6 +468,7 @@ const ParentDashboard = () => {
                   <span className="text-xs text-muted-foreground">BAB</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: pup > 0 ? 'hsl(145, 50%, 48%)' : undefined }}>{pup} <span className="text-sm font-normal text-muted-foreground">/ {pee}x</span></p>
+                <TrendBadge current={pup} previous={prevPup} />
               </CardContent></Card>
               <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(340, 55%, 55%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
@@ -530,11 +578,30 @@ const ParentDashboard = () => {
                   <Copy className="h-3.5 w-3.5 mr-1" /> Copy WhatsApp
                 </Button>
               </div>
+              {events.length > 0 && (
+                <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 no-scrollbar">
+                  <button
+                    onClick={() => setTimelineFilter(null)}
+                    className={cn('shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors', !timelineFilter ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80')}
+                  >
+                    Semua
+                  </button>
+                  {Array.from(new Set(events.map(e => e.type))).map(type => (
+                    <button
+                      key={type}
+                      onClick={() => setTimelineFilter(timelineFilter === type ? null : type)}
+                      className={cn('shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors', timelineFilter === type ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80')}
+                    >
+                      {ACTIVITY_ICONS[type as ActivityType]} {ACTIVITY_LABELS[type as ActivityType] || type}
+                    </button>
+                  ))}
+                </div>
+              )}
               {events.length === 0 ? (
                 <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">Belum ada data untuk tanggal ini</CardContent></Card>
               ) : (
                 <div className="space-y-2">
-                  {events.map(event => {
+                  {events.filter(e => !timelineFilter || e.type === timelineFilter).map(event => {
                     const ping = findClosestPing(event.time);
                     return (
                     <Card key={event.id} className="border-0 shadow-sm animate-fade-in cursor-pointer hover:shadow-md transition-shadow" onClick={() => setDetailEvent(event)}>
@@ -585,7 +652,7 @@ const ParentDashboard = () => {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-primary"
+                              className="h-9 w-9 text-muted-foreground hover:text-primary"
                               onClick={() => setEditEvent(event)}
                             >
                               <Pencil className="h-3.5 w-3.5" />
@@ -593,7 +660,7 @@ const ParentDashboard = () => {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              className="h-9 w-9 text-muted-foreground hover:text-destructive"
                               onClick={() => setDeleteTarget({
                                 id: event.id,
                                 daily_log_id: event.daily_log_id,

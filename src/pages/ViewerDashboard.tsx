@@ -21,6 +21,7 @@ import PendingInvites from '@/components/PendingInvites';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
 import { EditEventDialog } from '@/components/EditEventDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'snack', 'buah', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
@@ -284,7 +285,27 @@ const ViewerDashboard = () => {
     }
   };
 
-  if (loadingChildren) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Memuat...</div>;
+  if (loadingChildren) return (
+    <div className="min-h-screen pb-20">
+      <div className="sticky top-0 z-10 bg-primary px-4 py-3 text-primary-foreground">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-5 w-24 bg-primary-foreground/20" />
+            <Skeleton className="h-3 w-32 mt-1 bg-primary-foreground/10" />
+          </div>
+          <Skeleton className="h-9 w-9 rounded-lg bg-primary-foreground/20" />
+        </div>
+      </div>
+      <div className="px-4 py-3 space-y-4 max-w-2xl mx-auto">
+        <Skeleton className="h-11 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <div className="grid grid-cols-2 gap-3">
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
+        </div>
+        <Skeleton className="h-48 w-full rounded-lg" />
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen pb-20">
@@ -295,7 +316,10 @@ const ViewerDashboard = () => {
               <Users className="h-4 w-4 opacity-80" />
               <h1 className="text-lg font-bold">Keluarga</h1>
             </div>
-            <p className="text-xs opacity-80">Halo, {user?.name} 👋</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-xs opacity-80">Halo, {user?.name} 👋</p>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary-foreground/20 font-medium">Viewer</span>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => navigate('/notifications')}>
@@ -454,10 +478,10 @@ const ViewerDashboard = () => {
                           )}
                           {canInput && (
                             <>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setEditingEvent(event); }}>
+                              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground" onClick={(e) => { e.stopPropagation(); setEditingEvent(event); }}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: event.id, daily_log_id: event.daily_log_id, label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})` }); }}>
+                              <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: event.id, daily_log_id: event.daily_log_id, label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})` }); }}>
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </>

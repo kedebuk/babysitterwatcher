@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Bell, BellOff, CheckCheck, MapPin, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -31,20 +31,6 @@ const NotificationsPage = () => {
     enabled: !!user,
     refetchInterval: 10000,
   });
-
-  // Auto mark all as read when page opens
-  useEffect(() => {
-    if (user && notifications.length > 0 && notifications.some((n: any) => !n.is_read)) {
-      supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false)
-        .then(() => {
-          qc.invalidateQueries({ queryKey: ['unread_notifications_count'] });
-        });
-    }
-  }, [user, notifications]);
 
   const markAsRead = async (id: string) => {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
@@ -90,7 +76,17 @@ const NotificationsPage = () => {
 
       <div className="px-4 py-4 max-w-lg mx-auto space-y-2">
         {isLoading ? (
-          <div className="flex items-center justify-center py-20 text-muted-foreground">Memuat...</div>
+          <div className="space-y-2">
+            {[1,2,3,4,5].map(i => (
+              <div key={i} className="flex items-start gap-3 p-3">
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <BellOff className="h-12 w-12 mb-3 opacity-40" />
@@ -121,16 +117,16 @@ const NotificationsPage = () => {
                   </div>
                   <div className="flex gap-1 shrink-0">
                     {notif.message?.includes('lokasi') && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate('/location')}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate('/location')}>
                         <MapPin className="h-3.5 w-3.5 text-primary" />
                       </Button>
                     )}
                     {!notif.is_read && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => markAsRead(notif.id)}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => markAsRead(notif.id)}>
                         <CheckCheck className="h-3.5 w-3.5 text-primary" />
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteNotification(notif.id)}>
+                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => deleteNotification(notif.id)}>
                       <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                     </Button>
                   </div>
