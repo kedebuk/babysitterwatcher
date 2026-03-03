@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useChildren, useDailyLog, useEvents, useCreateOrGetDailyLog, useCreateEvent, useDeleteEvent, useProfileNames } from '@/hooks/use-data';
 import { ActivityType, ACTIVITY_LABELS, ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS, EventUnit, EventStatus } from '@/types';
 import { getSmartIcon } from '@/lib/smart-icon';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -92,6 +93,32 @@ const BabysitterToday = () => {
   const [viewingEvent, setViewingEvent] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; daily_log_id: string; label: string } | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Sisa dialog state: pops up at save time when susu has status "sisa"
+  const [sisaDialogOpen, setSisaDialogOpen] = useState(false);
+  const [sisaDialogRows, setSisaDialogRows] = useState<{ tempId: string; time: string; amount: string; sisaAmount: string }[]>([]);
+  const [pendingSaveRows, setPendingSaveRows] = useState<EventRow[] | null>(null);
+
+  // Pending sisa reminder: check if today's saved events have status "sisa" without sisa detail
+  const pendingSisaEvents = events.filter(
+    (e: any) => e.type === 'susu' && e.status === 'sisa' && e.amount && !(e.detail || '').includes('diminum')
+  );
+
+  // Show reminder when navigating back (visibility change)
+  const [showSisaReminder, setShowSisaReminder] = useState(false);
+  useEffect(() => {
+    if (pendingSisaEvents.length > 0) setShowSisaReminder(true);
+  }, [pendingSisaEvents.length]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && pendingSisaEvents.length > 0) {
+        setShowSisaReminder(true);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [pendingSisaEvents.length]);
 
   const totalSusu = events.filter(e => e.type === 'susu' && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
 
@@ -178,18 +205,21 @@ const BabysitterToday = () => {
       return;
     }
 
-    // Reminder: check if any susu rows with status "sisa" are missing sisaAmount
-    const susuMissingSisa = newRows.filter(r => r.type === 'susu' && r.time && r.status === 'sisa' && !r.sisaAmount);
-    if (susuMissingSisa.length > 0) {
-      toast({
-        title: '⚠️ Sisa Susu Belum Diisi!',
-        description: 'Kamu pilih "Sisa" tapi belum isi berapa ml sisanya. Isi dulu biar hitungan yang diminum otomatis benar.',
-        variant: 'destructive',
-        duration: 6000,
-      });
+    // Check if any susu rows have status "sisa" → show dialog to ask remaining amount
+    const susuSisaRows = newRows.filter(r => r.type === 'susu' && r.time && r.status === 'sisa' && r.amount);
+    if (susuSisaRows.length > 0 && !susuSisaRows.every(r => r.sisaAmount)) {
+      // Open dialog to ask for remaining amounts
+      setSisaDialogRows(susuSisaRows.map(r => ({ tempId: r.tempId, time: r.time, amount: r.amount, sisaAmount: r.sisaAmount || '' })));
+      setPendingSaveRows(newRows);
+      setSisaDialogOpen(true);
       return;
     }
 
+    await doSave(newRows);
+  };
+
+  const doSave = async (rowsToSave: EventRow[]) => {
+    if (!activeChildId || !user) return;
     setSaving(true);
     try {
       // Capture GPS once for all events in this save
@@ -212,7 +242,7 @@ const BabysitterToday = () => {
         created_by: user.id,
       });
 
-      for (const row of newRows) {
+      for (const row of rowsToSave) {
         if (!row.time) continue;
         let photoUrl: string | undefined;
         let afterPhotoUrl: string | undefined;
@@ -222,7 +252,7 @@ const BabysitterToday = () => {
         if (row.afterPhotoFile) {
           afterPhotoUrl = (await uploadPhoto(row.afterPhotoFile)) || undefined;
         }
-        const revisedDetail = row.detail || undefined;
+        let revisedDetail = row.detail || undefined;
         let finalAmount = row.amount ? Number(row.amount) : undefined;
         let finalUnit = row.unit || undefined;
         // AI: only estimate food weight, do NOT revise detail text
@@ -237,7 +267,7 @@ const BabysitterToday = () => {
           } catch { /* fallback to original */ }
         }
 
-        // Auto-calculate: jika susu status "sisa", kurangi jumlah dengan sisa di botol
+        // Auto-calculate: jika susu status "sisa" dan sisaAmount diisi, kurangi
         // Contoh: botol 60ml, sisa 20ml → yang diminum = 40ml
         if (row.type === 'susu' && row.status === 'sisa' && row.sisaAmount && finalAmount) {
           const sisaNum = Number(row.sisaAmount);
@@ -275,6 +305,34 @@ const BabysitterToday = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Handle sisa dialog: save with sisa amounts filled in
+  const handleSisaDialogSave = () => {
+    if (!pendingSaveRows) return;
+    const updatedRows = pendingSaveRows.map(r => {
+      const sisaRow = sisaDialogRows.find(s => s.tempId === r.tempId);
+      if (sisaRow && sisaRow.sisaAmount) {
+        return { ...r, sisaAmount: sisaRow.sisaAmount };
+      }
+      return r;
+    });
+    setSisaDialogOpen(false);
+    setPendingSaveRows(null);
+    doSave(updatedRows);
+  };
+
+  // Handle sisa dialog: skip, save without sisa calculation
+  const handleSisaDialogSkip = () => {
+    if (!pendingSaveRows) return;
+    setSisaDialogOpen(false);
+    setPendingSaveRows(null);
+    doSave(pendingSaveRows);
+    toast({
+      title: '📝 Sisa belum diisi',
+      description: 'Nanti kamu bisa isi sisa susunya dari daftar event. Kami akan ingatkan!',
+      duration: 5000,
+    });
   };
 
   return (
@@ -386,6 +444,36 @@ const BabysitterToday = () => {
               </CardContent>
             </Card>
 
+            {/* Reminder: pending sisa susu belum diisi */}
+            {showSisaReminder && pendingSisaEvents.length > 0 && (
+              <Card className="border-0 shadow-sm bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 animate-slide-up">
+                <CardContent className="p-3">
+                  <div className="flex items-start gap-2">
+                    <span className="text-lg">🍼</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-orange-800 dark:text-orange-200">Sisa susu belum diisi!</p>
+                      <p className="text-xs text-orange-600 dark:text-orange-400 mt-0.5">
+                        Ada {pendingSisaEvents.length} susu yang statusnya "Sisa" tapi belum diisi berapa ml sisanya. Tap event di bawah untuk edit.
+                      </p>
+                      {pendingSisaEvents.map((ev: any) => (
+                        <button
+                          key={ev.id}
+                          className="mt-1.5 flex items-center gap-2 text-xs bg-orange-100 dark:bg-orange-900/40 rounded-md px-2 py-1.5 w-full text-left hover:bg-orange-200 dark:hover:bg-orange-900/60 transition-colors"
+                          onClick={() => setEditingEvent(ev)}
+                        >
+                          <span className="font-bold">{ev.time?.substring(0, 5)}</span>
+                          <span>🍼 {ev.amount} ml — <span className="text-orange-700 dark:text-orange-300 font-medium">sisa berapa?</span></span>
+                        </button>
+                      ))}
+                    </div>
+                    <button onClick={() => setShowSisaReminder(false)} className="text-orange-400 hover:text-orange-600 p-0.5">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {events.length > 0 && (
               <div>
                 <h2 className="text-sm font-bold mb-2 text-muted-foreground">Event Tercatat</h2>
@@ -437,6 +525,7 @@ const BabysitterToday = () => {
                         amount: last.amount ? String(last.amount) : '',
                         unit: (last.unit as EventUnit) || 'ml',
                         status: null,
+                        sisaAmount: '',
                         photoFile: null,
                         photoPreview: null,
                         afterPhotoFile: null,
@@ -516,6 +605,50 @@ const BabysitterToday = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Sisa dialog: muncul saat save kalau ada susu status "sisa" */}
+      <Dialog open={sisaDialogOpen} onOpenChange={setSisaDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>🍼 Berapa Sisa di Botol?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Ada susu yang statusnya "Sisa". Isi berapa ml yang tersisa di botol supaya yang diminum otomatis dihitung.
+            </p>
+            {sisaDialogRows.map((row, i) => (
+              <div key={row.tempId} className="flex items-center gap-2 bg-secondary rounded-lg p-2.5">
+                <span className="text-xs font-bold min-w-[40px]">{row.time}</span>
+                <span className="text-sm">🍼 {row.amount} ml →</span>
+                <Input
+                  type="number"
+                  placeholder="Sisa ml"
+                  value={row.sisaAmount}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setSisaDialogRows(prev => prev.map((r, j) => j === i ? { ...r, sisaAmount: val } : r));
+                  }}
+                  className="w-[80px] h-8 text-sm"
+                />
+                <span className="text-xs text-muted-foreground">ml sisa</span>
+                {row.sisaAmount && Number(row.sisaAmount) < Number(row.amount) && (
+                  <span className="text-xs text-green-600 font-medium whitespace-nowrap">
+                    = {Number(row.amount) - Number(row.sisaAmount)} ml diminum
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          <DialogFooter className="flex gap-2 sm:gap-2">
+            <Button variant="outline" className="flex-1" onClick={handleSisaDialogSkip}>
+              Isi Nanti
+            </Button>
+            <Button className="flex-1" onClick={handleSisaDialogSave}>
+              Simpan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <BottomNav role="babysitter" />
     </div>
   );
@@ -554,56 +687,25 @@ function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto,
         </div>
         <Input placeholder="Detail (mis: susu 30 ml habis)" value={row.detail} onChange={e => updateRow(row.tempId, 'detail', e.target.value)} className="h-10 text-sm" />
         {(row.type === 'susu' || row.type === 'mpasi' || row.type === 'vitamin' || row.type === 'snack' || row.type === 'buah') && (
-          <div className="space-y-1.5">
-            <div className="flex gap-2">
-              <Input type="number" placeholder="Jumlah" value={row.amount} onChange={e => updateRow(row.tempId, 'amount', e.target.value)} className="flex-1 h-10 text-sm" />
-              <Select value={row.unit || 'ml'} onValueChange={v => updateRow(row.tempId, 'unit', v)}>
-                <SelectTrigger className="w-[80px] h-10"><SelectValue /></SelectTrigger>
+          <div className="flex gap-2">
+            <Input type="number" placeholder="Jumlah" value={row.amount} onChange={e => updateRow(row.tempId, 'amount', e.target.value)} className="flex-1 h-10 text-sm" />
+            <Select value={row.unit || 'ml'} onValueChange={v => updateRow(row.tempId, 'unit', v)}>
+              <SelectTrigger className="w-[80px] h-10"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ml">ml</SelectItem>
+                <SelectItem value="gram">gram</SelectItem>
+                <SelectItem value="pcs">pcs</SelectItem>
+                <SelectItem value="dosis">dosis</SelectItem>
+              </SelectContent>
+            </Select>
+            {row.type === 'susu' && (
+              <Select value={row.status || ''} onValueChange={v => updateRow(row.tempId, 'status', v as EventStatus)}>
+                <SelectTrigger className="w-[90px] h-10"><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ml">ml</SelectItem>
-                  <SelectItem value="gram">gram</SelectItem>
-                  <SelectItem value="pcs">pcs</SelectItem>
-                  <SelectItem value="dosis">dosis</SelectItem>
+                  <SelectItem value="habis">Habis</SelectItem>
+                  <SelectItem value="sisa">Sisa</SelectItem>
                 </SelectContent>
               </Select>
-              {row.type === 'susu' && (
-                <Select value={row.status || ''} onValueChange={v => updateRow(row.tempId, 'status', v as EventStatus)}>
-                  <SelectTrigger className="w-[90px] h-10"><SelectValue placeholder="Status" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="habis">Habis</SelectItem>
-                    <SelectItem value="sisa">Sisa</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-            {/* Sisa amount field: muncul kalau status = sisa */}
-            {row.type === 'susu' && row.status === 'sisa' && (
-              <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-950/20 rounded-lg p-2 border border-orange-200 dark:border-orange-800">
-                <span className="text-xs text-orange-700 dark:text-orange-300 whitespace-nowrap">🍼 Sisa di botol:</span>
-                <Input
-                  type="number"
-                  placeholder="cth: 20"
-                  value={row.sisaAmount}
-                  onChange={e => updateRow(row.tempId, 'sisaAmount', e.target.value)}
-                  className={`flex-1 h-8 text-sm ${!row.sisaAmount ? 'border-orange-400' : ''}`}
-                />
-                <span className="text-xs text-muted-foreground">ml</span>
-              </div>
-            )}
-            {row.type === 'susu' && row.status === 'sisa' && !row.sisaAmount && (
-              <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1 pl-1">
-                ⚠️ Isi berapa ml sisa di botol, biar yang diminum otomatis dihitung
-              </p>
-            )}
-            {row.type === 'susu' && row.status === 'sisa' && row.sisaAmount && row.amount && Number(row.sisaAmount) < Number(row.amount) && (
-              <p className="text-xs text-green-600 dark:text-green-400 pl-1">
-                ✅ Yang diminum: {Number(row.amount) - Number(row.sisaAmount)} ml (dari {row.amount} ml, sisa {row.sisaAmount} ml)
-              </p>
-            )}
-            {row.type === 'susu' && row.status === 'sisa' && row.sisaAmount && row.amount && Number(row.sisaAmount) >= Number(row.amount) && (
-              <p className="text-xs text-destructive pl-1">
-                ⚠️ Sisa tidak boleh sama atau lebih dari jumlah awal
-              </p>
             )}
           </div>
         )}
