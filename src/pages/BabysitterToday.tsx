@@ -34,6 +34,7 @@ interface EventRow {
   amount: string;
   unit: EventUnit;
   status: EventStatus;
+  sisaAmount: string;
   photoFile: File | null;
   photoPreview: string | null;
   afterPhotoFile: File | null;
@@ -48,6 +49,7 @@ const createEmptyRow = (): EventRow => ({
   amount: '',
   unit: 'ml',
   status: null,
+  sisaAmount: '',
   photoFile: null,
   photoPreview: null,
   afterPhotoFile: null,
@@ -175,6 +177,19 @@ const BabysitterToday = () => {
       toast({ title: '⚠️ Detail kosong', description: 'Isi detail untuk event yang memerlukan keterangan', variant: 'destructive' });
       return;
     }
+
+    // Reminder: check if any susu rows with status "sisa" are missing sisaAmount
+    const susuMissingSisa = newRows.filter(r => r.type === 'susu' && r.time && r.status === 'sisa' && !r.sisaAmount);
+    if (susuMissingSisa.length > 0) {
+      toast({
+        title: '⚠️ Sisa Susu Belum Diisi!',
+        description: 'Kamu pilih "Sisa" tapi belum isi berapa ml sisanya. Isi dulu biar hitungan yang diminum otomatis benar.',
+        variant: 'destructive',
+        duration: 6000,
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       // Capture GPS once for all events in this save
@@ -221,6 +236,18 @@ const BabysitterToday = () => {
             if (revData?.corrected_unit) finalUnit = revData.corrected_unit;
           } catch { /* fallback to original */ }
         }
+
+        // Auto-calculate: jika susu status "sisa", kurangi jumlah dengan sisa di botol
+        // Contoh: botol 60ml, sisa 20ml → yang diminum = 40ml
+        if (row.type === 'susu' && row.status === 'sisa' && row.sisaAmount && finalAmount) {
+          const sisaNum = Number(row.sisaAmount);
+          if (sisaNum > 0 && sisaNum < finalAmount) {
+            const consumed = finalAmount - sisaNum;
+            revisedDetail = (revisedDetail || '') + (revisedDetail ? '. ' : '') + `Disiapkan ${finalAmount}ml, sisa ${sisaNum}ml, diminum ${consumed}ml`;
+            finalAmount = consumed;
+          }
+        }
+
         await createEvent.mutateAsync({
           daily_log_id: dailyLog.id,
           time: row.time + ':00',
@@ -527,25 +554,56 @@ function EventRowCard({ row, updateRow, removeRow, onPhotoSelect, onRemovePhoto,
         </div>
         <Input placeholder="Detail (mis: susu 30 ml habis)" value={row.detail} onChange={e => updateRow(row.tempId, 'detail', e.target.value)} className="h-10 text-sm" />
         {(row.type === 'susu' || row.type === 'mpasi' || row.type === 'vitamin' || row.type === 'snack' || row.type === 'buah') && (
-          <div className="flex gap-2">
-            <Input type="number" placeholder="Jumlah" value={row.amount} onChange={e => updateRow(row.tempId, 'amount', e.target.value)} className="flex-1 h-10 text-sm" />
-            <Select value={row.unit || 'ml'} onValueChange={v => updateRow(row.tempId, 'unit', v)}>
-              <SelectTrigger className="w-[80px] h-10"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ml">ml</SelectItem>
-                <SelectItem value="gram">gram</SelectItem>
-                <SelectItem value="pcs">pcs</SelectItem>
-                <SelectItem value="dosis">dosis</SelectItem>
-              </SelectContent>
-            </Select>
-            {row.type === 'susu' && (
-              <Select value={row.status || ''} onValueChange={v => updateRow(row.tempId, 'status', v as EventStatus)}>
-                <SelectTrigger className="w-[90px] h-10"><SelectValue placeholder="Status" /></SelectTrigger>
+          <div className="space-y-1.5">
+            <div className="flex gap-2">
+              <Input type="number" placeholder="Jumlah" value={row.amount} onChange={e => updateRow(row.tempId, 'amount', e.target.value)} className="flex-1 h-10 text-sm" />
+              <Select value={row.unit || 'ml'} onValueChange={v => updateRow(row.tempId, 'unit', v)}>
+                <SelectTrigger className="w-[80px] h-10"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="habis">Habis</SelectItem>
-                  <SelectItem value="sisa">Sisa</SelectItem>
+                  <SelectItem value="ml">ml</SelectItem>
+                  <SelectItem value="gram">gram</SelectItem>
+                  <SelectItem value="pcs">pcs</SelectItem>
+                  <SelectItem value="dosis">dosis</SelectItem>
                 </SelectContent>
               </Select>
+              {row.type === 'susu' && (
+                <Select value={row.status || ''} onValueChange={v => updateRow(row.tempId, 'status', v as EventStatus)}>
+                  <SelectTrigger className="w-[90px] h-10"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="habis">Habis</SelectItem>
+                    <SelectItem value="sisa">Sisa</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            {/* Sisa amount field: muncul kalau status = sisa */}
+            {row.type === 'susu' && row.status === 'sisa' && (
+              <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-950/20 rounded-lg p-2 border border-orange-200 dark:border-orange-800">
+                <span className="text-xs text-orange-700 dark:text-orange-300 whitespace-nowrap">🍼 Sisa di botol:</span>
+                <Input
+                  type="number"
+                  placeholder="cth: 20"
+                  value={row.sisaAmount}
+                  onChange={e => updateRow(row.tempId, 'sisaAmount', e.target.value)}
+                  className={`flex-1 h-8 text-sm ${!row.sisaAmount ? 'border-orange-400' : ''}`}
+                />
+                <span className="text-xs text-muted-foreground">ml</span>
+              </div>
+            )}
+            {row.type === 'susu' && row.status === 'sisa' && !row.sisaAmount && (
+              <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1 pl-1">
+                ⚠️ Isi berapa ml sisa di botol, biar yang diminum otomatis dihitung
+              </p>
+            )}
+            {row.type === 'susu' && row.status === 'sisa' && row.sisaAmount && row.amount && Number(row.sisaAmount) < Number(row.amount) && (
+              <p className="text-xs text-green-600 dark:text-green-400 pl-1">
+                ✅ Yang diminum: {Number(row.amount) - Number(row.sisaAmount)} ml (dari {row.amount} ml, sisa {row.sisaAmount} ml)
+              </p>
+            )}
+            {row.type === 'susu' && row.status === 'sisa' && row.sisaAmount && row.amount && Number(row.sisaAmount) >= Number(row.amount) && (
+              <p className="text-xs text-destructive pl-1">
+                ⚠️ Sisa tidak boleh sama atau lebih dari jumlah awal
+              </p>
             )}
           </div>
         )}
