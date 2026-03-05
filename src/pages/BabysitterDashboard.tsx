@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDailyLog, useEvents, useChildLogs, useProfileNames } from '@/hooks/use-data';
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType } from '@/types';
 import { getSmartIcon } from '@/lib/smart-icon';
+import { ChildPhoto } from '@/components/ChildPhoto';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -310,11 +311,7 @@ const BabysitterDashboard = () => {
           <>
             <div className="flex items-center gap-3">
               {child && (
-                (child as any).photo_url ? (
-                  <img src={(child as any).photo_url} alt={child.name} loading="lazy" decoding="async" width={44} height={44} className="h-11 w-11 rounded-xl object-cover shrink-0" />
-                ) : (
-                  <div className="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0">{child.avatar_emoji || '👶'}</div>
-                )
+                <ChildPhoto photoUrl={(child as any).photo_url} name={child.name} emoji={child.avatar_emoji} />
               )}
               <Select value={activeChildId} onValueChange={setSelectedChild}>
                 <SelectTrigger className="h-11 bg-card flex-1"><SelectValue placeholder="Pilih anak" /></SelectTrigger>

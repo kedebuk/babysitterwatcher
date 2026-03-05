@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useChildren, useCreateChild } from '@/hooks/use-data';
 import { ChildAvatar } from '@/components/ChildAvatar';
 import { useSubscription } from '@/hooks/use-subscription';
+import { ChildPhoto } from '@/components/ChildPhoto';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -433,7 +434,7 @@ const ParentChildren = () => {
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="relative shrink-0 cursor-pointer" onClick={() => navigate('/parent/dashboard')}>
-                    <ChildAvatar photoUrl={(child as any).photo_url} name={child.name} emoji={child.avatar_emoji} className="h-14 w-14 rounded-2xl object-cover" fallbackClassName="h-14 w-14 flex items-center justify-center rounded-2xl bg-secondary text-2xl" onClick={(e) => { e.stopPropagation(); }} />
+                    <ChildPhoto photoUrl={(child as any).photo_url} name={child.name} emoji={child.avatar_emoji} size={56} className="h-14 w-14 rounded-2xl" />
                   </div>
                   <div className="flex-1 cursor-pointer" onClick={() => navigate('/parent/dashboard')}>
                     <h3 className="font-bold text-base">{child.name}</h3>

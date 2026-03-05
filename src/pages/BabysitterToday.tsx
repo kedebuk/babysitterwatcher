@@ -3,6 +3,7 @@ import { useChildren, useDailyLog, useEvents, useCreateOrGetDailyLog, useCreateE
 import { ChildAvatar } from '@/components/ChildAvatar';
 import { ActivityType, ACTIVITY_LABELS, ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS, EventUnit, EventStatus } from '@/types';
 import { getSmartIcon } from '@/lib/smart-icon';
+import { ChildPhoto } from '@/components/ChildPhoto';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -427,7 +428,9 @@ const BabysitterToday = () => {
             <div className="flex gap-2 items-center">
               {activeChildId && (() => {
                 const c = assignedChildren.find((ch: any) => ch.id === activeChildId);
-                return c ? <ChildAvatar photoUrl={c.photo_url} name={c.name} emoji={c.avatar_emoji} className="h-11 w-11 rounded-xl object-cover shrink-0" fallbackClassName="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0" /> : null;
+                return c ? (
+                  <ChildPhoto photoUrl={c.photo_url} name={c.name} emoji={c.avatar_emoji} size={44} className="h-11 w-11 rounded-xl" />
+                ) : null;
               })()}
               <Select value={activeChildId} onValueChange={setSelectedChild}>
                 <SelectTrigger className="flex-1 h-11 bg-card"><SelectValue placeholder="Pilih anak" /></SelectTrigger>

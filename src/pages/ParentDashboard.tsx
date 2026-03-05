@@ -25,6 +25,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PendingInvites from '@/components/PendingInvites';
 import { BottomNav } from '@/components/BottomNav';
 import { DailyTrivia } from '@/components/DailyTrivia';
+import { ChildPhoto } from '@/components/ChildPhoto';
 
 function getTotalByType(events: any[], type: string): number {
   return events.filter(e => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
@@ -387,7 +388,9 @@ const ParentDashboard = () => {
         ) : (
           <>
             <div className="flex items-center gap-3">
-              {child && <ChildAvatar photoUrl={(child as any).photo_url} name={child.name} emoji={child.avatar_emoji} className="h-11 w-11 rounded-xl object-cover shrink-0" fallbackClassName="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0" />}
+              {child && (
+                <ChildPhoto photoUrl={(child as any).photo_url} name={child.name} emoji={child.avatar_emoji} />
+              )}
               <Select value={activeChildId} onValueChange={setSelectedChild}>
                 <SelectTrigger className="h-11 bg-card flex-1"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
                 <SelectContent>
