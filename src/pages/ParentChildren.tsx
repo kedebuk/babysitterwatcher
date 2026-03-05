@@ -432,13 +432,10 @@ const ParentChildren = () => {
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="relative shrink-0 cursor-pointer" onClick={() => navigate('/parent/dashboard')}>
-                    {(child as any).photo_url ? (
-                      <img src={(child as any).photo_url} alt={child.name} className="h-14 w-14 rounded-2xl object-cover" />
-                    ) : (
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-2xl">
-                        {child.avatar_emoji || '👶'}
-                      </div>
-                    )}
+                    {(child as any).photo_url && <img src={(child as any).photo_url} alt={child.name} className="h-14 w-14 rounded-2xl object-cover cursor-pointer" onClick={(e) => { e.stopPropagation(); window.open((child as any).photo_url, '_blank'); }} onError={(e) => { e.currentTarget.style.display = 'none'; (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'; }} />}
+                    <div className="h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-2xl" style={{ display: (child as any).photo_url ? 'none' : 'flex' }}>
+                      {child.avatar_emoji || '👶'}
+                    </div>
                   </div>
                   <div className="flex-1 cursor-pointer" onClick={() => navigate('/parent/dashboard')}>
                     <h3 className="font-bold text-base">{child.name}</h3>

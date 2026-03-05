@@ -147,11 +147,8 @@ const AdminChildDetail = () => {
           <div>
             <h1 className="text-lg font-bold flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              {child?.photo_url ? (
-                <img src={child.photo_url} alt={child.name} className="h-7 w-7 rounded-lg object-cover" />
-              ) : (
-                <span>{child?.avatar_emoji}</span>
-              )}
+              {child?.photo_url && <img src={child.photo_url} alt={child.name} className="h-7 w-7 rounded-lg object-cover cursor-pointer" onClick={() => window.open(child.photo_url, '_blank')} onError={(e) => { e.currentTarget.style.display = 'none'; (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'inline'; }} />}
+              <span style={{ display: child?.photo_url ? 'none' : undefined }}>{child?.avatar_emoji || '👶'}</span>
               {child?.name || "Loading..."}
             </h1>
             <p className="text-xs opacity-80">Parent: {parentProfile?.name || parentProfile?.email || "..."}</p>

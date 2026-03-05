@@ -60,13 +60,10 @@ const AdminChildren = () => {
           return (
             <Card key={child.id} className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/admin/children/${child.id}`)}>
               <CardContent className="p-3 flex items-center gap-3">
-                {child.photo_url ? (
-                  <img src={child.photo_url} alt={child.name} className="h-12 w-12 rounded-2xl object-cover shrink-0" />
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-xl shrink-0">
-                    {child.avatar_emoji || '👶'}
-                  </div>
-                )}
+                {child.photo_url && <img src={child.photo_url} alt={child.name} className="h-12 w-12 rounded-2xl object-cover shrink-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); window.open(child.photo_url, '_blank'); }} onError={(e) => { e.currentTarget.style.display = 'none'; (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'; }} />}
+                <div className="h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-xl shrink-0" style={{ display: child.photo_url ? 'none' : 'flex' }}>
+                  {child.avatar_emoji || '👶'}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm">{child.name}</p>
                   <p className="text-xs text-muted-foreground">

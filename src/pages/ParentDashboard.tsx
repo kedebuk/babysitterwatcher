@@ -371,13 +371,10 @@ const ParentDashboard = () => {
         ) : (
           <>
             <div className="flex items-center gap-3">
-              {child && (
-                (child as any).photo_url ? (
-                  <img src={(child as any).photo_url} alt={child.name} loading="lazy" decoding="async" width={44} height={44} className="h-11 w-11 rounded-xl object-cover shrink-0" />
-                ) : (
-                  <div className="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0">{child.avatar_emoji || '👶'}</div>
-                )
-              )}
+              {child && <>
+                {(child as any).photo_url && <img src={(child as any).photo_url} alt={child.name} loading="lazy" decoding="async" width={44} height={44} className="h-11 w-11 rounded-xl object-cover shrink-0 cursor-pointer" onClick={() => window.open((child as any).photo_url, '_blank')} onError={(e) => { e.currentTarget.style.display = 'none'; (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'; }} />}
+                <div className="h-11 w-11 rounded-xl bg-secondary items-center justify-center text-xl shrink-0" style={{ display: (child as any).photo_url ? 'none' : 'flex' }}>{child.avatar_emoji || '👶'}</div>
+              </>}
               <Select value={activeChildId} onValueChange={setSelectedChild}>
                 <SelectTrigger className="h-11 bg-card flex-1"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
                 <SelectContent>
