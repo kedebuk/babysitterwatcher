@@ -510,7 +510,7 @@ const BabysitterDashboard = () => {
                             <p className="text-[10px] text-muted-foreground mt-0.5">oleh {profileNames[(event as any).created_by]}</p>
                           )}
                           {(event as any).photo_url && (
-                            <img src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" onClick={(e) => { e.stopPropagation(); window.open((event as any).photo_url, '_blank'); }} />
+                            <img src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" onClick={(e) => { e.stopPropagation(); window.open((event as any).photo_url, '_blank'); }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                           )}
                           {((event as any).latitude && (event as any).longitude) ? (
                             <a
