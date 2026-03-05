@@ -16,6 +16,7 @@ import { Copy, LogOut, ChevronLeft, ChevronRight, Users, Bell, PenLine, MessageC
 import { EditEventDialog } from '@/components/EditEventDialog';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ChildAvatar } from '@/components/ChildAvatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
@@ -371,10 +372,7 @@ const ParentDashboard = () => {
         ) : (
           <>
             <div className="flex items-center gap-3">
-              {child && <>
-                {(child as any).photo_url && <img src={(child as any).photo_url} alt={child.name} loading="lazy" decoding="async" width={44} height={44} className="h-11 w-11 rounded-xl object-cover shrink-0 cursor-pointer" onClick={() => window.open((child as any).photo_url, '_blank')} onError={(e) => { e.currentTarget.style.display = 'none'; (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'; }} />}
-                <div className="h-11 w-11 rounded-xl bg-secondary items-center justify-center text-xl shrink-0" style={{ display: (child as any).photo_url ? 'none' : 'flex' }}>{child.avatar_emoji || '👶'}</div>
-              </>}
+              {child && <ChildAvatar photoUrl={(child as any).photo_url} name={child.name} emoji={child.avatar_emoji} className="h-11 w-11 rounded-xl object-cover shrink-0" fallbackClassName="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0" />}
               <Select value={activeChildId} onValueChange={setSelectedChild}>
                 <SelectTrigger className="h-11 bg-card flex-1"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
                 <SelectContent>

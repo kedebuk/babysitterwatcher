@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useChildren, useDailyLog, useEvents, useCreateOrGetDailyLog, useCreateEvent, useDeleteEvent, useProfileNames } from '@/hooks/use-data';
+import { ChildAvatar } from '@/components/ChildAvatar';
 import { ActivityType, ACTIVITY_LABELS, ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS, EventUnit, EventStatus } from '@/types';
 import { getSmartIcon } from '@/lib/smart-icon';
 import { Card, CardContent } from '@/components/ui/card';
@@ -420,10 +421,7 @@ const BabysitterToday = () => {
             <div className="flex gap-2 items-center">
               {activeChildId && (() => {
                 const c = assignedChildren.find((ch: any) => ch.id === activeChildId);
-                return <>
-                  {c?.photo_url && <img src={c.photo_url} alt={c.name} loading="lazy" decoding="async" width={44} height={44} className="h-11 w-11 rounded-xl object-cover shrink-0 cursor-pointer" onClick={() => window.open(c.photo_url, '_blank')} onError={(e) => { e.currentTarget.style.display = 'none'; (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'; }} />}
-                  <div className="h-11 w-11 rounded-xl bg-secondary items-center justify-center text-xl shrink-0" style={{ display: c?.photo_url ? 'none' : 'flex' }}>{c?.avatar_emoji || '👶'}</div>
-                </>;
+                return c ? <ChildAvatar photoUrl={c.photo_url} name={c.name} emoji={c.avatar_emoji} className="h-11 w-11 rounded-xl object-cover shrink-0" fallbackClassName="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0" /> : null;
               })()}
               <Select value={activeChildId} onValueChange={setSelectedChild}>
                 <SelectTrigger className="flex-1 h-11 bg-card"><SelectValue placeholder="Pilih anak" /></SelectTrigger>

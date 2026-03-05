@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { ChildAvatar } from '@/components/ChildAvatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -60,10 +61,7 @@ const AdminChildren = () => {
           return (
             <Card key={child.id} className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/admin/children/${child.id}`)}>
               <CardContent className="p-3 flex items-center gap-3">
-                {child.photo_url && <img src={child.photo_url} alt={child.name} className="h-12 w-12 rounded-2xl object-cover shrink-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); window.open(child.photo_url, '_blank'); }} onError={(e) => { e.currentTarget.style.display = 'none'; (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'; }} />}
-                <div className="h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-xl shrink-0" style={{ display: child.photo_url ? 'none' : 'flex' }}>
-                  {child.avatar_emoji || '👶'}
-                </div>
+                <ChildAvatar photoUrl={child.photo_url} name={child.name} emoji={child.avatar_emoji} className="h-12 w-12 rounded-2xl object-cover shrink-0" fallbackClassName="h-12 w-12 flex items-center justify-center rounded-2xl bg-secondary text-xl shrink-0" onClick={(e) => { e.stopPropagation(); }} />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm">{child.name}</p>
                   <p className="text-xs text-muted-foreground">
