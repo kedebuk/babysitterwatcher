@@ -8,6 +8,7 @@ import { ArrowLeft, Shield, ChevronLeft, ChevronRight, MapPin } from "lucide-rea
 import { format, parseISO, subDays } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { ACTIVITY_ICONS, ACTIVITY_LABELS, ACTIVITY_BADGE_CLASS, ActivityType } from "@/types";
+import { ChildPhoto } from '@/components/ChildPhoto';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 function getTotalByType(events: any[], type: string): number {
@@ -147,11 +148,7 @@ const AdminChildDetail = () => {
           <div>
             <h1 className="text-lg font-bold flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              {child?.photo_url ? (
-                <img src={child.photo_url} alt={child.name} className="h-7 w-7 rounded-lg object-cover" />
-              ) : (
-                <span>{child?.avatar_emoji}</span>
-              )}
+              <ChildPhoto photoUrl={child?.photo_url} name={child?.name || ''} emoji={child?.avatar_emoji} size={28} className="h-7 w-7 rounded-lg" />
               {child?.name || "Loading..."}
             </h1>
             <p className="text-xs opacity-80">Parent: {parentProfile?.name || parentProfile?.email || "..."}</p>
