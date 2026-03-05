@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface ChildPhotoProps {
   photoUrl?: string | null;
@@ -10,10 +10,25 @@ interface ChildPhotoProps {
 
 export function ChildPhoto({ photoUrl, name, emoji, size = 44, className = 'h-11 w-11 rounded-xl' }: ChildPhotoProps) {
   const [error, setError] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Handle case where error fires before React attaches onError (cached broken image)
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth === 0) {
+      setError(true);
+    }
+  }, [photoUrl]);
+
+  // Reset error state when photoUrl changes
+  useEffect(() => {
+    setError(false);
+  }, [photoUrl]);
 
   if (photoUrl && !error) {
     return (
       <img
+        ref={imgRef}
         src={photoUrl}
         alt={name}
         loading="lazy"
