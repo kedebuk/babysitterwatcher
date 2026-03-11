@@ -30,6 +30,12 @@ function getTotalByType(events: any[], type: string): number {
   return events.filter(e => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
 }
 
+function parseSisaFromDetail(detail: string | null | undefined): number {
+  if (!detail) return 0;
+  const match = detail.match(/sisa (\d+(?:\.\d+)?)ml,/);
+  return match ? Number(match[1]) : 0;
+}
+
 function calcSleepHours(evts: any[], isMalam: boolean, nextDayEvts: any[] = []): number {
   const sorted = [...evts]
     .filter(e => e.type === 'tidur' || e.type === 'bangun')
@@ -224,6 +230,9 @@ const ParentDashboard = () => {
       : null;
   const isSleeping = lastSleepEvent?.type === 'tidur';
   const lastSusuEvent = [...events].filter(e => e.type === 'susu').slice(-1)[0] ?? null;
+  const totalSisaSusu = events
+    .filter((e: any) => e.type === 'susu' && e.status === 'sisa')
+    .reduce((total: number, e: any) => total + parseSisaFromDetail(e.detail), 0);
 
   const today = format(new Date(), 'yyyy-MM-dd');
   function calcElapsed(timeStr: string): string {
@@ -427,10 +436,17 @@ const ParentDashboard = () => {
               <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(210, 65%, 55%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-susu text-sm">🍼</div>
-                  <span className="text-xs text-muted-foreground">Total Susu</span>
+                  <span className="text-xs text-muted-foreground">Susu Diminum</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalSusu > 0 ? 'hsl(210, 65%, 55%)' : undefined }}>{totalSusu} <span className="text-sm font-normal text-muted-foreground">ml</span></p>
                 <TrendBadge current={totalSusu} previous={prevTotalSusu} />
+                {totalSisaSusu > 0 && (
+                  <div className="mt-1.5 flex items-center gap-1 bg-amber-50 dark:bg-amber-950/30 rounded-md px-1.5 py-1">
+                    <span className="text-[10px]">🗑️</span>
+                    <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">sisa {totalSisaSusu}ml</span>
+                    <span className="text-[10px] text-muted-foreground">· dari {totalSusu + totalSisaSusu}ml</span>
+                  </div>
+                )}
                 {lastSusuEvent && (
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     Terakhir {lastSusuEvent.time?.substring(0, 5)}{calcElapsed(lastSusuEvent.time || '') ? ` · ${calcElapsed(lastSusuEvent.time || '')}` : ''}

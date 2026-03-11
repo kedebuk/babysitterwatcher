@@ -268,14 +268,13 @@ const BabysitterToday = () => {
           } catch { /* fallback to original */ }
         }
 
-        // Sisa susu: tambahkan info consumed ke detail, amount tetap = jumlah disiapkan
-        // Fix: sebelumnya finalAmount diubah ke consumed sehingga total susu berkurang
+        // Sisa susu: simpan jumlah yang DIMINUM (disiapkan - sisa), detail mencatat info lengkap
         if (row.type === 'susu' && row.status === 'sisa' && row.sisaAmount && finalAmount) {
           const sisaNum = Number(row.sisaAmount);
           if (sisaNum > 0 && sisaNum < finalAmount) {
             const consumed = finalAmount - sisaNum;
             revisedDetail = (revisedDetail || '') + (revisedDetail ? '. ' : '') + `Disiapkan ${finalAmount}ml, sisa ${sisaNum}ml, diminum ${consumed}ml`;
-            // finalAmount TIDAK diubah → amount tersimpan = jumlah disiapkan
+            finalAmount = consumed; // simpan jumlah yang benar-benar diminum bayi
           }
         }
 
