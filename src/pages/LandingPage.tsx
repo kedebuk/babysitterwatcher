@@ -845,6 +845,144 @@ const landingStyles = `
     to   { opacity: 1; transform: translateY(0) scale(1); }
   }
 
+  /* ═══════════════════════════════════════════════════
+     TABLET — 768px+
+     ═══════════════════════════════════════════════════ */
+  @media (min-width: 768px) {
+    .lp-root { max-width: 720px; }
+    .lp-nav-inner { max-width: 720px; padding: 12px 32px; }
+    .lp-logo-text { font-size: 17px; }
+    .lp-nav-btn { font-size: 14px; padding: 10px 24px; }
+
+    .lp-hero { padding: 80px 40px 0; }
+    .lp-hero-h1 { font-size: 36px; }
+    .lp-hero-p { font-size: 17px; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .lp-hero-badge { font-size: 12px; padding: 8px 20px; }
+    .lp-phone { max-width: 340px; }
+
+    .lp-trust { gap: 40px; padding: 22px 32px; }
+    .lp-trust-item { font-size: 13px; }
+
+    .lp-stats { gap: 48px; padding: 32px; }
+    .lp-stat-num { font-size: 36px; }
+    .lp-stat-label { font-size: 12px; }
+
+    .lp-section { padding: 56px 40px; }
+    .lp-h2 { font-size: 26px; }
+    .lp-tag { font-size: 12px; }
+
+    .lp-empathy-quote { font-size: 20px; }
+    .lp-pain-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .lp-transform { padding: 56px 40px; }
+    .lp-ba-col { padding: 24px 20px; }
+    .lp-ba-item { font-size: 13px; }
+    .lp-tr-big { font-size: 32px; }
+
+    .lp-calc-card { padding: 28px; }
+    .lp-calc-value { font-size: 22px; }
+
+    .lp-role-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .lp-role-card { flex-direction: column; text-align: center; padding: 24px 16px; }
+    .lp-role-icon { width: 56px; height: 56px; font-size: 28px; }
+
+    .lp-features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .lp-phone-mockup-sm { max-width: 300px; }
+
+    .lp-testi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+    .lp-price-section { padding: 56px 40px; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+    .lp-price-section > .lp-price-tag,
+    .lp-price-section > .lp-price-h2,
+    .lp-price-section > p,
+    .lp-price-section > .lp-trial-banner,
+    .lp-price-section > .lp-price-guarantee { width: 100%; flex-basis: 100%; }
+    .lp-price-box { flex: 1; min-width: 280px; max-width: 340px; }
+    .lp-price-premium { margin-top: 0; }
+
+    .lp-faq-section { max-width: 640px; margin-left: auto; margin-right: auto; }
+
+    .lp-final-cta { padding: 60px 40px; }
+    .lp-final-cta .lp-h2 { font-size: 28px; }
+
+    .lp-footer { padding: 36px 40px; }
+    .lp-footer-brand { font-size: 18px; }
+  }
+
+  /* ═══════════════════════════════════════════════════
+     DESKTOP — 1024px+
+     ═══════════════════════════════════════════════════ */
+  @media (min-width: 1024px) {
+    .lp-root { max-width: 960px; }
+    .lp-nav-inner { max-width: 960px; padding: 14px 40px; }
+    .lp-logo-text { font-size: 18px; }
+    .lp-nav-btn { font-size: 15px; padding: 11px 28px; }
+
+    .lp-hero { padding: 100px 60px 0; }
+    .lp-hero-h1 { font-size: 44px; line-height: 1.25; }
+    .lp-hero-p { font-size: 18px; max-width: 560px; }
+    .lp-hero-badge { font-size: 13px; padding: 8px 22px; }
+    .lp-hero::before { width: 320px; height: 320px; top: -100px; right: -100px; }
+    .lp-phone { max-width: 380px; }
+    .lp-phone-wrapper { margin-top: 36px; }
+
+    .lp-trust { gap: 56px; padding: 26px 40px; }
+    .lp-trust-item { font-size: 14px; gap: 8px; }
+
+    .lp-stats { gap: 64px; padding: 40px; }
+    .lp-stat-num { font-size: 42px; }
+    .lp-stat-label { font-size: 13px; }
+
+    .lp-section { padding: 72px 60px; }
+    .lp-h2 { font-size: 30px; }
+    .lp-tag { font-size: 12px; letter-spacing: 2.5px; }
+
+    .lp-empathy-quote { font-size: 22px; max-width: 600px; }
+    .lp-pain-cards { grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+    .lp-pain-card { flex-direction: column; text-align: center; padding: 20px 16px; }
+    .lp-pc-icon { font-size: 28px; margin-top: 0; }
+
+    .lp-transform { padding: 72px 60px; }
+    .lp-ba-grid { max-width: 700px; margin-left: auto; margin-right: auto; margin-bottom: 24px; }
+    .lp-ba-col { padding: 28px 24px; }
+    .lp-ba-item { font-size: 14px; }
+    .lp-tr-big { font-size: 36px; }
+
+    .lp-calc-card { max-width: 700px; margin-left: auto; margin-right: auto; margin-bottom: 20px; padding: 32px; }
+    .lp-calc-value { font-size: 24px; }
+    .lp-calc-detail { font-size: 14px; }
+    .lp-calc-result { max-width: 700px; margin-left: auto; margin-right: auto; }
+    .lp-cr-num { font-size: 36px; }
+
+    .lp-role-card { padding: 28px 20px; }
+    .lp-role-name { font-size: 17px; }
+    .lp-role-desc { font-size: 14px; }
+
+    .lp-features-grid { grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    .lp-feature-title { font-size: 17px; }
+    .lp-feature-desc { font-size: 14px; }
+
+    .lp-phone-mockup-sm { max-width: 320px; }
+
+    .lp-testi-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+    .lp-testi-quote { font-size: 15px; }
+
+    .lp-price-section { padding: 72px 60px; }
+    .lp-price-box { max-width: 380px; padding: 36px 28px; }
+    .lp-price-h2 { font-size: 28px; }
+    .lp-price-amount { font-size: 56px; }
+
+    .lp-faq-section { max-width: 840px; }
+
+    .lp-final-cta { padding: 80px 60px; }
+    .lp-final-cta .lp-h2 { font-size: 32px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .lp-btn-orange { font-size: 18px; padding: 17px 44px; }
+
+    .lp-footer { padding: 44px 60px; }
+    .lp-footer-brand { font-size: 20px; }
+  }
+
   /* MOBILE touch feedback */
   @media (hover: none) {
     .lp-pain-card:active, .lp-role-card:active, .lp-feature-card:active, .lp-testi-card:active {
