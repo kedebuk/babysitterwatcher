@@ -41,6 +41,7 @@ const CompletePhone = lazy(() => import("./pages/CompletePhone"));
 const InventoryPage = lazy(() => import("./pages/InventoryPage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const ViewerDashboard = lazy(() => import("./pages/ViewerDashboard"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -111,7 +112,8 @@ const App = () => (
           <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<RootRedirect />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/dashboard" element={<RootRedirect />} />
               <Route path="/login" element={<Login />} />
               <Route path="/select-role" element={<SelectRole />} />
               <Route path="/complete-profile" element={<CompleteProfile />} />
