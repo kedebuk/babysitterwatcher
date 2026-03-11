@@ -32,8 +32,14 @@ function getTotalByType(events: any[], type: string): number {
 
 function parseSisaFromDetail(detail: string | null | undefined): number {
   if (!detail) return 0;
-  const match = detail.match(/sisa (\d+(?:\.\d+)?)ml,/);
-  return match ? Number(match[1]) : 0;
+  // Coba format dari sisa dialog: "sisa 30ml, diminum..."
+  const match = detail.match(/sisa (\d+(?:\.\d+)?)ml[,\s]/i);
+  if (match) return Number(match[1]);
+  // Fallback: hitung dari selisih "Disiapkan Xml" dan "diminum Yml"
+  const disiapkan = detail.match(/[Dd]isiapkan (\d+(?:\.\d+)?)ml/);
+  const diminum = detail.match(/diminum (\d+(?:\.\d+)?)ml/);
+  if (disiapkan && diminum) return Number(disiapkan[1]) - Number(diminum[1]);
+  return 0;
 }
 
 function calcSleepHours(evts: any[], isMalam: boolean, nextDayEvts: any[] = []): number {
@@ -231,7 +237,7 @@ const ParentDashboard = () => {
   const isSleeping = lastSleepEvent?.type === 'tidur';
   const lastSusuEvent = [...events].filter(e => e.type === 'susu').slice(-1)[0] ?? null;
   const totalSisaSusu = events
-    .filter((e: any) => e.type === 'susu' && e.status === 'sisa')
+    .filter((e: any) => e.type === 'susu' && (e.status === 'sisa' || parseSisaFromDetail(e.detail) > 0))
     .reduce((total: number, e: any) => total + parseSisaFromDetail(e.detail), 0);
 
   const today = format(new Date(), 'yyyy-MM-dd');
