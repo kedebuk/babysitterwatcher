@@ -268,14 +268,14 @@ const BabysitterToday = () => {
           } catch { /* fallback to original */ }
         }
 
-        // Auto-calculate: jika susu status "sisa" dan sisaAmount diisi, kurangi
-        // Contoh: botol 60ml, sisa 20ml → yang diminum = 40ml
+        // Sisa susu: tambahkan info consumed ke detail, amount tetap = jumlah disiapkan
+        // Fix: sebelumnya finalAmount diubah ke consumed sehingga total susu berkurang
         if (row.type === 'susu' && row.status === 'sisa' && row.sisaAmount && finalAmount) {
           const sisaNum = Number(row.sisaAmount);
           if (sisaNum > 0 && sisaNum < finalAmount) {
             const consumed = finalAmount - sisaNum;
             revisedDetail = (revisedDetail || '') + (revisedDetail ? '. ' : '') + `Disiapkan ${finalAmount}ml, sisa ${sisaNum}ml, diminum ${consumed}ml`;
-            finalAmount = consumed;
+            // finalAmount TIDAK diubah → amount tersimpan = jumlah disiapkan
           }
         }
 
@@ -610,7 +610,7 @@ const BabysitterToday = () => {
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Ada susu yang statusnya "Sisa". Isi berapa ml yang tersisa di botol supaya yang diminum otomatis dihitung.
+              Ada susu yang statusnya "Sisa". Isi berapa ml yang tersisa di botol — info ini akan dicatat di detail event.
             </p>
             {sisaDialogRows.map((row, i) => (
               <div key={row.tempId} className="flex items-center gap-2 bg-secondary rounded-lg p-2.5">
