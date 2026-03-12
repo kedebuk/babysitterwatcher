@@ -18,7 +18,7 @@ function useCountdown() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
-    const key = 'eleanor_promo_end';
+    const key = 'ellie_promo_end';
     let target = localStorage.getItem(key);
     if (!target) {
       const end = new Date();
@@ -50,7 +50,7 @@ function useCountdown() {
 
 function useSlots() {
   const [slots, setSlots] = useState(() => {
-    const saved = localStorage.getItem('eleanor_promo_slots');
+    const saved = localStorage.getItem('ellie_promo_slots');
     return saved ? parseInt(saved, 10) : 47;
   });
 
@@ -60,7 +60,7 @@ function useSlots() {
       return setTimeout(() => {
         setSlots(prev => {
           const next = Math.max(12, prev - (Math.random() > 0.5 ? 2 : 1));
-          localStorage.setItem('eleanor_promo_slots', String(next));
+          localStorage.setItem('ellie_promo_slots', String(next));
           return next;
         });
         timerId = schedule();

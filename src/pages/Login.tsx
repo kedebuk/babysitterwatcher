@@ -228,7 +228,7 @@ const Login = () => {
               </div>
             )}
             <h1 className="font-display text-2xl font-bold text-foreground">{brandName}</h1>
-            <p className="text-sm text-muted-foreground">Pantau aktivitas si kecil dengan cinta 💛</p>
+            <p className="text-sm text-muted-foreground">Pantau aktivitas si kecil dengan cinta</p>
           </CardHeader>
 
           <CardContent>
