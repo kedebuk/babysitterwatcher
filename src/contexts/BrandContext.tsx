@@ -9,8 +9,10 @@ interface BrandContextType {
   refresh: () => Promise<void>;
 }
 
+const BRAND_NAME = 'Ellie - Caretaker Log';
+
 const BrandContext = createContext<BrandContextType>({
-  brandName: 'Ellie',
+  brandName: BRAND_NAME,
   brandLogoUrl: '',
   faviconUrl: '',
   loading: true,
@@ -18,7 +20,7 @@ const BrandContext = createContext<BrandContextType>({
 });
 
 export function BrandProvider({ children }: { children: React.ReactNode }) {
-  const [brandName, setBrandName] = useState('Ellie');
+  const [brandName] = useState(BRAND_NAME);
   const [brandLogoUrl, setBrandLogoUrl] = useState('');
   const [faviconUrl, setFaviconUrl] = useState('');
   const [loading, setLoading] = useState(true);
@@ -27,15 +29,10 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     const { data } = await supabase
       .from('app_settings')
       .select('key, value')
-      .in('key', ['brand_name', 'brand_logo_url', 'brand_favicon_url']);
+      .in('key', ['brand_logo_url', 'brand_favicon_url']);
 
     if (data) {
-      // Legacy brand names → migrated to Ellie
-      const legacyNames = ['Eleanor Tracker', 'Baby Watcher', 'Baby Watcher App', 'BabysitterWatcher'];
       (data as any[]).forEach((row: any) => {
-        if (row.key === 'brand_name' && row.value) {
-          setBrandName(legacyNames.includes(row.value) ? 'Ellie' : row.value);
-        }
         if (row.key === 'brand_logo_url' && row.value) setBrandLogoUrl(row.value);
         if (row.key === 'brand_favicon_url' && row.value) setFaviconUrl(row.value);
       });
@@ -49,7 +46,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
   // Update document title
   useEffect(() => {
-    document.title = `${brandName} — Caretaker Log`;
+    document.title = brandName;
   }, [brandName]);
 
   // Update favicon dynamically

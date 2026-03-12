@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardList, MapPin, Camera, BarChart3, MessageCircle, Brain, Baby, Shield, Clock, Heart } from 'lucide-react';
+import { ClipboardList, MapPin, Camera, BarChart3, MessageCircle, Brain, Baby, Shield, Clock } from 'lucide-react';
 import { useBrand } from '@/contexts/BrandContext';
+import { EllieLogo } from '@/components/EllieLogo';
 
 const features = [
   {
@@ -46,13 +47,9 @@ const Index = () => {
       <section className="relative overflow-hidden px-4 pt-20 pb-24 text-center">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-accent/5" />
         <div className="relative mx-auto max-w-3xl space-y-8">
-          {brandLogoUrl ? (
-            <img src={brandLogoUrl} alt={brandName} loading="eager" decoding="async" width={80} height={80} className="h-20 w-20 rounded-3xl object-contain" />
-          ) : (
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10">
-              <Heart className="h-10 w-10 text-primary" fill="hsl(var(--primary))" opacity={0.8} />
-            </div>
-          )}
+          <div className="mx-auto">
+            <EllieLogo size={80} />
+          </div>
           <div className="space-y-3">
             <p className="text-sm font-semibold uppercase tracking-widest text-primary">{brandName}</p>
             <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">

@@ -9,9 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Baby, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useBrand } from '@/contexts/BrandContext';
+import { EllieLogo } from '@/components/EllieLogo';
 import { Separator } from '@/components/ui/separator';
 import { usePixel } from '@/components/MetaPixelProvider';
 
@@ -220,13 +221,9 @@ const Login = () => {
       <div className="relative flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-sm border-0 shadow-xl bg-white/80 backdrop-blur-md animate-fade-in">
           <CardHeader className="text-center pb-2">
-            {brandLogoUrl ? (
-              <img src={brandLogoUrl} alt={brandName} loading="eager" decoding="async" width={64} height={64} className="mx-auto mb-3 h-16 w-16 rounded-3xl object-contain" />
-            ) : (
-              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10">
-                <Baby className="h-8 w-8 text-primary" />
-              </div>
-            )}
+            <div className="mx-auto mb-3">
+              <EllieLogo size={64} />
+            </div>
             <h1 className="font-display text-2xl font-bold text-foreground">{brandName}</h1>
             <p className="text-sm text-muted-foreground">Pantau aktivitas si kecil dengan cinta 💛</p>
           </CardHeader>

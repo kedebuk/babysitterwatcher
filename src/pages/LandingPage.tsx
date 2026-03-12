@@ -117,7 +117,22 @@ export default function LandingPage() {
         <nav className="lp-nav">
           <div className="lp-nav-inner">
             <div className="lp-logo">
-              <span className="lp-logo-icon">👶</span>
+              <svg width="28" height="28" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                <rect width="120" height="120" rx="32" fill="url(#ellie-nav-bg)" />
+                <g transform="translate(18, 22)" fill="white" fillOpacity="0.95">
+                  <ellipse cx="42" cy="34" rx="28" ry="26" />
+                  <path d="M14 20C4 14 0 24 2 36C4 46 14 48 18 42C12 36 12 26 14 20Z" fillOpacity="0.7" />
+                  <ellipse cx="58" cy="52" rx="24" ry="20" />
+                  <rect x="40" y="62" width="10" height="16" rx="5" />
+                  <rect x="62" y="62" width="10" height="16" rx="5" />
+                  <path d="M26 44C22 48 18 56 20 62C22 66 26 66 28 62C30 58 28 52 32 48" stroke="white" strokeWidth="5" strokeLinecap="round" fill="none" strokeOpacity="0.95" />
+                  <circle cx="38" cy="30" r="3.5" fill="url(#ellie-nav-bg)" />
+                  <circle cx="39.2" cy="28.8" r="1.2" fill="white" />
+                  <path d="M80 46C84 42 86 38 84 36" stroke="white" strokeWidth="3" strokeLinecap="round" fill="none" strokeOpacity="0.7" />
+                  <path d="M56 44C56 42 58 40 60 40C62 40 63 42 63 44C63 42 64 40 66 40C68 40 70 42 70 44C70 48 63 52 63 52C63 52 56 48 56 44Z" fill="url(#ellie-nav-bg)" fillOpacity="0.4" />
+                </g>
+                <defs><linearGradient id="ellie-nav-bg" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stopColor="hsl(35, 92%, 60%)" /><stop offset="1" stopColor="hsl(15, 85%, 60%)" /></linearGradient></defs>
+              </svg>
               <span className="lp-logo-text">Ellie</span>
             </div>
             <button className="lp-nav-btn" onClick={handleAuthClick} disabled={loading}>
@@ -464,7 +479,7 @@ export default function LandingPage() {
 
         {/* FOOTER */}
         <div className="lp-footer">
-          <div className="lp-footer-brand">Ellie — Caretaker Log</div>
+          <div className="lp-footer-brand">Ellie - Caretaker Log</div>
           <p>Pantau Si Kecil dengan Cinta, Dari Mana Saja</p>
           <p style={{ marginTop: 8 }}>© 2026 Ellie. Built with ❤️ for Indonesian parents.</p>
         </div>
@@ -480,7 +495,7 @@ const landingStyles = `
   .lp-nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.06); }
   .lp-nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; max-width: 480px; margin: 0 auto; }
   .lp-logo { display: flex; align-items: center; gap: 8px; }
-  .lp-logo-icon { font-size: 20px; }
+  .lp-logo svg { flex-shrink: 0; }
   .lp-logo-text { font-size: 15px; font-weight: 800; color: #222; letter-spacing: -0.3px; }
   .lp-nav-btn { background: linear-gradient(135deg, #FF7043, #FF8A65); color: #fff; border: none; font-family: inherit; font-size: 13px; font-weight: 700; padding: 8px 18px; border-radius: 50px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 8px rgba(255,112,67,0.3); }
   .lp-nav-btn:hover { transform: scale(1.03); }
