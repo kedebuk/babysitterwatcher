@@ -49,18 +49,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     document.title = brandName;
   }, [brandName]);
 
-  // Update favicon dynamically
-  useEffect(() => {
-    if (!faviconUrl) return;
-    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'icon';
-      document.head.appendChild(link);
-    }
-    const separator = faviconUrl.includes('?') ? '&' : '?';
-    link.href = `${faviconUrl}${separator}v=2`;
-  }, [faviconUrl]);
+  // Favicon is now set via /favicon.svg in index.html — no dynamic override needed
 
   return (
     <BrandContext.Provider value={{ brandName, brandLogoUrl, faviconUrl, loading, refresh: loadBrand }}>
