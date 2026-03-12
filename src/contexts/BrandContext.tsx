@@ -30,8 +30,12 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       .in('key', ['brand_name', 'brand_logo_url', 'brand_favicon_url']);
 
     if (data) {
+      // Legacy brand names → migrated to Ellie
+      const legacyNames = ['Eleanor Tracker', 'Baby Watcher', 'Baby Watcher App', 'BabysitterWatcher'];
       (data as any[]).forEach((row: any) => {
-        if (row.key === 'brand_name' && row.value) setBrandName(row.value);
+        if (row.key === 'brand_name' && row.value) {
+          setBrandName(legacyNames.includes(row.value) ? 'Ellie' : row.value);
+        }
         if (row.key === 'brand_logo_url' && row.value) setBrandLogoUrl(row.value);
         if (row.key === 'brand_favicon_url' && row.value) setFaviconUrl(row.value);
       });
