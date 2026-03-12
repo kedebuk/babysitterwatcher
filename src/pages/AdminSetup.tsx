@@ -60,7 +60,7 @@ const AdminSetup = () => {
         password,
         options: {
           data: { name, role: 'admin' },
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       });
       if (error) throw error;

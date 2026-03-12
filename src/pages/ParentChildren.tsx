@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useChildren, useCreateChild } from '@/hooks/use-data';
+import { ChildAvatar } from '@/components/ChildAvatar';
 import { useSubscription } from '@/hooks/use-subscription';
 import { ChildPhoto } from '@/components/ChildPhoto';
 import { Card, CardContent } from '@/components/ui/card';

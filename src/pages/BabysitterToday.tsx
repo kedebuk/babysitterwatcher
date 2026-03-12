@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useChildren, useDailyLog, useEvents, useCreateOrGetDailyLog, useCreateEvent, useDeleteEvent, useProfileNames } from '@/hooks/use-data';
+import { ChildAvatar } from '@/components/ChildAvatar';
 import { ActivityType, ACTIVITY_LABELS, ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS, EventUnit, EventStatus } from '@/types';
 import { getSmartIcon } from '@/lib/smart-icon';
 import { ChildPhoto } from '@/components/ChildPhoto';
@@ -223,17 +224,24 @@ const BabysitterToday = () => {
     if (!activeChildId || !user) return;
     setSaving(true);
     try {
-      // Capture GPS once for all events in this save
-      let latitude: number | undefined;
-      let longitude: number | undefined;
-      if (navigator.geolocation) {
-        try {
-          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 });
-          });
-          latitude = pos.coords.latitude;
-          longitude = pos.coords.longitude;
-        } catch { /* GPS not available, proceed without */ }
+      // Capture GPS once for all events in this save — WAJIB
+      let latitude: number;
+      let longitude: number;
+      if (!navigator.geolocation) {
+        toast({ title: '📍 Lokasi diperlukan', description: 'Browser kamu tidak mendukung GPS. Coba buka di browser lain.', variant: 'destructive' });
+        setSaving(false);
+        return;
+      }
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+        });
+        latitude = pos.coords.latitude;
+        longitude = pos.coords.longitude;
+      } catch {
+        toast({ title: '📍 Lokasi wajib diaktifkan', description: 'Izinkan akses lokasi di browser/HP kamu dulu, lalu coba simpan lagi.', variant: 'destructive' });
+        setSaving(false);
+        return;
       }
 
       const dailyLog = await createOrGetLog.mutateAsync({
@@ -268,14 +276,13 @@ const BabysitterToday = () => {
           } catch { /* fallback to original */ }
         }
 
-        // Auto-calculate: jika susu status "sisa" dan sisaAmount diisi, kurangi
-        // Contoh: botol 60ml, sisa 20ml → yang diminum = 40ml
+        // Sisa susu: simpan jumlah yang DIMINUM (disiapkan - sisa), detail mencatat info lengkap
         if (row.type === 'susu' && row.status === 'sisa' && row.sisaAmount && finalAmount) {
           const sisaNum = Number(row.sisaAmount);
           if (sisaNum > 0 && sisaNum < finalAmount) {
             const consumed = finalAmount - sisaNum;
             revisedDetail = (revisedDetail || '') + (revisedDetail ? '. ' : '') + `Disiapkan ${finalAmount}ml, sisa ${sisaNum}ml, diminum ${consumed}ml`;
-            finalAmount = consumed;
+            finalAmount = consumed; // simpan jumlah yang benar-benar diminum bayi
           }
         }
 
@@ -612,7 +619,7 @@ const BabysitterToday = () => {
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Ada susu yang statusnya "Sisa". Isi berapa ml yang tersisa di botol supaya yang diminum otomatis dihitung.
+              Ada susu yang statusnya "Sisa". Isi berapa ml yang tersisa di botol — info ini akan dicatat di detail event.
             </p>
             {sisaDialogRows.map((row, i) => (
               <div key={row.tempId} className="flex items-center gap-2 bg-secondary rounded-lg p-2.5">
