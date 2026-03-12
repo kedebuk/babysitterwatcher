@@ -223,17 +223,24 @@ const BabysitterToday = () => {
     if (!activeChildId || !user) return;
     setSaving(true);
     try {
-      // Capture GPS once for all events in this save
-      let latitude: number | undefined;
-      let longitude: number | undefined;
-      if (navigator.geolocation) {
-        try {
-          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 });
-          });
-          latitude = pos.coords.latitude;
-          longitude = pos.coords.longitude;
-        } catch { /* GPS not available, proceed without */ }
+      // Capture GPS once for all events in this save — WAJIB
+      let latitude: number;
+      let longitude: number;
+      if (!navigator.geolocation) {
+        toast({ title: '📍 Lokasi diperlukan', description: 'Browser kamu tidak mendukung GPS. Coba buka di browser lain.', variant: 'destructive' });
+        setSaving(false);
+        return;
+      }
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+        });
+        latitude = pos.coords.latitude;
+        longitude = pos.coords.longitude;
+      } catch {
+        toast({ title: '📍 Lokasi wajib diaktifkan', description: 'Izinkan akses lokasi di browser/HP kamu dulu, lalu coba simpan lagi.', variant: 'destructive' });
+        setSaving(false);
+        return;
       }
 
       const dailyLog = await createOrGetLog.mutateAsync({
