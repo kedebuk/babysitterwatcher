@@ -34,7 +34,7 @@ interface SettingsState {
 
 const defaultSettings: SettingsState = {
   admin_whatsapp: '',
-  brand_name: 'Eleanor Tracker',
+  brand_name: 'Ellie — Caretaker Log',
   brand_logo_url: '',
   brand_favicon_url: '',
   meta_pixel_id: '',
@@ -225,7 +225,7 @@ const AdminSettings = () => {
               <Label htmlFor="brand_name">Nama Brand / Aplikasi</Label>
               <Input
                 id="brand_name"
-                placeholder="Eleanor Tracker"
+                placeholder="Ellie — Caretaker Log"
                 value={settings.brand_name}
                 onChange={e => update('brand_name', e.target.value)}
               />

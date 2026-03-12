@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Soft circle background -->
+  <circle cx="100" cy="100" r="96" fill="url(#bg)" />
+
+  <!-- Inner glow -->
+  <circle cx="100" cy="100" r="80" fill="url(#inner)" opacity="0.35" />
+
+  <!-- Stylized "E" letterform — elegant, rounded -->
+  <path d="M72 68h56a4 4 0 0 1 0 8H80v20h40a4 4 0 0 1 0 8H80v20h48a4 4 0 0 1 0 8H72a4 4 0 0 1-4-4V72a4 4 0 0 1 4-4z" fill="#fff" opacity="0.95"/>
+
+  <!-- Small heart accent -->
+  <path d="M140 62c3.5-4 9.5-4 13 0 3.5 4 3.5 10 0 14l-13 14-13-14c-3.5-4-3.5-10 0-14 3.5-4 9.5-4 13 0z" fill="#FB7185" opacity="0.9" transform="scale(0.55) translate(165, 60)"/>
+
+  <!-- Subtle sparkle dots -->
+  <circle cx="150" cy="56" r="2.5" fill="#FDE68A" opacity="0.8"/>
+  <circle cx="160" cy="64" r="1.5" fill="#FDE68A" opacity="0.6"/>
+  <circle cx="145" cy="48" r="1.5" fill="#FDE68A" opacity="0.5"/>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="200" y2="200">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#EC4899"/>
+    </linearGradient>
+    <radialGradient id="inner" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#FFF" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#FFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>

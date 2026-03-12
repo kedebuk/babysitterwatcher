@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     
     const settingsMap: Record<string, string> = {};
     (brandSettings || []).forEach((s: any) => { settingsMap[s.key] = s.value; });
-    const brandName = settingsMap["brand_name"] || "Eleanor Tracker";
+    const brandName = settingsMap["brand_name"] || "Ellie — Caretaker Log";
     const brandLogoUrl = settingsMap["brand_logo_url"] || "";
 
     const roleLabel = inviteRole === "parent" ? "Keluarga (Viewer)" : "Babysitter";
