@@ -58,6 +58,15 @@ const PendingInvites = () => {
         .update({ status: 'accepted' })
         .eq('id', invite.id);
 
+      const parentId = invite.children?.parent_id;
+      if (parentId) {
+        const roleName = invite.invite_role === 'parent' ? 'keluarga' : 'babysitter';
+        await supabase.from('notifications').insert({
+          user_id: parentId,
+          message: `✅ ${user!.name} telah menerima undangan sebagai ${roleName} untuk ${invite.children?.name}.`,
+        });
+      }
+
       qc.invalidateQueries({ queryKey: ['my_pending_invites'] });
       qc.invalidateQueries({ queryKey: ['assigned_children'] });
       qc.invalidateQueries({ queryKey: ['children'] });
