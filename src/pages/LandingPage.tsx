@@ -118,7 +118,7 @@ export default function LandingPage() {
           <div className="lp-nav-inner">
             <div className="lp-logo">
               <span className="lp-logo-icon">👶</span>
-              <span className="lp-logo-text">Baby Watcher</span>
+              <span className="lp-logo-text">Ellie</span>
             </div>
             <button className="lp-nav-btn" onClick={handleAuthClick} disabled={loading}>
               {loading ? "..." : user ? "Ke Dashboard →" : "Masuk / Daftar"}
@@ -140,7 +140,7 @@ export default function LandingPage() {
                 <div className="lp-app-header">
                   <div>
                     <div className="lp-app-greeting">Selamat pagi 👋</div>
-                    <div className="lp-app-name">Dashboard Eleanor</div>
+                    <div className="lp-app-name">Dashboard Ellie</div>
                   </div>
                   <div className="lp-app-avatar">M</div>
                 </div>
@@ -225,7 +225,7 @@ export default function LandingPage() {
         {/* BEFORE / AFTER */}
         <div className="lp-transform lp-reveal" ref={transformRef}>
           <div className="lp-tag" style={{ color: "#FFAB76" }}>Bedanya Nyata</div>
-          <h2 className="lp-h2" style={{ color: "#fff" }}>Tanpa vs Dengan Baby Watcher</h2>
+          <h2 className="lp-h2" style={{ color: "#fff" }}>Tanpa vs Dengan Ellie</h2>
           <div className="lp-ba-grid">
             <div className="lp-ba-col lp-before">
               <div className="lp-ba-label" style={{ color: "#EF5350" }}>❌ Tanpa</div>
@@ -267,7 +267,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="lp-calc-result">
-            <div className="lp-cr-label">Dengan Baby Watcher</div>
+            <div className="lp-cr-label">Dengan Ellie</div>
             <div className="lp-cr-num">😌 Tenang 100%</div>
             <div className="lp-cr-note">Semua tercatat otomatis. Real-time. Presisi.<br/>Coba 7 hari gratis — mulai dari Rp69rb/bulan.</div>
           </div>
@@ -352,7 +352,7 @@ export default function LandingPage() {
         <div className="lp-section lp-testi-section lp-reveal" ref={testiRef}>
           <div className="lp-tag">Cerita Nyata</div>
           <h2 className="lp-h2">Mereka sudah merasakan bedanya</h2>
-          <p className="lp-testi-intro">Dari working mama di kota besar sampai papa yang dinas luar kota — inilah pengalaman mereka setelah pakai Baby Watcher.</p>
+          <p className="lp-testi-intro">Dari working mama di kota besar sampai papa yang dinas luar kota — inilah pengalaman mereka setelah pakai Ellie.</p>
           <div className="lp-testi-grid">
             {[
               { stars: 5, metric: "📉 Frekuensi WA babysitter turun 90%", quote: "Baru seminggu, udah kerasa banget bedanya. Sekarang meeting nggak sambil cek WA tiap 10 menit. Buka app, langsung keliatan semua — susu berapa, udah makan belum, tidur berapa lama.", bold: "Baru seminggu, udah kerasa banget bedanya.", name: "Mama Alya", role: "Product Manager — Bandung", badge: "3 bulan", bg: "#FFF0E6", avatar: "👩", highlight: true },
@@ -437,12 +437,12 @@ export default function LandingPage() {
           <div className="lp-tag">Tanya Jawab</div>
           <h2 className="lp-h2">Punya pertanyaan?</h2>
           {[
-            { q: "Ini app apa sih sebenarnya?", a: "Baby Watcher App adalah aplikasi monitoring bayi harian. Babysitter mencatat aktivitas si kecil (susu, makan, tidur, dll), dan orang tua bisa memantau semuanya real-time dari HP — tanpa harus WA bolak-balik." },
+            { q: "Ini app apa sih sebenarnya?", a: "Ellie adalah aplikasi caretaker log harian. Babysitter mencatat aktivitas si kecil (susu, makan, tidur, dll), dan orang tua bisa memantau semuanya real-time dari HP — tanpa harus WA bolak-balik." },
             { q: "Gimana cara kerja 7 hari gratis?", a: "Langsung daftar, langsung pakai semua fitur tanpa batas selama 7 hari. Tidak perlu kartu kredit. Setelah 7 hari, pilih paket Starter (Rp69rb/bulan) atau Premium (Rp169rb/bulan). Bisa batalkan kapan saja." },
             { q: "Bedanya Starter dan Premium?", a: "Starter untuk 1 anak, cocok untuk keluarga dengan satu bayi. Premium untuk sampai 4 anak dengan dashboard terpisah masing-masing — plus insight perbandingan antar anak dan prioritas support. Hemat 39% dibanding ambil 4x Starter." },
             { q: "Babysitter saya gaptek, bisa pakai?", a: "Sangat bisa! Interface untuk babysitter dirancang sesimpel mungkin — tinggal pilih jenis aktivitas, isi detail, tap simpan. Kalau bisa pakai WhatsApp, pasti bisa pakai app ini." },
             { q: "Data bayi saya aman nggak?", a: "Sangat aman. Kami menggunakan Supabase dengan Row Level Security — artinya hanya kamu dan orang yang kamu undang yang bisa melihat data. Data dienkripsi dan disimpan di server aman." },
-            { q: "Harus install app dari Play Store?", a: "Tidak perlu! Baby Watcher adalah web app — langsung buka dari browser HP. Bisa di-bookmark ke home screen supaya terasa seperti app native." },
+            { q: "Harus install app dari Play Store?", a: "Tidak perlu! Ellie adalah web app — langsung buka dari browser HP. Bisa di-bookmark ke home screen supaya terasa seperti app native." },
           ].map((faq, i) => (
             <div className="lp-faq-item" key={i} onClick={(e) => e.currentTarget.classList.toggle("open")}>
               <div className="lp-faq-q"><span>{faq.q}</span><div className="lp-faq-toggle">+</div></div>
@@ -464,9 +464,9 @@ export default function LandingPage() {
 
         {/* FOOTER */}
         <div className="lp-footer">
-          <div className="lp-footer-brand">Baby Watcher App</div>
+          <div className="lp-footer-brand">Ellie — Caretaker Log</div>
           <p>Pantau Si Kecil dengan Cinta, Dari Mana Saja</p>
-          <p style={{ marginTop: 8 }}>© 2026 Baby Watcher App. Built with ❤️ for Indonesian parents.</p>
+          <p style={{ marginTop: 8 }}>© 2026 Ellie. Built with ❤️ for Indonesian parents.</p>
         </div>
       </div>
     </>

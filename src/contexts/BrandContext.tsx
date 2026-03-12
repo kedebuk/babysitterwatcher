@@ -10,7 +10,7 @@ interface BrandContextType {
 }
 
 const BrandContext = createContext<BrandContextType>({
-  brandName: 'Eleanor Tracker',
+  brandName: 'Ellie',
   brandLogoUrl: '',
   faviconUrl: '',
   loading: true,
@@ -18,7 +18,7 @@ const BrandContext = createContext<BrandContextType>({
 });
 
 export function BrandProvider({ children }: { children: React.ReactNode }) {
-  const [brandName, setBrandName] = useState('Eleanor Tracker');
+  const [brandName, setBrandName] = useState('Ellie');
   const [brandLogoUrl, setBrandLogoUrl] = useState('');
   const [faviconUrl, setFaviconUrl] = useState('');
   const [loading, setLoading] = useState(true);
@@ -45,7 +45,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
   // Update document title
   useEffect(() => {
-    document.title = `${brandName} — Pantau Si Kecil dengan Cinta`;
+    document.title = `${brandName} — Caretaker Log`;
   }, [brandName]);
 
   // Update favicon dynamically

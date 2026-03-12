@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ellie — Caretaker Log</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #fff;
+    color: #333;
+    max-width: 480px;
+    margin: 0 auto;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* === HERO === */
+  .hero {
+    background: linear-gradient(160deg, #FF7043 0%, #FF8A65 35%, #FFAB76 70%, #FFD699 100%);
+    padding: 44px 24px 0;
+    text-align: center;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 50%;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: 80px; left: -40px;
+    width: 140px; height: 140px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.2);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    margin-bottom: 18px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .hero-badge .pulse {
+    width: 6px; height: 6px;
+    background: #A5D6A7;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.4); }
+  }
+  .hero h1 {
+    font-size: 26px;
+    font-weight: 900;
+    line-height: 1.3;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+    letter-spacing: -0.3px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    position: relative;
+  }
+  .hero h1 em::after {
+    content: '';
+    position: absolute;
+    bottom: 2px; left: 0; right: 0;
+    height: 8px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 4px;
+    z-index: -1;
+  }
+  .hero p {
+    font-size: 15px;
+    line-height: 1.65;
+    opacity: 0.95;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+  }
+  .btn-cta {
+    display: inline-block;
+    background: #fff;
+    color: #FF7043;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 15px 36px;
+    border-radius: 50px;
+    text-decoration: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    z-index: 1;
+    letter-spacing: -0.2px;
+  }
+  .btn-cta:hover { transform: scale(1.03); box-shadow: 0 6px 24px rgba(0,0,0,0.16); }
+  .hero-sub-cta {
+    display: block;
+    font-size: 12px;
+    color: rgba(255,255,255,0.8);
+    margin-top: 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .btn-cta-orange {
+    display: inline-block;
+    background: linear-gradient(135deg, #FF7043, #FF8A65);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 15px 36px;
+    border-radius: 50px;
+    text-decoration: none;
+    box-shadow: 0 4px 20px rgba(255,112,67,0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+    letter-spacing: -0.2px;
+  }
+  .btn-cta-orange:hover { transform: scale(1.03); box-shadow: 0 6px 24px rgba(255,112,67,0.45); }
+
+  /* === PHONE HERO MOCKUP === */
+  .hero-phone-wrapper {
+    position: relative;
+    z-index: 2;
+    margin-top: 28px;
+    padding: 0 20px;
+  }
+  .hero-phone {
+    background: #1a1a1a;
+    border-radius: 32px 32px 0 0;
+    padding: 12px 10px 0;
+    max-width: 300px;
+    margin: 0 auto;
+    box-shadow: 0 -4px 40px rgba(0,0,0,0.15);
+    position: relative;
+  }
+  .hero-phone .phone-notch {
+    width: 100px;
+    height: 22px;
+    background: #1a1a1a;
+    border-radius: 0 0 14px 14px;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+  }
+  .hero-phone .phone-inner {
+    background: #F8F9FA;
+    border-radius: 22px 22px 0 0;
+    overflow: hidden;
+    padding: 28px 14px 18px;
+  }
+  /* Mock app screen */
+  .app-status-bar {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #888;
+    margin-bottom: 12px;
+    padding: 0 4px;
+  }
+  .app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding: 0 2px;
+  }
+  .app-header .greeting {
+    font-size: 11px;
+    color: #888;
+  }
+  .app-header .name {
+    font-size: 16px;
+    font-weight: 800;
+    color: #222;
+    margin-top: 1px;
+  }
+  .app-header .avatar-circle {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #FF8A65, #FFAB76);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #fff;
+    font-weight: 800;
+  }
+  .app-date-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 11px;
+    color: #555;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .app-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .app-summary-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    border: 1px solid #f0f0f0;
+  }
+  .app-summary-card .sc-top {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 4px;
+  }
+  .app-summary-card .sc-icon {
+    font-size: 14px;
+  }
+  .app-summary-card .sc-label {
+    font-size: 10px;
+    color: #999;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .app-summary-card .sc-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: #222;
+    line-height: 1.1;
+  }
+  .app-summary-card .sc-sub {
+    font-size: 9px;
+    color: #aaa;
+    margin-top: 1px;
+  }
+  .app-summary-card.alert {
+    border-left: 3px solid #FFA726;
+  }
+  .app-summary-card.alert .sc-value { color: #E65100; }
+  .app-summary-card.good .sc-value { color: #2E7D32; }
+  .app-event-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    border: 1px solid #f5f5f5;
+  }
+  .app-event-row .ev-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .app-event-row .ev-info { flex: 1; }
+  .app-event-row .ev-title { font-size: 11px; font-weight: 700; color: #333; }
+  .app-event-row .ev-detail { font-size: 9px; color: #999; }
+  .app-event-row .ev-time {
+    font-size: 9px;
+    color: #bbb;
+    font-weight: 600;
+  }
+
+  /* === TRUST BAR === */
+  .trust-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    padding: 18px 24px;
+    background: #FAFAFA;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #777;
+    font-weight: 600;
+  }
+  .trust-item .t-icon { font-size: 14px; }
+
+  /* === STATS === */
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    padding: 24px 24px;
+    background: #fff;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-size: 28px; font-weight: 900; color: #FF7043; letter-spacing: -1px; }
+  .stat-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-top: 2px; }
+
+  /* === SECTIONS === */
+  .section { padding: 40px 24px; }
+  .section-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: #FF7043;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .section h2 {
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.35;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+    letter-spacing: -0.3px;
+  }
+
+  /* === PAIN/EMPATHY === */
+  .empathy-section {
+    background: #FFF8F5;
+    border-top: 3px solid #FFCCBC;
+  }
+  .empathy-quote {
+    font-size: 18px;
+    font-weight: 700;
+    color: #BF360C;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    font-style: italic;
+    padding-left: 16px;
+    border-left: 3px solid #FF8A65;
+  }
+  .pain-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .pain-card {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid #FFE0CC;
+  }
+  .pain-card .pc-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .pain-card .pc-text { flex: 1; }
+  .pain-card .pc-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #222;
+    margin-bottom: 3px;
+  }
+  .pain-card .pc-desc {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.5;
+  }
+
+  /* === TRANSITION (BEFORE/AFTER) === */
+  .transform-section {
+    background: #1a1a1a;
+    padding: 40px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .transform-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 70% 20%, rgba(255,112,67,0.08) 0%, transparent 50%);
+  }
+  .transform-section .section-tag { color: #FFAB76; }
+  .transform-section h2 { color: #fff; }
+  .ba-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: #333;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .ba-col { padding: 18px 14px; }
+  .ba-col.before { background: #2a2a2a; }
+  .ba-col.after { background: #1E3A2F; }
+  .ba-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .ba-col.before .ba-label { color: #EF5350; }
+  .ba-col.after .ba-label { color: #66BB6A; }
+  .ba-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 6px 0;
+    font-size: 12px;
+    color: #aaa;
+    line-height: 1.45;
+  }
+  .ba-item .bi-icon { font-size: 11px; flex-shrink: 0; margin-top: 1px; }
+  .ba-col.before .bi-icon { color: #EF5350; }
+  .ba-col.after .bi-icon { color: #66BB6A; }
+  .transform-result {
+    background: linear-gradient(135deg, #FF7043 0%, #FF8A65 100%);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    color: #fff;
+    position: relative;
+    z-index: 1;
+  }
+  .transform-result .tr-big {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 4px;
+  }
+  .transform-result .tr-sub {
+    font-size: 13px;
+    opacity: 0.9;
+    line-height: 1.5;
+  }
+
+  /* === VALUE CALC === */
+  .kalkulator-section { background: #FFF5EE; }
+  .calc-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+  }
+  .calc-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px dashed #eee;
+  }
+  .calc-step:last-child { border-bottom: none; }
+  .calc-num {
+    width: 32px; height: 32px;
+    background: #FF7043;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .calc-text { flex: 1; }
+  .calc-text .label { font-size: 13px; color: #888; margin-bottom: 2px; }
+  .calc-text .value { font-size: 20px; font-weight: 800; color: #FF7043; }
+  .calc-text .detail { font-size: 13px; color: #666; margin-top: 2px; line-height: 1.5; }
+  .calc-result {
+    background: linear-gradient(135deg, #FF7043, #FF8A65);
+    border-radius: 14px;
+    padding: 22px;
+    text-align: center;
+    color: #fff;
+  }
+  .calc-result .result-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.85; margin-bottom: 6px; font-weight: 700; }
+  .calc-result .result-num { font-size: 32px; font-weight: 900; line-height: 1.2; }
+  .calc-result .result-note { font-size: 13px; opacity: 0.9; margin-top: 6px; line-height: 1.5; }
+
+  /* === ROLE CARDS === */
+  .role-section { background: #FFF5EE; }
+  .role-grid { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .role-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    border: 1px solid #f5f0eb;
+    transition: transform 0.2s;
+  }
+  .role-card .role-icon {
+    width: 50px; height: 50px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .role-card .role-info { flex: 1; }
+  .role-card .role-name { font-size: 15px; font-weight: 800; color: #222; }
+  .role-card .role-desc { font-size: 13px; color: #777; line-height: 1.45; margin-top: 2px; }
+
+  /* === FEATURE CARDS === */
+  .toolkit-section { background: #FAFAFA; }
+  .modul-grid { display: flex; flex-direction: column; gap: 14px; }
+  .modul-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    border: 1px solid #f0f0f0;
+    transition: transform 0.2s;
+  }
+  .modul-card .modul-icon-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .modul-card .modul-emoji {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .modul-card .modul-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #222;
+  }
+  .modul-card .modul-desc {
+    font-size: 13.5px;
+    color: #666;
+    line-height: 1.6;
+  }
+  .modul-card .modul-peek {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #FF7043;
+    background: #FFF5EE;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  .modul-card.highlight {
+    border: 1px solid #FFCCBC;
+    background: linear-gradient(180deg, #FFFBF5 0%, #fff 100%);
+  }
+
+  /* === TESTIMONIALS — MODERN CARDS === */
+  .testi-section {
+    background: linear-gradient(180deg, #FFF8F5 0%, #FFF 100%);
+    padding: 40px 24px;
+  }
+  .testi-header-text {
+    font-size: 14px;
+    color: #888;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .testi-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .testi-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1px solid #f5f0eb;
+    position: relative;
+  }
+  .testi-card::before {
+    content: '"';
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    font-size: 48px;
+    font-weight: 900;
+    color: #FFE0CC;
+    line-height: 1;
+    font-family: Georgia, serif;
+  }
+  .testi-stars {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 10px;
+  }
+  .testi-stars .star { color: #FFC107; font-size: 14px; }
+  .testi-quote {
+    font-size: 14px;
+    color: #444;
+    line-height: 1.65;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .testi-quote strong { color: #222; }
+  .testi-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 14px;
+    border-top: 1px solid #f5f0eb;
+  }
+  .testi-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .testi-name { font-size: 13px; font-weight: 800; color: #222; }
+  .testi-role { font-size: 11px; color: #999; }
+  .testi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #2E7D32;
+    background: #E8F5E9;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 3px;
+  }
+  .testi-highlight {
+    border: 2px solid #FFCCBC;
+    background: linear-gradient(180deg, #FFFAF5 0%, #fff 100%);
+  }
+  .testi-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #FFF5EE;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #E65100;
+  }
+
+  /* === SECOND MOCKUP === */
+  .mockup-section {
+    text-align: center;
+    background: linear-gradient(180deg, #FAFAFA 0%, #fff 100%);
+  }
+  .phone-mockup {
+    background: #1a1a1a;
+    border-radius: 28px;
+    padding: 10px;
+    max-width: 260px;
+    margin: 20px auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  }
+  .phone-mockup .pm-screen {
+    border-radius: 20px;
+    overflow: hidden;
+    background: #F8F9FA;
+    padding: 16px 12px 14px;
+  }
+  .pm-header-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
+  .pm-header-bar .pm-back { font-size: 14px; color: #FF7043; }
+  .pm-header-bar .pm-title { font-size: 13px; font-weight: 800; color: #222; flex: 1; }
+  .pm-header-bar .pm-date { font-size: 10px; color: #aaa; }
+  .pm-log-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-bottom: 5px;
+    border: 1px solid #f0f0f0;
+  }
+  .pm-log-item .pl-icon {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .pm-log-item .pl-info { flex: 1; }
+  .pm-log-item .pl-title { font-size: 10px; font-weight: 700; color: #333; }
+  .pm-log-item .pl-sub { font-size: 9px; color: #aaa; }
+  .pm-log-item .pl-time { font-size: 9px; color: #ccc; font-weight: 600; }
+  .pm-log-item .pl-photo {
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    background: #FFF5EE;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  /* === PRICE === */
+  .price-section {
+    background: linear-gradient(160deg, #FF7043, #FF8A65, #FFAB76);
+    padding: 40px 24px;
+    text-align: center;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .price-section::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+  .price-box {
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px 24px;
+    color: #333;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    position: relative;
+    z-index: 1;
+  }
+  .price-ribbon {
+    position: absolute;
+    top: -1px; right: 20px;
+    background: #FF7043;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 6px 12px 8px;
+    border-radius: 0 0 8px 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 8px rgba(255,112,67,0.3);
+  }
+  .price-free { font-size: 52px; font-weight: 900; color: #22C55E; line-height: 1; margin-bottom: 4px; letter-spacing: -2px; }
+  .price-period { font-size: 14px; color: #999; margin-bottom: 20px; }
+  .bonus-list { list-style: none; text-align: left; margin-bottom: 24px; }
+  .bonus-list li {
+    padding: 8px 0;
+    font-size: 14px;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #f8f8f8;
+  }
+  .bonus-list li:last-child { border-bottom: none; }
+  .bonus-list li .check {
+    width: 20px; height: 20px;
+    background: #E8F5E9;
+    color: #2E7D32;
+    font-weight: 800;
+    font-size: 12px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .guarantee {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.6;
+    margin-top: 16px;
+    padding: 14px;
+    background: #F0FFF4;
+    border-radius: 12px;
+    border: 1px solid #C8E6C9;
+  }
+
+  /* === FAQ === */
+  .faq-section { background: #FAFAFA; }
+  .faq-item { border-bottom: 1px solid #eee; padding: 18px 0; }
+  .faq-q {
+    font-size: 15px;
+    font-weight: 700;
+    color: #222;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    line-height: 1.4;
+  }
+  .faq-toggle {
+    width: 26px; height: 26px;
+    background: #FFF5EE;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    color: #FF7043;
+    font-weight: 400;
+    flex-shrink: 0;
+    transition: transform 0.3s;
+  }
+  .faq-item.open .faq-toggle { transform: rotate(45deg); }
+  .faq-a {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.65;
+    margin-top: 12px;
+    display: none;
+    padding-left: 2px;
+  }
+  .faq-item.open .faq-a { display: block; }
+
+  /* === FINAL CTA === */
+  .final-cta {
+    padding: 44px 24px;
+    text-align: center;
+    background: linear-gradient(180deg, #fff 0%, #FFF8F5 100%);
+  }
+  .final-cta h2 {
+    font-size: 22px;
+    font-weight: 900;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+    line-height: 1.35;
+  }
+  .final-cta p {
+    font-size: 14px;
+    color: #777;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .final-cta .urgency {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #E65100;
+    background: #FFF3E0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  /* === FOOTER === */
+  .footer {
+    text-align: center;
+    padding: 28px 24px;
+    background: #1a1a1a;
+    color: #888;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .footer a { color: #FFAB76; text-decoration: none; }
+  .footer .f-brand {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+
+  /* === ANIMATIONS === */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hero h1, .hero p, .btn-cta, .hero-phone {
+    animation: fadeInUp 0.6s ease-out both;
+  }
+  .hero h1 { animation-delay: 0.1s; }
+  .hero p { animation-delay: 0.2s; }
+  .btn-cta { animation-delay: 0.3s; }
+  .hero-phone { animation-delay: 0.4s; }
+</style>
+</head>
+<body>
+
+<!-- ========== HERO ========== -->
+<div class="hero">
+  <div class="hero-badge"><span class="pulse"></span> Gratis — Early Access Terbuka</div>
+  <h1>Kerja Tenang,<br>Si Kecil <em>Terpantau</em><br>Real-Time</h1>
+  <p>Babysitter catat. Kamu pantau dari HP.<br>Susu, makan, tidur, foto, lokasi — semua ada.</p>
+  <a href="https://eleanortracker.vercel.app" class="btn-cta">Coba Gratis Sekarang →</a>
+  <span class="hero-sub-cta">Tanpa install app. Langsung buka di browser.</span>
+
+  <!-- Realistic App Screenshot Mockup -->
+  <div class="hero-phone-wrapper">
+    <div class="hero-phone">
+      <div class="phone-notch"></div>
+      <div class="phone-inner">
+        <div class="app-status-bar">
+          <span>9:41</span>
+          <span>⚡ 87%</span>
+        </div>
+        <div class="app-header">
+          <div>
+            <div class="greeting">Selamat pagi 👋</div>
+            <div class="name">Dashboard Ellie</div>
+          </div>
+          <div class="avatar-circle">M</div>
+        </div>
+        <div class="app-date-pill">📅 Selasa, 11 Mar 2026</div>
+        <div class="app-summary-grid">
+          <div class="app-summary-card alert">
+            <div class="sc-top"><span class="sc-icon">🍼</span><span class="sc-label">Susu</span></div>
+            <div class="sc-value">90 ml</div>
+            <div class="sc-sub">sisa 30ml ⚠️</div>
+          </div>
+          <div class="app-summary-card">
+            <div class="sc-top"><span class="sc-icon">🍽️</span><span class="sc-label">Makan</span></div>
+            <div class="sc-value">280 g</div>
+            <div class="sc-sub">3x makan hari ini</div>
+          </div>
+          <div class="app-summary-card good">
+            <div class="sc-top"><span class="sc-icon">😴</span><span class="sc-label">Tidur</span></div>
+            <div class="sc-value">2j 15m</div>
+            <div class="sc-sub">siang 1j30m</div>
+          </div>
+          <div class="app-summary-card">
+            <div class="sc-top"><span class="sc-icon">💩</span><span class="sc-label">BAB/BAK</span></div>
+            <div class="sc-value">2 / 5</div>
+            <div class="sc-sub">normal ✓</div>
+          </div>
+        </div>
+        <div class="app-event-row">
+          <div class="ev-icon" style="background: #FFF3E0;">🍼</div>
+          <div class="ev-info">
+            <div class="ev-title">Susu 60ml — sisa 30ml</div>
+            <div class="ev-detail">ASI Perah · Botol Dr.Brown</div>
+          </div>
+          <div class="ev-time">09:15</div>
+        </div>
+        <div class="app-event-row">
+          <div class="ev-icon" style="background: #E8F5E9;">🥣</div>
+          <div class="ev-info">
+            <div class="ev-title">MPASI Bubur Ayam</div>
+            <div class="ev-detail">120g · habis · 📸</div>
+          </div>
+          <div class="ev-time">08:30</div>
+        </div>
+        <div class="app-event-row">
+          <div class="ev-icon" style="background: #E3F2FD;">😴</div>
+          <div class="ev-info">
+            <div class="ev-title">Tidur Siang</div>
+            <div class="ev-detail">durasi 1j 30m</div>
+          </div>
+          <div class="ev-time">12:00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TRUST BAR ========== -->
+<div class="trust-bar">
+  <div class="trust-item"><span class="t-icon">🔒</span> Data Privat</div>
+  <div class="trust-item"><span class="t-icon">⚡</span> Real-Time</div>
+  <div class="trust-item"><span class="t-icon">📱</span> Tanpa Install</div>
+</div>
+
+<!-- ========== STATS ========== -->
+<div class="stats">
+  <div class="stat">
+    <div class="stat-num">500+</div>
+    <div class="stat-label">Keluarga</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">10K+</div>
+    <div class="stat-label">Log / Hari</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">4.9★</div>
+    <div class="stat-label">Rating</div>
+  </div>
+</div>
+
+<!-- ========== EMPATHY / PAIN ========== -->
+<div class="section empathy-section">
+  <div class="section-tag">Kamu Pasti Ngerasain Ini</div>
+  <div class="empathy-quote">"Lagi meeting, tapi pikiran di rumah. Bayi udah makan belum ya?"</div>
+
+  <div class="pain-cards">
+    <div class="pain-card">
+      <span class="pc-icon">📱</span>
+      <div class="pc-text">
+        <div class="pc-title">WA babysitter 5-10x sehari</div>
+        <div class="pc-desc">"Udah minum susu?", "Udah makan?", "Lagi tidur?" — repeat terus, chat tenggelam.</div>
+      </div>
+    </div>
+    <div class="pain-card">
+      <span class="pc-icon">😰</span>
+      <div class="pc-text">
+        <div class="pc-title">Nggak ada data yang jelas</div>
+        <div class="pc-desc">Babysitter bilang "udah minum kok." Tapi berapa ml? Habis atau ada sisa? Nggak dicatat.</div>
+      </div>
+    </div>
+    <div class="pain-card">
+      <span class="pc-icon">😴</span>
+      <div class="pc-text">
+        <div class="pc-title">Pola bayi nggak terpantau</div>
+        <div class="pc-desc">Tidur jam berapa? Bangun kapan? BAB berapa kali? Pas ke dokter, jawabannya "kayaknya..."</div>
+      </div>
+    </div>
+    <div class="pain-card">
+      <span class="pc-icon">📍</span>
+      <div class="pc-text">
+        <div class="pc-title">Nggak tau babysitter di mana</div>
+        <div class="pc-desc">Bawa bayi jalan ke taman? Ke mall? Nggak ada cara tau tanpa nanya terus-terusan.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== BEFORE / AFTER ========== -->
+<div class="transform-section">
+  <div class="section-tag">Bedanya Nyata</div>
+  <h2>Tanpa vs Dengan Ellie</h2>
+
+  <div class="ba-grid">
+    <div class="ba-col before">
+      <div class="ba-label">❌ Tanpa</div>
+      <div class="ba-item"><span class="bi-icon">✕</span> WA bolak-balik</div>
+      <div class="ba-item"><span class="bi-icon">✕</span> Nggak ada catatan</div>
+      <div class="ba-item"><span class="bi-icon">✕</span> Cemas saat kerja</div>
+      <div class="ba-item"><span class="bi-icon">✕</span> Lokasi nggak tau</div>
+      <div class="ba-item"><span class="bi-icon">✕</span> Ke dokter tanpa data</div>
+    </div>
+    <div class="ba-col after">
+      <div class="ba-label">✅ Dengan</div>
+      <div class="ba-item"><span class="bi-icon">✓</span> Dashboard real-time</div>
+      <div class="ba-item"><span class="bi-icon">✓</span> Data ml-level presisi</div>
+      <div class="ba-item"><span class="bi-icon">✓</span> Kerja tenang, fokus</div>
+      <div class="ba-item"><span class="bi-icon">✓</span> GPS otomatis</div>
+      <div class="ba-item"><span class="bi-icon">✓</span> Riwayat lengkap</div>
+    </div>
+  </div>
+
+  <div class="transform-result">
+    <div class="tr-big">😌 → 100% Tenang</div>
+    <div class="tr-sub">Babysitter input, kamu pantau.<br>Tanpa ganggu meeting. Tanpa cemas.</div>
+  </div>
+</div>
+
+<!-- ========== VALUE SIMULATION ========== -->
+<div class="section kalkulator-section">
+  <div class="section-tag">Hitung Sendiri</div>
+  <h2>Berapa "harga" ketenangan pikiran kamu?</h2>
+
+  <div class="calc-card">
+    <div class="calc-step">
+      <div class="calc-num">1</div>
+      <div class="calc-text">
+        <div class="label">Tanpa App — WA Babysitter</div>
+        <div class="value">5-10x/hari</div>
+        <div class="detail">Bolak-balik nanya hal yang sama, setiap hari, setiap minggu. Chat nggak ada datanya.</div>
+      </div>
+    </div>
+    <div class="calc-step">
+      <div class="calc-num">2</div>
+      <div class="calc-text">
+        <div class="label">Waktu Kerja Terganggu</div>
+        <div class="value">~30 menit/hari</div>
+        <div class="detail">Cek HP, reply WA, mikirin bayi di tengah kerjaan. Fokus buyar, produktivitas turun.</div>
+      </div>
+    </div>
+    <div class="calc-step">
+      <div class="calc-num">3</div>
+      <div class="calc-text">
+        <div class="label">Level Cemas</div>
+        <div class="value">😰 Tinggi</div>
+        <div class="detail">Nggak ada catatan. Nggak tau bayi terakhir makan kapan. Andalkan ingatan babysitter aja.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="calc-result">
+    <div class="result-label">Dengan Ellie</div>
+    <div class="result-num">😌 Tenang 100%</div>
+    <div class="result-note">Semua tercatat otomatis. Real-time. Presisi.<br>Dan semuanya GRATIS.</div>
+  </div>
+</div>
+
+<!-- ========== ROLES ========== -->
+<div class="section role-section">
+  <div class="section-tag">Siapa Pakai Apa</div>
+  <h2>3 role, 1 tujuan — bayi terjaga dengan baik</h2>
+  <div class="role-grid">
+    <div class="role-card">
+      <div class="role-icon" style="background: #FFF0E6;">👩‍💼</div>
+      <div class="role-info">
+        <div class="role-name">Parent</div>
+        <div class="role-desc">Pantau dashboard real-time. Lihat semua aktivitas, foto, dan lokasi. Terima notifikasi otomatis.</div>
+      </div>
+    </div>
+    <div class="role-card">
+      <div class="role-icon" style="background: #E8F5E9;">👩‍🍼</div>
+      <div class="role-info">
+        <div class="role-name">Babysitter</div>
+        <div class="role-desc">Input aktivitas harian — susu, makan, tidur, BAB, foto. Tap-tap, selesai. Simpel dari HP.</div>
+      </div>
+    </div>
+    <div class="role-card">
+      <div class="role-icon" style="background: #E3F2FD;">👴</div>
+      <div class="role-info">
+        <div class="role-name">Viewer</div>
+        <div class="role-desc">Nenek, kakek, keluarga. Dashboard read-only — ikut pantau tanpa ribet. Nggak perlu nelpon tiap jam.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== FITUR DETAIL ========== -->
+<div class="section toolkit-section">
+  <div class="section-tag">Fitur Lengkap</div>
+  <h2>Semua yang kamu butuhkan, ada di sini</h2>
+
+  <div class="modul-grid">
+    <div class="modul-card highlight">
+      <div class="modul-icon-row">
+        <div class="modul-emoji" style="background: #FFF3E0;">🍼</div>
+        <div class="modul-title">Tracking Susu ml-Level</div>
+      </div>
+      <div class="modul-desc">Catat jumlah disiapkan, diminum, dan sisa. Total harian, trend mingguan. Babysitter pilih "Habis" atau "Sisa" — sisanya dihitung otomatis.</div>
+      <div class="modul-peek">⚡ Alert kalau intake di bawah target</div>
+    </div>
+
+    <div class="modul-card">
+      <div class="modul-icon-row">
+        <div class="modul-emoji" style="background: #E8F5E9;">🥣</div>
+        <div class="modul-title">Makan & Nutrisi</div>
+      </div>
+      <div class="modul-desc">MPASI, snack, buah, vitamin — semua tercatat. Jenis, gram, waktu. Foto makanan bisa di-attach langsung dari kamera.</div>
+      <div class="modul-peek">📸 Lihat foto makanan si kecil real-time</div>
+    </div>
+
+    <div class="modul-card">
+      <div class="modul-icon-row">
+        <div class="modul-emoji" style="background: #E3F2FD;">😴</div>
+        <div class="modul-title">Pola Tidur Otomatis</div>
+      </div>
+      <div class="modul-desc">Babysitter tap "Tidur" dan "Bangun" — durasi dihitung otomatis. Total siang vs malam. Berguna banget buat laporan ke dokter anak.</div>
+      <div class="modul-peek">📊 Grafik tidur mingguan</div>
+    </div>
+
+    <div class="modul-card highlight">
+      <div class="modul-icon-row">
+        <div class="modul-emoji" style="background: #FCE4EC;">📍</div>
+        <div class="modul-title">Lokasi & Foto Real-Time</div>
+      </div>
+      <div class="modul-desc">Setiap input aktivitas, lokasi babysitter otomatis tercatat via GPS. Plus foto — lihat si kecil makan, main, tidur, langsung dari kantor.</div>
+      <div class="modul-peek">🗺️ Klik "Lihat Lokasi" di setiap event</div>
+    </div>
+
+    <div class="modul-card">
+      <div class="modul-icon-row">
+        <div class="modul-emoji" style="background: #F3E5F5;">📊</div>
+        <div class="modul-title">Riwayat & Insight</div>
+      </div>
+      <div class="modul-desc">Scroll ke tanggal mana pun — data tetap ada. Trend mingguan dalam grafik visual. Export ringkasan via WhatsApp ke pasangan atau dokter anak.</div>
+      <div class="modul-peek">📤 1-tap kirim ringkasan ke dokter</div>
+    </div>
+
+    <div class="modul-card">
+      <div class="modul-icon-row">
+        <div class="modul-emoji" style="background: #E0F2F1;">👥</div>
+        <div class="modul-title">Multi-Role & Multi-Anak</div>
+      </div>
+      <div class="modul-desc">Ajak nenek/kakek sebagai viewer. Tambah lebih dari satu anak — masing-masing punya dashboard terpisah. Satu keluarga, satu platform.</div>
+      <div class="modul-peek">👨‍👩‍👧‍👦 Kolaborasi satu keluarga</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MOCKUP BABYSITTER VIEW ========== -->
+<div class="section mockup-section">
+  <div class="section-tag">Babysitter View</div>
+  <h2>Ini yang babysitter lihat — simpel banget 📱</h2>
+  <p style="font-size: 14px; color: #888; margin-top: -10px; margin-bottom: 10px;">Bahkan yang gaptek pun bisa pakai dalam 2 menit.</p>
+
+  <div class="phone-mockup">
+    <div class="pm-screen">
+      <div class="pm-header-bar">
+        <span class="pm-back">←</span>
+        <span class="pm-title">Input Hari Ini</span>
+        <span class="pm-date">11 Mar</span>
+      </div>
+      <div class="pm-log-item">
+        <div class="pl-icon" style="background: #FFF3E0;">🍼</div>
+        <div class="pl-info">
+          <div class="pl-title">Susu 90ml — sisa 30ml</div>
+          <div class="pl-sub">ASI Perah · Dr.Brown</div>
+        </div>
+        <div class="pl-time">09:15</div>
+      </div>
+      <div class="pm-log-item">
+        <div class="pl-icon" style="background: #E8F5E9;">🥣</div>
+        <div class="pl-info">
+          <div class="pl-title">MPASI Bubur Ayam 120g</div>
+          <div class="pl-sub">Habis · Menu siang</div>
+        </div>
+        <div class="pl-photo">📸</div>
+      </div>
+      <div class="pm-log-item">
+        <div class="pl-icon" style="background: #E3F2FD;">😴</div>
+        <div class="pl-info">
+          <div class="pl-title">Tidur Siang 1j30m</div>
+          <div class="pl-sub">12:00 — 13:30</div>
+        </div>
+        <div class="pl-time">13:30</div>
+      </div>
+      <div class="pm-log-item">
+        <div class="pl-icon" style="background: #FFF9C4;">💩</div>
+        <div class="pl-info">
+          <div class="pl-title">BAB — Normal</div>
+          <div class="pl-sub">Warna & tekstur OK</div>
+        </div>
+        <div class="pl-time">14:15</div>
+      </div>
+      <div class="pm-log-item">
+        <div class="pl-icon" style="background: #FCE4EC;">💊</div>
+        <div class="pl-info">
+          <div class="pl-title">Vitamin D3 ✓</div>
+          <div class="pl-sub">Dosis pagi</div>
+        </div>
+        <div class="pl-time">08:00</div>
+      </div>
+      <div style="margin-top: 10px; background: linear-gradient(135deg, #FF7043, #FF8A65); border-radius: 10px; padding: 10px; text-align: center; color: #fff; font-size: 12px; font-weight: 700;">+ Tambah Aktivitas Baru</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TESTIMONI ========== -->
+<div class="testi-section">
+  <div class="section-tag">Cerita Nyata</div>
+  <h2>Mereka sudah merasakan bedanya</h2>
+  <p class="testi-header-text">Dari working mama di kota besar sampai papa yang dinas luar kota — inilah pengalaman mereka setelah pakai Ellie.</p>
+
+  <div class="testi-grid">
+    <!-- Testi 1 — HIGHLIGHT -->
+    <div class="testi-card testi-highlight">
+      <div class="testi-stars">
+        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+      </div>
+      <div class="testi-metric">📉 Frekuensi WA babysitter turun 90%</div>
+      <div class="testi-quote">
+        <strong>Baru seminggu, udah kerasa banget bedanya.</strong> Sekarang meeting nggak sambil cek WA tiap 10 menit. Buka app, langsung keliatan semua — susu berapa, udah makan belum, tidur berapa lama. Kayak punya mata kedua di rumah.
+      </div>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background: #FFF0E6;">👩</div>
+        <div>
+          <div class="testi-name">Mama Alya</div>
+          <div class="testi-role">Product Manager — Bandung</div>
+          <div class="testi-badge">✓ Pengguna aktif 3 bulan</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Testi 2 -->
+    <div class="testi-card">
+      <div class="testi-stars">
+        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+      </div>
+      <div class="testi-quote">
+        <strong>Fitur lokasi game changer.</strong> Sekarang tau babysitter bawa anak ke taman atau di rumah aja — tanpa nanya. Plus pas kontrol ke dokter anak, tinggal buka riwayat. Dokter sampai bilang datanya lengkap.
+      </div>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background: #E3F2FD;">👨</div>
+        <div>
+          <div class="testi-name">Papa Rafi</div>
+          <div class="testi-role">Software Engineer — Jakarta</div>
+          <div class="testi-badge">✓ Pengguna aktif 2 bulan</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Testi 3 -->
+    <div class="testi-card">
+      <div class="testi-stars">
+        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+      </div>
+      <div class="testi-quote">
+        <strong>Babysitter saya yang gaptek aja bisa langsung pakai.</strong> Tinggal tap-tap, foto, selesai. Dan nenek juga saya kasih akses viewer — sekarang nggak nelpon tiap jam nanya "cucunya udah makan?" 😂
+      </div>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background: #E8F5E9;">👩</div>
+        <div>
+          <div class="testi-name">Mama Keisha</div>
+          <div class="testi-role">Dokter Gigi — Surabaya</div>
+          <div class="testi-badge">✓ Pengguna aktif 4 bulan</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Testi 4 — NEW -->
+    <div class="testi-card">
+      <div class="testi-stars">
+        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+      </div>
+      <div class="testi-quote">
+        <strong>Saya sering dinas luar kota.</strong> Dulu was-was banget ninggalin anak sama babysitter. Sekarang tinggal buka app — foto aktivitas masuk, lokasi keliatan, susu dan makan tercatat rapi. Berasa kayak ada di rumah.
+      </div>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background: #FFF8E1;">👨</div>
+        <div>
+          <div class="testi-name">Papa Dimas</div>
+          <div class="testi-role">Sales Manager — Semarang</div>
+          <div class="testi-badge">✓ Pengguna aktif 1 bulan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PRICING ========== -->
+<div class="price-section" id="order">
+  <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.9; margin-bottom: 10px; font-weight: 700;">Mulai Sekarang</p>
+  <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 6px; color: #fff;">Ketenangan pikiran<br>nggak harus mahal.</h2>
+  <p style="font-size: 14px; opacity: 0.9; margin-bottom: 24px;">Malah gratis.</p>
+
+  <div class="price-box">
+    <div class="price-ribbon">Early Access</div>
+    <div class="price-free">GRATIS</div>
+    <div class="price-period">Semua fitur. Tanpa batas waktu. Tanpa kartu kredit.</div>
+
+    <ul class="bonus-list">
+      <li><span class="check">✓</span> Dashboard real-time parent</li>
+      <li><span class="check">✓</span> Input babysitter unlimited</li>
+      <li><span class="check">✓</span> Tracking susu, makan, tidur, BAB</li>
+      <li><span class="check">✓</span> Foto aktivitas bayi</li>
+      <li><span class="check">✓</span> Lokasi babysitter otomatis (GPS)</li>
+      <li><span class="check">✓</span> Multi-role & multi-anak</li>
+      <li><span class="check">✓</span> Riwayat & trend mingguan</li>
+      <li><span class="check">✓</span> Export ringkasan via WhatsApp</li>
+    </ul>
+
+    <a href="https://eleanortracker.vercel.app" class="btn-cta-orange" style="display: block; text-align: center;">Daftar Gratis Sekarang →</a>
+
+    <p class="guarantee">🔒 <strong>Data 100% privat.</strong> Hanya kamu dan tim kamu yang bisa akses. Dilindungi enkripsi dan Row Level Security — standar keamanan enterprise.</p>
+  </div>
+</div>
+
+<!-- ========== FAQ ========== -->
+<div class="section faq-section">
+  <div class="section-tag">Tanya Jawab</div>
+  <h2>Punya pertanyaan?</h2>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+      <span>Ini app apa sih sebenarnya?</span>
+      <div class="faq-toggle">+</div>
+    </div>
+    <p class="faq-a">Ellie adalah aplikasi monitoring bayi harian. Babysitter mencatat aktivitas si kecil (susu, makan, tidur, dll), dan orang tua bisa memantau semuanya real-time dari HP. Seperti punya "mata kedua" di rumah — tanpa harus WA bolak-balik.</p>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+      <span>Babysitter saya gaptek, bisa pakai?</span>
+      <div class="faq-toggle">+</div>
+    </div>
+    <p class="faq-a">Sangat bisa! Interface untuk babysitter dirancang sesimpel mungkin — tinggal pilih jenis aktivitas, isi detail, tap simpan. Kalau bisa pakai WhatsApp, pasti bisa pakai app ini. Banyak babysitter user kami yang langsung bisa tanpa diajari.</p>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+      <span>Beneran gratis? Ada biaya tersembunyi?</span>
+      <div class="faq-toggle">+</div>
+    </div>
+    <p class="faq-a">100% gratis selama early access. Tidak ada biaya tersembunyi, tidak perlu kartu kredit. Ke depan mungkin ada fitur premium tambahan, tapi semua fitur inti tetap gratis selamanya.</p>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+      <span>Data bayi saya aman nggak?</span>
+      <div class="faq-toggle">+</div>
+    </div>
+    <p class="faq-a">Sangat aman. Kami menggunakan Supabase dengan Row Level Security — artinya hanya kamu dan orang yang kamu undang yang bisa melihat data. Data dienkripsi dan disimpan di server aman. Tidak ada orang lain yang bisa mengakses data bayi kamu.</p>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+      <span>Bisa untuk lebih dari satu anak?</span>
+      <div class="faq-toggle">+</div>
+    </div>
+    <p class="faq-a">Bisa! Kamu bisa menambahkan beberapa anak dalam satu akun. Masing-masing punya dashboard dan riwayat terpisah, jadi data nggak tercampur.</p>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+      <span>Harus install app dari Play Store?</span>
+      <div class="faq-toggle">+</div>
+    </div>
+    <p class="faq-a">Tidak perlu! Ellie adalah web app — langsung buka dari browser HP. Bisa di-bookmark ke home screen supaya terasa seperti app native. Praktis, ringan, nggak makan storage.</p>
+  </div>
+</div>
+
+<!-- ========== FINAL CTA ========== -->
+<div class="final-cta">
+  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="margin-bottom: 16px;">
+    <circle cx="32" cy="28" r="20" fill="#FFF5EE" stroke="#FF8A65" stroke-width="2"/>
+    <circle cx="26" cy="26" r="2" fill="#333"/>
+    <circle cx="38" cy="26" r="2" fill="#333"/>
+    <path d="M27 33 Q32 38 37 33" stroke="#FF8A65" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M28 50 C28 46 22 43 22 48 C22 53 32 58 32 58 C32 58 42 53 42 48 C42 43 36 46 36 50 C36 52 32 54 32 54 C32 54 28 52 28 50Z" fill="#FF8A65" opacity="0.7"/>
+  </svg>
+
+  <div class="urgency">⏰ Early access — slot terbatas</div>
+
+  <h2>Kamu kerja keras untuk keluarga.<br>Biar app ini yang bantu jaga ketenangan pikiran.</h2>
+  <p>Mulai pantau si kecil dalam 30 detik. Gratis, tanpa install, langsung pakai.</p>
+  <a href="https://eleanortracker.vercel.app" class="btn-cta-orange">Mulai Gratis Sekarang →</a>
+  <span style="display: block; font-size: 12px; color: #aaa; margin-top: 10px;">Tanpa kartu kredit. Langsung bisa pakai.</span>
+</div>
+
+<!-- ========== FOOTER ========== -->
+<div class="footer">
+  <div class="f-brand">Ellie</div>
+  <p>Pantau Si Kecil dengan Cinta, Dari Mana Saja</p>
+  <p style="margin-top: 8px;">© 2026 Ellie. Built with ❤️ for Indonesian parents.</p>
+  <p style="margin-top: 6px;"><a href="https://eleanortracker.vercel.app">eleanortracker.vercel.app</a></p>
+</div>
+
+</body>
+</html>

@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     
     const settingsMap: Record<string, string> = {};
     (brandSettings || []).forEach((s: any) => { settingsMap[s.key] = s.value; });
-    const brandName = settingsMap["brand_name"] || "Eleanor Tracker";
+    const brandName = settingsMap["brand_name"] || "Ellie";
     const brandLogoUrl = settingsMap["brand_logo_url"] || "";
 
     const roleLabel = inviteRole === "parent" ? "Keluarga (Viewer)" : "Babysitter";
@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
       <p style="font-size: 13px; color: #888;">Jika Anda sudah memiliki akun, cukup login dan undangan akan muncul di dashboard Anda.</p>
     </div>
     <div class="footer">
-      <p>${brandName} — Pantau Si Kecil dengan Cinta 💛</p>
+      <p>${brandName} — Caretaker Log 💛</p>
     </div>
   </div>
 </body>
