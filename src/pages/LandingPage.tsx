@@ -140,7 +140,7 @@ export default function LandingPage() {
                 <div className="lp-app-header">
                   <div>
                     <div className="lp-app-greeting">Selamat pagi 👋</div>
-                    <div className="lp-app-name">Dashboard Eleanor</div>
+                    <div className="lp-app-name">Dashboard Ellie</div>
                   </div>
                   <div className="lp-app-avatar">M</div>
                 </div>
