@@ -96,9 +96,10 @@ const NotificationsPage = () => {
           notifications.map((notif: any) => (
             <Card
               key={notif.id}
+              onClick={() => { if (!notif.is_read) markAsRead(notif.id); }}
               className={cn(
                 'border-0 shadow-sm transition-all',
-                !notif.is_read && 'border-l-4 border-l-primary bg-primary/5'
+                !notif.is_read && 'border-l-4 border-l-primary bg-primary/5 cursor-pointer active:opacity-70'
               )}
             >
               <CardContent className="p-3">
@@ -117,16 +118,11 @@ const NotificationsPage = () => {
                   </div>
                   <div className="flex gap-1 shrink-0">
                     {notif.message?.includes('lokasi') && (
-                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate('/location')}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={(e) => { e.stopPropagation(); navigate('/location'); }}>
                         <MapPin className="h-3.5 w-3.5 text-primary" />
                       </Button>
                     )}
-                    {!notif.is_read && (
-                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => markAsRead(notif.id)}>
-                        <CheckCheck className="h-3.5 w-3.5 text-primary" />
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => deleteNotification(notif.id)}>
+                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}>
                       <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                     </Button>
                   </div>
