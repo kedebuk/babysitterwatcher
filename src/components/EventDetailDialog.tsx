@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { ActivityType, ACTIVITY_LABELS, ACTIVITY_ICONS, ACTIVITY_BADGE_CLASS } from '@/types';
 import { getSmartIcon } from '@/lib/smart-icon';
-import { Pencil, MapPin } from 'lucide-react';
+import { Pencil, MapPin, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface EventDetailDialogProps {
@@ -30,6 +30,56 @@ function useReverseGeocode(lat: number | null, lng: number | null) {
       .catch(() => setName(null));
   }, [lat, lng]);
   return name;
+}
+
+function PhotoThumbnail({ src, label }: { src: string; label: string }) {
+  const [lightbox, setLightbox] = useState(false);
+
+  return (
+    <>
+      <div className="text-center">
+        <button
+          type="button"
+          onClick={() => setLightbox(true)}
+          className="rounded-lg overflow-hidden border focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <img
+            src={src}
+            alt={label}
+            loading="lazy"
+            decoding="async"
+            width={112}
+            height={112}
+            className="w-28 h-28 object-cover hover:opacity-90 transition-opacity"
+            onError={(e) => { (e.target as HTMLImageElement).parentElement!.parentElement!.style.display = 'none'; }}
+          />
+        </button>
+        <span className="text-[10px] text-muted-foreground mt-1 block">{label}</span>
+      </div>
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
+          onClick={() => setLightbox(false)}
+        >
+          <button
+            type="button"
+            className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-1"
+            onClick={() => setLightbox(false)}
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img
+            src={src}
+            alt={label}
+            className="max-w-[92vw] max-h-[85vh] rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <span className="absolute bottom-6 text-white text-sm font-medium drop-shadow">{label}</span>
+        </div>
+      )}
+    </>
+  );
 }
 
 export function EventDetailDialog({ event, open, onOpenChange, createdByName, onEdit }: EventDetailDialogProps) {
@@ -92,18 +142,8 @@ export function EventDetailDialog({ event, open, onOpenChange, createdByName, on
             <div>
               <p className="text-[11px] font-medium text-muted-foreground mb-1.5">📷 Foto</p>
               <div className="flex gap-3">
-                {event.photo_url && (
-                  <div className="text-center">
-                    <img src={event.photo_url} alt="Sebelum" loading="lazy" decoding="async" width={112} height={112} className="rounded-lg w-28 h-28 object-cover border" onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }} />
-                    <span className="text-[10px] text-muted-foreground mt-1 block">Sebelum</span>
-                  </div>
-                )}
-                {event.photo_url_after && (
-                  <div className="text-center">
-                    <img src={event.photo_url_after} alt="Sesudah" loading="lazy" decoding="async" width={112} height={112} className="rounded-lg w-28 h-28 object-cover border" onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }} />
-                    <span className="text-[10px] text-muted-foreground mt-1 block">Sesudah</span>
-                  </div>
-                )}
+                {event.photo_url && <PhotoThumbnail src={event.photo_url} label="Sebelum" />}
+                {event.photo_url_after && <PhotoThumbnail src={event.photo_url_after} label="Sesudah" />}
               </div>
             </div>
           )}
