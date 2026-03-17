@@ -161,15 +161,24 @@ const Pricing = () => {
               {selectedPlan === 'starter' && <Check className="h-3 w-3 text-white" />}
             </div>
           </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-sm text-muted-foreground">Rp</span>
-            <span className="text-3xl font-bold">69</span>
-            <span className="text-sm text-muted-foreground">rb / bulan</span>
-          </div>
-          {billingCycle === 'quarterly' && (
-            <p className="text-xs text-emerald-600 font-medium mt-1">
-              Rp{Math.round(69000 * 0.80 * 3 / 1000)}rb / 3 bulan (hemat 20%)
-            </p>
+          {billingCycle === 'quarterly' ? (
+            <>
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm text-muted-foreground">Rp</span>
+                <span className="text-3xl font-bold">{Math.round(69000 * 0.80 * 3 / 1000)}</span>
+                <span className="text-sm text-muted-foreground">rb / 3 bulan</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                <span className="line-through">Rp207rb</span>
+                <span className="text-emerald-600 font-medium ml-1.5">Hemat 20%</span>
+              </p>
+            </>
+          ) : (
+            <div className="flex items-baseline gap-1">
+              <span className="text-sm text-muted-foreground">Rp</span>
+              <span className="text-3xl font-bold">69</span>
+              <span className="text-sm text-muted-foreground">rb / bulan</span>
+            </div>
           )}
         </button>
 
@@ -196,19 +205,29 @@ const Pricing = () => {
               {selectedPlan === 'premium' && <Check className="h-3 w-3 text-white" />}
             </div>
           </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-sm text-muted-foreground">Rp</span>
-            <span className="text-3xl font-bold">169</span>
-            <span className="text-sm text-muted-foreground">rb / bulan</span>
-          </div>
           {billingCycle === 'quarterly' ? (
-            <p className="text-xs text-emerald-600 font-medium mt-1">
-              Rp{Math.round(169000 * 0.80 * 3 / 1000)}rb / 3 bulan (hemat 20%)
-            </p>
+            <>
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm text-muted-foreground">Rp</span>
+                <span className="text-3xl font-bold">{Math.round(169000 * 0.80 * 3 / 1000)}</span>
+                <span className="text-sm text-muted-foreground">rb / 3 bulan</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                <span className="line-through">Rp507rb</span>
+                <span className="text-emerald-600 font-medium ml-1.5">Hemat 20%</span>
+              </p>
+            </>
           ) : (
-            <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">
-              Hemat 39% vs 4x Starter
-            </p>
+            <>
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm text-muted-foreground">Rp</span>
+                <span className="text-3xl font-bold">169</span>
+                <span className="text-sm text-muted-foreground">rb / bulan</span>
+              </div>
+              <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1">
+                Hemat 39% vs 4x Starter
+              </p>
+            </>
           )}
         </button>
 
