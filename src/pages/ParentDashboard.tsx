@@ -664,105 +664,58 @@ const ParentDashboard = () => {
               {events.length === 0 ? (
                 <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">Belum ada data untuk tanggal ini</CardContent></Card>
               ) : (
-                <div className="relative pl-4">
+                <div className="relative">
                   {/* Vertical timeline line */}
-                  <div className="absolute left-[39px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary/30 via-primary/15 to-primary/5 rounded-full" />
+                  <div className="absolute left-[23px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-border via-border/60 to-border/20 rounded-full" />
 
-                  <div className="space-y-3">
-                  {events.filter(e => !timelineFilter || e.type === timelineFilter).map((event, idx, arr) => {
-                    const ping = findClosestPing(event.time);
-                    const badgeColorMap: Record<string, string> = {
-                      susu: 'border-l-blue-400 bg-blue-50/40',
-                      mpasi: 'border-l-orange-400 bg-orange-50/40',
-                      snack: 'border-l-yellow-400 bg-yellow-50/40',
-                      buah: 'border-l-emerald-400 bg-emerald-50/40',
-                      tidur: 'border-l-violet-400 bg-violet-50/40',
-                      bangun: 'border-l-purple-400 bg-purple-50/40',
-                      pup: 'border-l-green-400 bg-green-50/40',
-                      pee: 'border-l-teal-400 bg-teal-50/40',
-                      mandi: 'border-l-cyan-400 bg-cyan-50/40',
-                      vitamin: 'border-l-pink-400 bg-pink-50/40',
-                      lap_badan: 'border-l-sky-400 bg-sky-50/40',
-                      catatan: 'border-l-gray-400 bg-gray-50/40',
-                    };
+                  <div className="space-y-0.5">
+                  {events.filter(e => !timelineFilter || e.type === timelineFilter).map((event) => {
                     const dotColorMap: Record<string, string> = {
-                      susu: 'bg-blue-400 ring-blue-100',
-                      mpasi: 'bg-orange-400 ring-orange-100',
-                      snack: 'bg-yellow-400 ring-yellow-100',
-                      buah: 'bg-emerald-400 ring-emerald-100',
-                      tidur: 'bg-violet-400 ring-violet-100',
-                      bangun: 'bg-purple-400 ring-purple-100',
-                      pup: 'bg-green-400 ring-green-100',
-                      pee: 'bg-teal-400 ring-teal-100',
-                      mandi: 'bg-cyan-400 ring-cyan-100',
-                      vitamin: 'bg-pink-400 ring-pink-100',
-                      lap_badan: 'bg-sky-400 ring-sky-100',
-                      catatan: 'bg-gray-400 ring-gray-100',
+                      susu: 'bg-blue-400', mpasi: 'bg-orange-400', snack: 'bg-yellow-400', buah: 'bg-emerald-400',
+                      tidur: 'bg-violet-400', bangun: 'bg-purple-400', pup: 'bg-green-400', pee: 'bg-teal-400',
+                      mandi: 'bg-cyan-400', vitamin: 'bg-pink-400', lap_badan: 'bg-sky-400', catatan: 'bg-gray-400',
                     };
                     return (
-                    <div key={event.id} className="relative flex items-start gap-3 animate-fade-in">
+                    <div
+                      key={event.id}
+                      className="relative flex items-center gap-2.5 py-2.5 px-2 rounded-xl cursor-pointer hover:bg-muted/50 transition-colors animate-fade-in group"
+                      onClick={() => setDetailEvent(event)}
+                    >
                       {/* Timeline dot */}
-                      <div className="relative z-10 flex flex-col items-center pt-4">
-                        <div className={`h-3 w-3 rounded-full ring-4 ${dotColorMap[event.type] || 'bg-gray-400 ring-gray-100'}`} />
+                      <div className="relative z-10 shrink-0 w-[14px] flex justify-center">
+                        <div className={`h-2.5 w-2.5 rounded-full ring-2 ring-background ${dotColorMap[event.type] || 'bg-gray-400'}`} />
                       </div>
 
-                      {/* Event card */}
-                      <div
-                        className={`flex-1 rounded-2xl border-l-4 shadow-sm cursor-pointer hover:shadow-md transition-all ${badgeColorMap[event.type] || 'border-l-gray-400 bg-gray-50/40'}`}
-                        onClick={() => setDetailEvent(event)}
-                      >
-                        <div className="p-3.5 flex items-start gap-3">
-                          {/* Time */}
-                          <div className="pt-0.5 min-w-[42px]">
-                            <span className="text-xs font-bold text-foreground/70 bg-white/80 px-1.5 py-0.5 rounded-md shadow-sm">
-                              {event.time?.substring(0, 5)}
-                            </span>
-                          </div>
-                          {/* Icon */}
-                          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                            {event.type === 'catatan' ? <ActivityIconFromEmoji emoji={getSmartIcon(event.type, event.detail, ACTIVITY_ICONS[event.type as ActivityType])} size={28} /> : <ActivityIcon type={event.type} size={28} />}
-                          </div>
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-foreground">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</p>
-                            {event.detail && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{event.detail}</p>}
-                            {(event as any).created_by && profileNames[(event as any).created_by] && (
-                              <p className="text-[10px] text-muted-foreground/70 mt-1 flex items-center gap-1">
-                                <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/40" />
-                                {profileNames[(event as any).created_by]}
-                              </p>
-                            )}
-                            {(event as any).photo_url && (
-                              <img src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-xl w-28 h-28 object-cover cursor-pointer shadow-sm" onClick={(e) => { e.stopPropagation(); window.open((event as any).photo_url, '_blank'); }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                            )}
-                            {((event as any).latitude && (event as any).longitude) ? (
-                              <a href={`https://www.google.com/maps?q=${(event as any).latitude},${(event as any).longitude}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
-                                <MapPin className="h-3 w-3" /> Lihat Lokasi
-                              </a>
-                            ) : ping && (
-                              <a href={`https://www.google.com/maps?q=${ping.latitude},${ping.longitude}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
-                                <MapPin className="h-3 w-3" /> Lihat Lokasi
-                              </a>
-                            )}
-                          </div>
-                          {/* Right side */}
-                          <div className="flex flex-col items-end shrink-0 gap-1.5">
-                            {event.amount && (
-                              <div className="text-right bg-white/80 px-2 py-1 rounded-lg shadow-sm">
-                                <p className="text-sm font-bold text-foreground">{event.amount}</p>
-                                <p className="text-[10px] text-muted-foreground">{event.unit}</p>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-0.5">
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/60 hover:text-primary" onClick={(e) => { e.stopPropagation(); setEditEvent(event); }}>
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/60 hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: event.id, daily_log_id: event.daily_log_id, label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})` }); }}>
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
+                      {/* Time */}
+                      <span className="text-[11px] font-semibold text-muted-foreground tabular-nums w-[38px] shrink-0">
+                        {event.time?.substring(0, 5)}
+                      </span>
+
+                      {/* Icon */}
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
+                        {event.type === 'catatan' ? <ActivityIconFromEmoji emoji={getSmartIcon(event.type, event.detail, ACTIVITY_ICONS[event.type as ActivityType])} size={22} /> : <ActivityIcon type={event.type} size={22} />}
+                      </div>
+
+                      {/* Label */}
+                      <span className="flex-1 text-sm font-semibold text-foreground truncate">
+                        {ACTIVITY_LABELS[event.type as ActivityType] || event.type}
+                      </span>
+
+                      {/* Amount (if any) */}
+                      {event.amount ? (
+                        <span className="text-xs font-bold text-muted-foreground tabular-nums shrink-0">
+                          {event.amount} <span className="font-normal text-[10px]">{event.unit}</span>
+                        </span>
+                      ) : null}
+
+                      {/* Action buttons - show on hover */}
+                      <div className="flex items-center gap-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/50 hover:text-primary" onClick={(e) => { e.stopPropagation(); setEditEvent(event); }}>
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/50 hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: event.id, daily_log_id: event.daily_log_id, label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})` }); }}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
                     );
