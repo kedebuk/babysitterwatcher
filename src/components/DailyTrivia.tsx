@@ -66,7 +66,8 @@ export function DailyTrivia({ childName, childId, dob, date }: DailyTriviaProps)
         setHoroscope(data.horoscope);
       }
     } catch (e: any) {
-      toast({ title: 'Error', description: e.message || 'Gagal memuat ramalan', variant: 'destructive' });
+      console.warn('Trivia error:', e.message);
+      setHoroscope('Bintang-bintang sedang istirahat sebentar... coba lagi nanti ya! ✨');
     } finally {
       setLoading(false);
     }

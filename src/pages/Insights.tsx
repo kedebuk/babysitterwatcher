@@ -36,7 +36,8 @@ const Insights = () => {
       if (data?.error) throw new Error(data.error);
       setInsight(data.insight);
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      console.warn('Insight error:', err.message);
+      setInsight('Maaf, insight sedang tidak tersedia saat ini. Silakan coba lagi nanti.');
     } finally {
       setLoading(false);
     }
