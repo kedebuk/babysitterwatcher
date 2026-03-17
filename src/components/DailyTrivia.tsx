@@ -61,9 +61,10 @@ export function DailyTrivia({ childName, childId, dob, date }: DailyTriviaProps)
       });
       if (error) throw error;
       if (data?.error) {
-        toast({ title: 'Oops', description: data.error, variant: 'destructive' });
+        console.warn('Trivia API error:', data.error);
+        setHoroscope('Bintang-bintang sedang istirahat sebentar... coba lagi nanti ya! ✨');
       } else {
-        setHoroscope(data.horoscope);
+        setHoroscope(data.horoscope || 'Bintang-bintang sedang istirahat sebentar... ✨');
       }
     } catch (e: any) {
       console.warn('Trivia error:', e.message);
