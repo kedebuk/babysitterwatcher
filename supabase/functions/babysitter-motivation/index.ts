@@ -152,4 +152,3 @@ Langsung tulis pesannya tanpa pembuka atau penutup tambahan.`;
     );
   }
 });
-# trigger lovable sync
