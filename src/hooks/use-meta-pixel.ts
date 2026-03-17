@@ -59,19 +59,28 @@ export function useMetaPixel() {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase
-        .from('app_settings' as any)
-        .select('key, value')
-        .in('key', ['meta_pixel_id', 'pixel_event_landing', 'pixel_event_signup', 'pixel_event_whatsapp', 'meta_capi_dataset_id', 'meta_capi_access_token']);
-      
-      if (data) {
-        const map: Record<string, string> = {};
-        (data as any[]).forEach((row: any) => { map[row.key] = row.value; });
-        setSettings(map);
-        
-        if (map.meta_pixel_id) {
-          initPixel(map.meta_pixel_id);
+      try {
+        const { data, error } = await supabase
+          .from('app_settings' as any)
+          .select('key, value')
+          .in('key', ['meta_pixel_id', 'pixel_event_landing', 'pixel_event_signup', 'pixel_event_whatsapp', 'meta_capi_dataset_id', 'meta_capi_access_token']);
+
+        if (error) {
+          console.warn('Failed to load Meta Pixel settings:', error.message);
+          return;
         }
+
+        if (data) {
+          const map: Record<string, string> = {};
+          (data as any[]).forEach((row: any) => { map[row.key] = row.value; });
+          setSettings(map);
+
+          if (map.meta_pixel_id) {
+            initPixel(map.meta_pixel_id);
+          }
+        }
+      } catch (err) {
+        console.warn('Meta Pixel initialization error:', err);
       }
     };
     load();

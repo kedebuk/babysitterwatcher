@@ -94,7 +94,8 @@ export function useAssignments(childId?: string) {
       if (error) throw error;
       if (!data || data.length === 0) return [];
       const userIds = [...new Set(data.map(a => a.babysitter_user_id))];
-      const { data: profiles } = await supabase.from('profiles').select('id, name, email, avatar_url').in('id', userIds);
+      const { data: profiles, error: profilesError } = await supabase.from('profiles').select('id, name, email, avatar_url').in('id', userIds);
+      if (profilesError) throw profilesError;
       const profileMap: Record<string, any> = {};
       (profiles || []).forEach(p => { profileMap[p.id] = p; });
       return data.map(a => ({ ...a, profiles: profileMap[a.babysitter_user_id] || null }));
@@ -164,10 +165,11 @@ export function useEvents(dailyLogId?: string) {
   return useQuery({
     queryKey: ['events', dailyLogId],
     queryFn: async () => {
+      if (!dailyLogId) throw new Error('dailyLogId is required');
       const { data, error } = await supabase
         .from('events')
         .select('id, daily_log_id, time, type, detail, amount, unit, status, photo_url, photo_url_after, created_by, latitude, longitude, created_at')
-        .eq('daily_log_id', dailyLogId!)
+        .eq('daily_log_id', dailyLogId)
         .order('time');
       if (error) throw error;
       return data;

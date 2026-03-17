@@ -30,10 +30,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeRole, setActiveRoleState] = useState<UserRole | null>(() => {
-    const stored = sessionStorage.getItem('activeRole');
-    return stored as UserRole | null;
-  });
+  const [activeRole, setActiveRoleState] = useState<UserRole | null>(null);
 
   const setActiveRole = useCallback((role: UserRole | null) => {
     setActiveRoleState(role);
@@ -89,14 +86,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Set up auth state listener first
+    let initialSessionHandled = false;
+
+    const applyRole = (appUser: AppUser | null) => {
+      if (!appUser) return;
+      // Validate stored activeRole against actual user roles
+      const storedRole = sessionStorage.getItem('activeRole') as UserRole | null;
+      if (storedRole && appUser.roles.includes(storedRole)) {
+        setActiveRoleState(storedRole);
+      } else {
+        setActiveRoleState(appUser.role);
+        sessionStorage.removeItem('activeRole');
+      }
+    };
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Skip INITIAL_SESSION — handled by getSession below to avoid race
+      if (event === 'INITIAL_SESSION') return;
+
       if (session?.user) {
-        // Use setTimeout to avoid potential deadlock with Supabase client
         setTimeout(async () => {
           try {
             const appUser = await fetchUserProfile(session.user);
             setUser(appUser);
+            applyRole(appUser);
           } catch (err) {
             console.error('Failed to fetch user profile:', err);
             setUser(null);
@@ -106,16 +120,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }, 0);
       } else {
         setUser(null);
+        setActiveRoleState(null);
+        sessionStorage.removeItem('activeRole');
         setLoading(false);
       }
     });
 
-    // Then check initial session
+    // Check initial session (runs once)
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (initialSessionHandled) return;
+      initialSessionHandled = true;
       try {
         if (session?.user) {
           const appUser = await fetchUserProfile(session.user);
           setUser(appUser);
+          applyRole(appUser);
         }
       } catch (err) {
         console.error('Failed to fetch initial profile:', err);

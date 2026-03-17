@@ -16,6 +16,7 @@ export const EllieLogo: React.FC<EllieLogoProps> = ({ size = 64, className = '' 
     height={size}
     className={className}
     style={{ borderRadius: size * 0.22, objectFit: 'cover' }}
+    onError={(e) => { e.currentTarget.style.display = 'none'; }}
   />
 );
 

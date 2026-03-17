@@ -1,22 +1,22 @@
 project_id = "nlgakvmxxuoocgkfdkxd"
 
 [functions.hard-delete-user]
-verify_jwt = false
+verify_jwt = true
 
 [functions.delete-user]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-invite-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.child-insights]
-verify_jwt = false
+verify_jwt = true
 
 [functions.meta-capi]
-verify_jwt = false
+verify_jwt = true
 
 [functions.restore-user]
-verify_jwt = false
+verify_jwt = true
 
 [functions.recognize-food]
-verify_jwt = false
+verify_jwt = true

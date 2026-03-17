@@ -380,7 +380,7 @@ const Chat = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             {selectedContact?.avatar_url ? (
-              <img src={selectedContact.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+              <img src={selectedContact.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             ) : !selectedContact ? (
               <div className="h-8 w-8 rounded-full bg-primary-foreground/20 flex items-center justify-center text-xs"><Users className="h-4 w-4" /></div>
             ) : (
@@ -474,7 +474,7 @@ const Chat = () => {
                 <Card key={`${c.id}-${c.child_id}-${i}`} className="border-0 shadow-sm cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setSelectedContact(c)}>
                   <CardContent className="p-3 flex items-center gap-3">
                     {c.avatar_url ? (
-                      <img src={c.avatar_url} alt={c.name} className="h-10 w-10 rounded-full object-cover" />
+                      <img src={c.avatar_url} alt={c.name} className="h-10 w-10 rounded-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                     ) : (
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                         {c.name?.charAt(0)?.toUpperCase()}
