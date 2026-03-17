@@ -263,6 +263,7 @@ const AdminChildDetail = () => {
                             alt="Foto"
                             className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer"
                             onClick={() => window.open(event.photo_url, "_blank")}
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
                           />
                         )}
                         {ping && (

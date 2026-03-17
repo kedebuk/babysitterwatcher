@@ -1,7 +1,3 @@
-// Chinese Zodiac (Shio) based on Lunar New Year dates
-// Simplified: uses approximate Lunar New Year dates
-const CHINESE_ZODIAC_YEARS: { year: number; animal: string; emoji: string; element: string }[] = [];
-
 const animals = ['Tikus', 'Kerbau', 'Macan', 'Kelinci', 'Naga', 'Ular', 'Kuda', 'Kambing', 'Monyet', 'Ayam', 'Anjing', 'Babi'];
 const animalEmojis = ['🐀', '🐂', '🐅', '🐇', '🐉', '🐍', '🐴', '🐐', '🐒', '🐓', '🐕', '🐷'];
 const elements = ['Kayu', 'Kayu', 'Api', 'Api', 'Tanah', 'Tanah', 'Logam', 'Logam', 'Air', 'Air'];

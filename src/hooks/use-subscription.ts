@@ -134,6 +134,10 @@ export function calculatePrice(
   cycle: 'monthly' | 'quarterly',
   plans: PricingPlan[]
 ): { perMonth: number; perQuarter: number | null; savings: number } {
+  if (!plans || plans.length === 0) {
+    return { perMonth: 0, perQuarter: null, savings: 0 };
+  }
+
   let total = 0;
   const fullPrice = numChildren * 69000;
 

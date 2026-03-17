@@ -456,7 +456,7 @@ const AdminUsers = () => {
                   <CardContent className="p-3 space-y-2">
                     <div className="flex items-center justify-between gap-3">
                       {profile.avatar_url ? (
-                        <img src={profile.avatar_url} alt={profile.name} className="h-10 w-10 rounded-full object-cover shrink-0" />
+                        <img src={profile.avatar_url} alt={profile.name} className="h-10 w-10 rounded-full object-cover shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-bold shrink-0">
                           {profile.name?.charAt(0)?.toUpperCase() || '?'}
@@ -542,7 +542,7 @@ const AdminUsers = () => {
                   <CardContent className="p-3 space-y-2">
                     <div className="flex items-center justify-between gap-3">
                       {profile.avatar_url ? (
-                        <img src={profile.avatar_url} alt={profile.name} className="h-10 w-10 rounded-full object-cover shrink-0 grayscale" />
+                        <img src={profile.avatar_url} alt={profile.name} className="h-10 w-10 rounded-full object-cover shrink-0 grayscale" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-bold shrink-0">
                           {profile.name?.charAt(0)?.toUpperCase() || '?'}
@@ -584,7 +584,7 @@ const AdminUsers = () => {
             <div className="space-y-4">
               <div className="flex justify-center">
                 {selectedProfile.avatar_url ? (
-                  <img src={selectedProfile.avatar_url} alt={selectedProfile.name} className="h-24 w-24 rounded-full object-cover border-2 border-primary/20" />
+                  <img src={selectedProfile.avatar_url} alt={selectedProfile.name} className="h-24 w-24 rounded-full object-cover border-2 border-primary/20" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 ) : (
                   <div className="flex h-24 w-24 items-center justify-center rounded-full bg-secondary text-3xl font-bold">
                     {selectedProfile.name?.charAt(0)?.toUpperCase() || '?'}

@@ -23,10 +23,11 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
-    const { image_base64, parent_id } = await req.json();
+    const { image_base64 } = await req.json();
     if (!image_base64) throw new Error("No image provided");
 
-    const targetParentId = parent_id || user.id;
+    // Always use authenticated user's ID — never accept parent_id from client
+    const targetParentId = user.id;
 
     // Fetch existing food memory for context
     const { data: memories } = await supabase

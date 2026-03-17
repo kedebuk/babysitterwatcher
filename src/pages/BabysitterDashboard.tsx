@@ -311,7 +311,7 @@ const BabysitterDashboard = () => {
             <div className="flex items-center gap-3">
               {child && (
                 (child as any).photo_url ? (
-                  <img src={(child as any).photo_url} alt={child.name} loading="lazy" decoding="async" width={44} height={44} className="h-11 w-11 rounded-xl object-cover shrink-0" />
+                  <img src={(child as any).photo_url} alt={child.name} loading="lazy" decoding="async" width={44} height={44} className="h-11 w-11 rounded-xl object-cover shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 ) : (
                   <div className="h-11 w-11 rounded-xl bg-secondary flex items-center justify-center text-xl shrink-0">{child.avatar_emoji || '👶'}</div>
                 )
@@ -513,7 +513,7 @@ const BabysitterDashboard = () => {
                             <p className="text-[10px] text-muted-foreground mt-0.5">oleh {profileNames[(event as any).created_by]}</p>
                           )}
                           {(event as any).photo_url && (
-                            <img src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" onClick={(e) => { e.stopPropagation(); window.open((event as any).photo_url, '_blank'); }} />
+                            <img src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" onClick={(e) => { e.stopPropagation(); window.open((event as any).photo_url, '_blank'); }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                           )}
                           {((event as any).latitude && (event as any).longitude) ? (
                             <a
