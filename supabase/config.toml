@@ -30,3 +30,6 @@ verify_jwt = false
 
 [functions.daily-horoscope]
 verify_jwt = false
+
+[functions.babysitter-motivation]
+verify_jwt = false
