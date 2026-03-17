@@ -18,6 +18,7 @@ import { EventDetailDialog } from '@/components/EventDetailDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ChildAvatar } from '@/components/ChildAvatar';
 import { ActivityIcon, ActivityIconFromEmoji, SusuIcon, MpasiIcon, PupIcon, VitaminIcon, SnackIcon, BuahIcon, MandiIcon, InsightIcon, ChartIcon, TimelineIcon, TidurIcon, ActiveSunIcon, SleepingIcon, WasteIcon, PlateIcon, FruitSliceIcon } from '@/components/ActivityIcons';
+import { AvatarSvg } from '@/components/AvatarIcons';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
@@ -394,7 +395,7 @@ const ParentDashboard = () => {
               <Select value={activeChildId} onValueChange={setSelectedChild}>
                 <SelectTrigger className="h-11 bg-card flex-1"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
                 <SelectContent>
-                  {children.map(c => <SelectItem key={c.id} value={c.id}>{c.avatar_emoji} {c.name}</SelectItem>)}
+                  {children.map(c => <SelectItem key={c.id} value={c.id}><span className="inline-flex items-center gap-2"><AvatarSvg emoji={c.avatar_emoji || '👶'} size={20} /> {c.name}</span></SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
