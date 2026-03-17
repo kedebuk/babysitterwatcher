@@ -350,7 +350,7 @@ const BabysitterDashboard = () => {
             <div className="grid grid-cols-3 gap-3">
               <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(210, 65%, 55%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-susu"><SusuIcon size={20} /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-susu"><SusuIcon size={28} /></div>
                   <span className="text-xs text-muted-foreground">Total Susu</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalSusu > 0 ? 'hsl(210, 65%, 55%)' : undefined }}>{totalSusu} <span className="text-sm font-normal text-muted-foreground">ml</span></p>
@@ -363,7 +363,7 @@ const BabysitterDashboard = () => {
               <Card className="border-0 shadow-sm border-l-[3px] cursor-pointer hover:shadow-md transition-shadow" style={{ borderLeftColor: 'hsl(24, 75%, 55%)' }} onClick={() => setExpandedCard(expandedCard === 'makan' ? null : 'makan')}>
                 <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-makan"><MpasiIcon size={20} /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-makan"><MpasiIcon size={28} /></div>
                   <span className="text-xs text-muted-foreground">Total Makan</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalMakan > 0 ? 'hsl(24, 75%, 55%)' : undefined }}>{totalMakan} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
@@ -381,14 +381,14 @@ const BabysitterDashboard = () => {
               </CardContent></Card>
               <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(145, 50%, 48%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-pup"><PupIcon size={20} /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-pup"><PupIcon size={28} /></div>
                   <span className="text-xs text-muted-foreground">BAB</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: pup > 0 ? 'hsl(145, 50%, 48%)' : undefined }}>{pup} <span className="text-sm font-normal text-muted-foreground">/ {pee}x</span></p>
               </CardContent></Card>
               <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(340, 55%, 55%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-vitamin"><VitaminIcon size={20} /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-vitamin"><VitaminIcon size={28} /></div>
                   <span className="text-xs text-muted-foreground">Vitamin</span>
                 </div>
                 <p className={`text-lg font-bold ${vitaminEvent ? '' : 'text-muted-foreground/60'}`} style={vitaminEvent ? { color: 'hsl(340, 55%, 55%)' } : undefined}>{vitaminEvent ? `${vitaminEvent.time?.substring(0, 5)}` : 'Belum'}</p>
@@ -396,7 +396,7 @@ const BabysitterDashboard = () => {
               <Card className="border-0 shadow-sm border-l-[3px] cursor-pointer hover:shadow-md transition-shadow" style={{ borderLeftColor: 'hsl(45, 70%, 50%)' }} onClick={() => setExpandedCard(expandedCard === 'snack' ? null : 'snack')}>
                 <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-snack"><SnackIcon size={20} /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-snack"><SnackIcon size={28} /></div>
                   <span className="text-xs text-muted-foreground">Snack</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalSnack > 0 ? 'hsl(45, 70%, 50%)' : undefined }}>{totalSnack} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
@@ -415,7 +415,7 @@ const BabysitterDashboard = () => {
               <Card className="border-0 shadow-sm border-l-[3px] cursor-pointer hover:shadow-md transition-shadow" style={{ borderLeftColor: 'hsl(120, 55%, 45%)' }} onClick={() => setExpandedCard(expandedCard === 'buah' ? null : 'buah')}>
                 <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-buah"><BuahIcon size={20} /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-buah"><BuahIcon size={28} /></div>
                   <span className="text-xs text-muted-foreground">Buah</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalBuah > 0 ? 'hsl(120, 55%, 45%)' : undefined }}>{totalBuah} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
@@ -436,7 +436,7 @@ const BabysitterDashboard = () => {
             {mandiEvents.length > 0 && (
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-mandi"><MandiIcon size={20} /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-mandi"><MandiIcon size={28} /></div>
                   <span className="text-sm font-semibold">Mandi / Lap Badan</span>
                 </div>
                 <p className="text-sm text-muted-foreground">{mandiEvents.map(e => `${e.time?.substring(0, 5)} ${e.type === 'mandi' ? 'Mandi' : 'Lap badan'}`).join(' • ')}</p>
