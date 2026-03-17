@@ -683,25 +683,31 @@ const ParentChildren = () => {
           <DialogContent>
             <DialogHeader><DialogTitle>Edit Data Anak</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div className="flex items-center gap-4">
-                <div className="relative cursor-pointer" onClick={() => editFileRef.current?.click()}>
-                  {editPhotoPreview ? (
-                    <img src={editPhotoPreview} alt="Foto anak" className="h-20 w-20 rounded-2xl object-cover" />
-                  ) : (
-                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary text-3xl">
+              <div className="space-y-3">
+                <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) handleEditPhotoSelect(e.target.files[0]); e.target.value = ''; }} />
+                <div className="flex items-center gap-4 cursor-pointer group" onClick={() => editFileRef.current?.click()}>
+                  <div className="relative shrink-0">
+                    {editPhotoPreview ? (
+                      <img src={editPhotoPreview} alt="Foto anak" className="h-20 w-20 rounded-2xl object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; if (e.currentTarget.nextElementSibling) (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'; }} />
+                    ) : null}
+                    <div style={{ display: editPhotoPreview ? 'none' : 'flex' }} className="h-20 w-20 items-center justify-center rounded-2xl bg-secondary text-3xl">
                       {editEmoji}
                     </div>
-                  )}
-                  <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full h-6 w-6 flex items-center justify-center">
-                    <Camera className="h-3.5 w-3.5" />
+                    <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full h-7 w-7 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                      <Camera className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Tap untuk ganti foto</span>
+                    <br />
+                    <span className="text-xs">JPG, PNG maks 5MB</span>
                   </div>
                 </div>
-                <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) handleEditPhotoSelect(e.target.files[0]); e.target.value = ''; }} />
-                <div className="flex-1 space-y-1.5">
+                <div className="space-y-1.5">
                   <Label>Emoji Avatar</Label>
                   <div className="flex gap-2">
                     {['👶', '🧒', '👧', '👦', '🍼'].map(e => (
-                      <button key={e} onClick={() => setEditEmoji(e)} className={`text-2xl p-2 rounded-lg ${editEmoji === e ? 'bg-primary/20 ring-2 ring-primary' : 'bg-muted'}`}>{e}</button>
+                      <button key={e} type="button" onClick={() => setEditEmoji(e)} className={`text-2xl p-2 rounded-lg ${editEmoji === e ? 'bg-primary/20 ring-2 ring-primary' : 'bg-muted'}`}>{e}</button>
                     ))}
                   </div>
                 </div>
