@@ -2,11 +2,21 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { crypto } from "https://deno.land/std@0.224.0/crypto/mod.ts";
 import { encodeHex } from "https://deno.land/std@0.224.0/encoding/hex.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const ALLOWED_ORIGINS = [
+  "https://eleanortracker.vercel.app",
+  "https://eleanortracker.online",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:8080",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
+}
 
 async function sha256(value: string): Promise<string> {
   const data = new TextEncoder().encode(value.trim().toLowerCase());
@@ -22,7 +32,7 @@ async function hashUserData(userData: Record<string, any>): Promise<Record<strin
   if (userData.ph) hashed.ph = [await sha256(userData.ph)];
   if (userData.fn) hashed.fn = [await sha256(userData.fn)];
   if (userData.ln) hashed.ln = [await sha256(userData.ln)];
-  
+
   // Pass through non-hashed fields
   if (userData.client_ip_address) hashed.client_ip_address = userData.client_ip_address;
   if (userData.client_user_agent) hashed.client_user_agent = userData.client_user_agent;
@@ -34,6 +44,7 @@ async function hashUserData(userData: Record<string, any>): Promise<Record<strin
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -103,21 +114,24 @@ Deno.serve(async (req) => {
     const body: Record<string, any> = { data: [eventData] };
     if (test_event_code) body.test_event_code = test_event_code;
 
-    // Send to Meta Conversions API
-    const metaUrl = `https://graph.facebook.com/v21.0/${datasetId}/events?access_token=${accessToken}`;
+    // Send to Meta Conversions API — token in header, not URL
+    const metaUrl = `https://graph.facebook.com/v21.0/${datasetId}/events`;
 
     const metaResponse = await fetch(metaUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+      },
       body: JSON.stringify(body),
     });
 
     const metaResult = await metaResponse.json();
 
     if (!metaResponse.ok) {
-      console.error("Meta CAPI error:", JSON.stringify(metaResult));
+      console.error("Meta CAPI error:", metaResponse.status);
       return new Response(
-        JSON.stringify({ error: "Meta CAPI request failed", details: metaResult }),
+        JSON.stringify({ error: "Meta CAPI request failed" }),
         { status: metaResponse.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

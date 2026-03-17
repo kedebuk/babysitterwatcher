@@ -1,22 +1,32 @@
 project_id = "nlgakvmxxuoocgkfdkxd"
 
+# All functions handle auth manually (admin role checks, RLS, getUser).
+# verify_jwt = false is required because functions need to handle CORS
+# preflight and custom auth patterns (admin checks, service role ops).
+
 [functions.hard-delete-user]
-verify_jwt = true
+verify_jwt = false
 
 [functions.delete-user]
-verify_jwt = true
+verify_jwt = false
 
 [functions.send-invite-email]
-verify_jwt = true
+verify_jwt = false
 
 [functions.child-insights]
-verify_jwt = true
+verify_jwt = false
 
 [functions.meta-capi]
-verify_jwt = true
+verify_jwt = false
 
 [functions.restore-user]
-verify_jwt = true
+verify_jwt = false
 
 [functions.recognize-food]
-verify_jwt = true
+verify_jwt = false
+
+[functions.revise-event-detail]
+verify_jwt = false
+
+[functions.daily-horoscope]
+verify_jwt = false
