@@ -17,6 +17,7 @@ import { EditEventDialog } from '@/components/EditEventDialog';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ChildAvatar } from '@/components/ChildAvatar';
+import { ActivityIcon, ActivityIconFromEmoji, SusuIcon, MpasiIcon, PupIcon, VitaminIcon, SnackIcon, BuahIcon, MandiIcon, InsightIcon, ChartIcon, TimelineIcon, TidurIcon, ActiveSunIcon, SleepingIcon, WasteIcon, PlateIcon, FruitSliceIcon } from '@/components/ActivityIcons';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
@@ -408,7 +409,7 @@ const ParentDashboard = () => {
                   ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
                   : 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
               }`}>
-                <span className="text-base">{isSleeping ? '😴' : '🌞'}</span>
+                <span className="text-base">{isSleeping ? <SleepingIcon size={20} /> : <ActiveSunIcon size={20} />}</span>
                 <span>{isSleeping ? 'Sedang Tidur' : 'Sedang Aktif'}</span>
                 <span className="text-xs opacity-60 ml-auto">
                   {(lastSleepEvent as any)?._carryOver ? 'semalam ' : 'sejak '}{lastSleepEvent.time?.substring(0, 5)}{!((lastSleepEvent as any)?._carryOver) && calcElapsed(lastSleepEvent.time || '') ? ` · ${calcElapsed(lastSleepEvent.time || '')}` : ''}
@@ -425,9 +426,9 @@ const ParentDashboard = () => {
               <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-base">🧠</div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10"><InsightIcon size={22} /></div>
                     <span className="text-sm font-bold text-foreground">Insight Harian {child?.name?.split(' ')[0]}</span>
-                    <span className="text-xs">✨📊</span>
+                    <span className="text-xs flex items-center gap-0.5"><ChartIcon size={14} /></span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-[10px] text-primary/60">tap baca</span>
@@ -441,14 +442,14 @@ const ParentDashboard = () => {
             <div className="grid grid-cols-3 gap-3">
               <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(210, 65%, 55%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-susu text-sm">🍼</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-susu"><SusuIcon size={20} /></div>
                   <span className="text-xs text-muted-foreground">Susu Diminum</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalSusu > 0 ? 'hsl(210, 65%, 55%)' : undefined }}>{totalSusu} <span className="text-sm font-normal text-muted-foreground">ml</span></p>
                 <TrendBadge current={totalSusu} previous={prevTotalSusu} />
                 {totalSisaSusu > 0 && (
                   <div className="mt-1.5 flex items-center gap-1 bg-amber-50 dark:bg-amber-950/30 rounded-md px-1.5 py-1">
-                    <span className="text-[10px]">🗑️</span>
+                    <span className="text-[10px]"><WasteIcon size={12} /></span>
                     <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">sisa {totalSisaSusu}ml</span>
                     <span className="text-[10px] text-muted-foreground">· dari {totalSusu + totalSisaSusu}ml</span>
                   </div>
@@ -462,7 +463,7 @@ const ParentDashboard = () => {
                <Card className="border-0 shadow-sm border-l-[3px] cursor-pointer hover:shadow-md transition-shadow" style={{ borderLeftColor: 'hsl(24, 75%, 55%)' }} onClick={() => setExpandedCard(expandedCard === 'makan' ? null : 'makan')}>
                 <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-makan text-sm">🥣</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-makan"><MpasiIcon size={20} /></div>
                   <span className="text-xs text-muted-foreground">Total Makan</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalMakan > 0 ? 'hsl(24, 75%, 55%)' : undefined }}>{totalMakan} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
@@ -473,7 +474,7 @@ const ParentDashboard = () => {
                 {expandedCard === 'makan' && mpasiEvents.length > 0 && (
                   <div className="mt-2 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
                     {mpasiEvents.map((e, i) => (
-                      <p key={i} className="text-xs text-muted-foreground">🍽️ {e.detail || 'MPASI'}{e.amount ? ` — ${e.amount}${e.unit || 'g'}` : ''}</p>
+                      <p key={i} className="text-xs text-muted-foreground flex items-center gap-1"><PlateIcon size={14} /> {e.detail || 'MPASI'}{e.amount ? ` — ${e.amount}${e.unit || 'g'}` : ''}</p>
                     ))}
                     <p className="text-[10px] text-primary/60 mt-1">tap untuk tutup ▴</p>
                   </div>
@@ -481,7 +482,7 @@ const ParentDashboard = () => {
               </CardContent></Card>
               <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(145, 50%, 48%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-pup text-sm">💩</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-pup"><PupIcon size={20} /></div>
                   <span className="text-xs text-muted-foreground">BAB</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: pup > 0 ? 'hsl(145, 50%, 48%)' : undefined }}>{pup} <span className="text-sm font-normal text-muted-foreground">/ {pee}x</span></p>
@@ -489,7 +490,7 @@ const ParentDashboard = () => {
               </CardContent></Card>
               <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(340, 55%, 55%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-vitamin text-sm">💊</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-vitamin"><VitaminIcon size={20} /></div>
                   <span className="text-xs text-muted-foreground">Vitamin</span>
                 </div>
                 <p className={`text-lg font-bold ${vitaminEvent ? '' : 'text-muted-foreground/60'}`} style={vitaminEvent ? { color: 'hsl(340, 55%, 55%)' } : undefined}>{vitaminEvent ? `${vitaminEvent.time?.substring(0, 5)}` : 'Belum'}</p>
@@ -497,7 +498,7 @@ const ParentDashboard = () => {
                <Card className="border-0 shadow-sm border-l-[3px] cursor-pointer hover:shadow-md transition-shadow" style={{ borderLeftColor: 'hsl(45, 70%, 50%)' }} onClick={() => setExpandedCard(expandedCard === 'snack' ? null : 'snack')}>
                 <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-snack text-sm">🍪</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-snack"><SnackIcon size={20} /></div>
                   <span className="text-xs text-muted-foreground">Snack</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalSnack > 0 ? 'hsl(45, 70%, 50%)' : undefined }}>{totalSnack} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
@@ -507,7 +508,7 @@ const ParentDashboard = () => {
                 {expandedCard === 'snack' && snackEvents.length > 0 && (
                   <div className="mt-2 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
                     {snackEvents.map((e, i) => (
-                      <p key={i} className="text-xs text-muted-foreground">🍪 {e.detail || 'Snack'}{e.amount ? ` — ${e.amount}${e.unit || 'g'}` : ''}</p>
+                      <p key={i} className="text-xs text-muted-foreground flex items-center gap-1"><SnackIcon size={14} /> {e.detail || 'Snack'}{e.amount ? ` — ${e.amount}${e.unit || 'g'}` : ''}</p>
                     ))}
                     <p className="text-[10px] text-primary/60 mt-1">tap untuk tutup ▴</p>
                   </div>
@@ -516,7 +517,7 @@ const ParentDashboard = () => {
                <Card className="border-0 shadow-sm border-l-[3px] cursor-pointer hover:shadow-md transition-shadow" style={{ borderLeftColor: 'hsl(120, 55%, 45%)' }} onClick={() => setExpandedCard(expandedCard === 'buah' ? null : 'buah')}>
                 <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-buah text-sm">🍎</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-buah"><BuahIcon size={20} /></div>
                   <span className="text-xs text-muted-foreground">Buah</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalBuah > 0 ? 'hsl(120, 55%, 45%)' : undefined }}>{totalBuah} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
@@ -526,7 +527,7 @@ const ParentDashboard = () => {
                 {expandedCard === 'buah' && buahEvents.length > 0 && (
                   <div className="mt-2 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
                     {buahEvents.map((e, i) => (
-                      <p key={i} className="text-xs text-muted-foreground">🍉 {e.detail || 'Buah'}{e.amount ? ` — ${e.amount}${e.unit || 'g'}` : ''}</p>
+                      <p key={i} className="text-xs text-muted-foreground flex items-center gap-1"><FruitSliceIcon size={14} /> {e.detail || 'Buah'}{e.amount ? ` — ${e.amount}${e.unit || 'g'}` : ''}</p>
                     ))}
                     <p className="text-[10px] text-primary/60 mt-1">tap untuk tutup ▴</p>
                   </div>
@@ -537,7 +538,7 @@ const ParentDashboard = () => {
             {mandiEvents.length > 0 && (
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-mandi text-sm">🛁</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-mandi"><MandiIcon size={20} /></div>
                   <span className="text-sm font-semibold">Mandi / Lap Badan</span>
                 </div>
                 <p className="text-sm text-muted-foreground">{mandiEvents.map(e => `${e.time?.substring(0, 5)} ${e.type === 'mandi' ? 'Mandi' : 'Lap badan'}`).join(' • ')}</p>
@@ -546,7 +547,7 @@ const ParentDashboard = () => {
 
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-1 px-3 pt-3">
-                <CardTitle className="text-sm font-semibold">📈 Grafik 7 Hari Terakhir</CardTitle>
+                <CardTitle className="text-sm font-semibold flex items-center gap-1.5"><ChartIcon size={18} /> Grafik 7 Hari Terakhir</CardTitle>
                 <p className="text-[10px] text-muted-foreground">Susu (ml) · Makan (gram) · BAB</p>
               </CardHeader>
               <CardContent className="p-2">
@@ -567,7 +568,7 @@ const ParentDashboard = () => {
 
             <Card className="border-0 shadow-sm bg-gradient-to-br from-indigo-50/60 to-purple-50/40 dark:from-indigo-950/30 dark:to-purple-950/20">
               <CardHeader className="pb-1 px-3 pt-3">
-                <CardTitle className="text-sm font-semibold">😴 Pola Tidur 7 Hari</CardTitle>
+                <CardTitle className="text-sm font-semibold flex items-center gap-1.5"><TidurIcon size={18} /> Pola Tidur 7 Hari</CardTitle>
                 <p className="text-[10px] text-muted-foreground">Durasi dalam jam · Malam (≥18:00 atau &lt;10:00) · Siang (10:00–17:59)</p>
               </CardHeader>
               <CardContent className="p-2">
@@ -590,7 +591,7 @@ const ParentDashboard = () => {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h2 className="font-bold text-sm">📋 Timeline Harian</h2>
+                <h2 className="font-bold text-sm flex items-center gap-1.5"><TimelineIcon size={18} /> Timeline Harian</h2>
                 <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleCopyWhatsApp}>
                   <Copy className="h-3.5 w-3.5 mr-1" /> Copy WhatsApp
                 </Button>
@@ -609,7 +610,7 @@ const ParentDashboard = () => {
                       onClick={() => setTimelineFilter(timelineFilter === type ? null : type)}
                       className={cn('shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors', timelineFilter === type ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80')}
                     >
-                      {ACTIVITY_ICONS[type as ActivityType]} {ACTIVITY_LABELS[type as ActivityType] || type}
+                      <span className="inline-flex items-center gap-1"><ActivityIcon type={type} size={14} /> {ACTIVITY_LABELS[type as ActivityType] || type}</span>
                     </button>
                   ))}
                 </div>
@@ -624,8 +625,8 @@ const ParentDashboard = () => {
                     <Card key={event.id} className="border-0 shadow-sm animate-fade-in cursor-pointer hover:shadow-md transition-shadow" onClick={() => setDetailEvent(event)}>
                       <CardContent className="p-3 flex items-start gap-3">
                         <div className="text-center min-w-[44px]"><p className="text-xs font-bold text-muted-foreground">{event.time?.substring(0, 5)}</p></div>
-                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                          {event.type === 'catatan' ? getSmartIcon(event.type, event.detail, ACTIVITY_ICONS[event.type as ActivityType]) : (ACTIVITY_ICONS[event.type as ActivityType] || '📝')}
+                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
+                          {event.type === 'catatan' ? <ActivityIconFromEmoji emoji={getSmartIcon(event.type, event.detail, ACTIVITY_ICONS[event.type as ActivityType])} size={22} /> : <ActivityIcon type={event.type} size={22} />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</p>

@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PendingInvites from '@/components/PendingInvites';
+import { ActivityIcon, ActivityIconFromEmoji, SusuIcon, MpasiIcon, PupIcon, VitaminIcon, MandiIcon, ChartIcon, TimelineIcon, TidurIcon, ActiveSunIcon, SleepingIcon } from '@/components/ActivityIcons';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
 import { EditEventDialog } from '@/components/EditEventDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -398,28 +399,28 @@ const ViewerDashboard = () => {
             <div className="grid grid-cols-2 gap-3">
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-susu text-sm">🍼</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-susu"><SusuIcon size={20} /></div>
                   <span className="text-xs text-muted-foreground">Total Susu</span>
                 </div>
                 <p className="text-2xl font-bold">{totalSusu} <span className="text-sm font-normal text-muted-foreground">ml</span></p>
               </CardContent></Card>
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-makan text-sm">🥣</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-makan"><MpasiIcon size={20} /></div>
                   <span className="text-xs text-muted-foreground">Total Makan</span>
                 </div>
                 <p className="text-2xl font-bold">{totalMakan}</p>
               </CardContent></Card>
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-pup text-sm">💩</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-pup"><PupIcon size={20} /></div>
                   <span className="text-xs text-muted-foreground">BAB</span>
                 </div>
                 <p className="text-2xl font-bold">{pup} <span className="text-sm font-normal text-muted-foreground">/ {pee}x</span></p>
               </CardContent></Card>
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-vitamin text-sm">💊</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-vitamin"><VitaminIcon size={20} /></div>
                   <span className="text-xs text-muted-foreground">Vitamin</span>
                 </div>
                 <p className="text-lg font-bold">{vitaminEvent ? `✅ ${vitaminEvent.time?.substring(0, 5)}` : '❌ Belum'}</p>
@@ -429,7 +430,7 @@ const ViewerDashboard = () => {
             {mandiEvents.length > 0 && (
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-mandi text-sm">🛁</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg activity-badge-mandi"><MandiIcon size={20} /></div>
                   <span className="text-sm font-semibold">Mandi / Lap Badan</span>
                 </div>
                 <p className="text-sm text-muted-foreground">{mandiEvents.map(e => `${e.time?.substring(0, 5)} ${e.type === 'mandi' ? 'Mandi' : 'Lap badan'}`).join(' • ')}</p>
@@ -437,7 +438,7 @@ const ViewerDashboard = () => {
             )}
 
             <Card className="border-0 shadow-sm">
-              <CardHeader className="pb-2 px-3 pt-3"><CardTitle className="text-sm font-semibold">📈 Grafik 7 Hari Terakhir</CardTitle></CardHeader>
+              <CardHeader className="pb-2 px-3 pt-3"><CardTitle className="text-sm font-semibold flex items-center gap-1.5"><ChartIcon size={18} /> Grafik 7 Hari Terakhir</CardTitle></CardHeader>
               <CardContent className="p-2">
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -456,7 +457,7 @@ const ViewerDashboard = () => {
 
             {/* Timeline with edit/delete */}
             <div>
-              <h2 className="font-bold text-sm mb-2">📋 Timeline Harian</h2>
+              <h2 className="font-bold text-sm mb-2 flex items-center gap-1.5"><TimelineIcon size={18} /> Timeline Harian</h2>
               {events.length === 0 ? (
                 <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">Belum ada data untuk tanggal ini</CardContent></Card>
               ) : (
@@ -466,8 +467,8 @@ const ViewerDashboard = () => {
                       <CardContent className="p-2.5">
                         <div className="flex items-center gap-2.5">
                           <span className="text-xs font-bold text-muted-foreground min-w-[36px]">{event.time?.substring(0, 5)}</span>
-                          <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                            {event.type === 'catatan' ? getSmartIcon(event.type, event.detail) : (ACTIVITY_ICONS[event.type as ActivityType] || '📝')}
+                          <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
+                            {event.type === 'catatan' ? <ActivityIconFromEmoji emoji={getSmartIcon(event.type, event.detail)} size={22} /> : <ActivityIcon type={event.type} size={22} />}
                           </span>
                           <span className="text-xs flex-1 truncate">{event.detail || ACTIVITY_LABELS[event.type as ActivityType] || event.type}</span>
                           {event.amount && <span className="text-xs font-bold">{event.amount} {event.unit}</span>}
