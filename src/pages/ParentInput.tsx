@@ -18,6 +18,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { EditEventDialog } from '@/components/EditEventDialog';
 import { EventDetailDialog } from '@/components/EventDetailDialog';
 import { FoodScanButton } from '@/components/FoodScanButton';
+import { AvatarSvg } from '@/components/AvatarIcons';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'snack', 'buah', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
@@ -234,7 +235,7 @@ const ParentInput = () => {
               <Select value={activeChildId} onValueChange={setSelectedChild}>
                 <SelectTrigger className="flex-1 h-11 bg-card"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
                 <SelectContent>
-                  {children.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.avatar_emoji} {c.name}</SelectItem>)}
+                  {children.map((c: any) => <SelectItem key={c.id} value={c.id}><span className="inline-flex items-center gap-2"><AvatarSvg emoji={c.avatar_emoji || '👶'} size={20} /> {c.name}</span></SelectItem>)}
                 </SelectContent>
               </Select>
               <div className="h-11 px-3 flex items-center bg-card rounded-lg text-sm font-medium border">

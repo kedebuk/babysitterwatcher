@@ -23,6 +23,7 @@ import { EventDetailDialog } from '@/components/EventDetailDialog';
 import { EditEventDialog } from '@/components/EditEventDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AvatarSvg } from '@/components/AvatarIcons';
 
 const ACTIVITY_OPTIONS: ActivityType[] = ['susu', 'mpasi', 'snack', 'buah', 'tidur', 'bangun', 'pup', 'pee', 'mandi', 'vitamin', 'lap_badan', 'catatan'];
 
@@ -385,7 +386,7 @@ const ViewerDashboard = () => {
               <Select value={activeChildId} onValueChange={setSelectedChild}>
                 <SelectTrigger className="h-11 bg-card flex-1"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
                 <SelectContent>
-                  {children.map(c => <SelectItem key={c.id} value={c.id}>{c.avatar_emoji} {c.name}</SelectItem>)}
+                  {children.map(c => <SelectItem key={c.id} value={c.id}><span className="inline-flex items-center gap-2"><AvatarSvg emoji={c.avatar_emoji || '👶'} size={20} /> {c.name}</span></SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

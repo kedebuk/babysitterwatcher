@@ -22,6 +22,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { BabysitterMotivation } from '@/components/BabysitterMotivation';
 import { DailyTrivia } from '@/components/DailyTrivia';
 import { ActivityIcon, ActivityIconFromEmoji, SusuIcon, MpasiIcon, PupIcon, VitaminIcon, SnackIcon, BuahIcon, MandiIcon, InsightIcon, ChartIcon, TimelineIcon, TidurIcon, ActiveSunIcon, SleepingIcon, WasteIcon, PlateIcon, FruitSliceIcon } from '@/components/ActivityIcons';
+import { AvatarSvg } from '@/components/AvatarIcons';
 
 function getTotalByType(events: any[], type: string): number {
   return events.filter(e => e.type === type && e.amount).reduce((s, e) => s + Number(e.amount || 0), 0);
@@ -320,7 +321,7 @@ const BabysitterDashboard = () => {
               <Select value={activeChildId} onValueChange={setSelectedChild}>
                 <SelectTrigger className="h-11 bg-card flex-1"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
                 <SelectContent>
-                  {assignedChildren.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.avatar_emoji} {c.name}</SelectItem>)}
+                  {assignedChildren.map((c: any) => <SelectItem key={c.id} value={c.id}><span className="inline-flex items-center gap-2"><AvatarSvg emoji={c.avatar_emoji || '👶'} size={20} /> {c.name}</span></SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

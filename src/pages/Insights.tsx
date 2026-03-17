@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
+import { AvatarSvg } from '@/components/AvatarIcons';
 
 const Insights = () => {
   const { user } = useAuth();
@@ -95,7 +96,7 @@ const Insights = () => {
         <Select value={activeChildId} onValueChange={setSelectedChild}>
           <SelectTrigger className="h-11 bg-card"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
           <SelectContent>
-            {children.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.avatar_emoji || '👶'} {c.name}</SelectItem>)}
+            {children.map((c: any) => <SelectItem key={c.id} value={c.id}><span className="inline-flex items-center gap-2"><AvatarSvg emoji={c.avatar_emoji || '👶'} size={20} /> {c.name}</span></SelectItem>)}
           </SelectContent>
         </Select>
 

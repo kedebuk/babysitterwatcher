@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { format, subDays, differenceInDays } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AvatarSvg } from '@/components/AvatarIcons';
 
 const EMOJI_OPTIONS = ['📦', '🍼', '🧷', '💊', '🧴', '🧻', '🧸', '👶', '🍪', '🥛'];
 const UNIT_OPTIONS = ['pcs', 'ml', 'sachet', 'botol', 'pack', 'dosis', 'lembar', '%'];
@@ -405,7 +406,7 @@ const InventoryPage = () => {
             <SelectTrigger className="h-11 bg-card"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
             <SelectContent>
               {childList.map((c: any) => (
-                <SelectItem key={c.id} value={c.id}>{c.avatar_emoji || '👶'} {c.name}</SelectItem>
+                <SelectItem key={c.id} value={c.id}><span className="inline-flex items-center gap-2"><AvatarSvg emoji={c.avatar_emoji || '👶'} size={20} /> {c.name}</span></SelectItem>
               ))}
             </SelectContent>
           </Select>

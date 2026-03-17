@@ -14,6 +14,7 @@ import { id as idLocale } from 'date-fns/locale';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { AvatarSvg } from '@/components/AvatarIcons';
 
 // Fix leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -263,7 +264,7 @@ const LocationPage = () => {
         <Select value={activeChildId} onValueChange={setSelectedChild}>
           <SelectTrigger className="h-11 bg-card"><SelectValue placeholder="Pilih anak" /></SelectTrigger>
           <SelectContent>
-            {assignedChildren.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.avatar_emoji || '👶'} {c.name}</SelectItem>)}
+            {assignedChildren.map((c: any) => <SelectItem key={c.id} value={c.id}><span className="inline-flex items-center gap-2"><AvatarSvg emoji={c.avatar_emoji || '👶'} size={20} /> {c.name}</span></SelectItem>)}
           </SelectContent>
         </Select>
 
