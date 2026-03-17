@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { AvatarSvg } from '@/components/AvatarIcons';
 
 function extractPath(url: string, bucket: string): string | null {
   const marker = `/object/public/${bucket}/`;
@@ -40,7 +41,7 @@ export function ChildAvatar({ photoUrl, name, emoji, className = 'h-11 w-11 roun
   if (showFallback) {
     return (
       <div className={fallbackClassName || className?.replace('object-cover', '').trim() + ' bg-secondary flex items-center justify-center'}>
-        {emoji || '👶'}
+        <AvatarSvg emoji={emoji || '👶'} size={24} />
       </div>
     );
   }

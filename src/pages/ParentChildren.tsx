@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useChildren, useCreateChild } from '@/hooks/use-data';
 import { ChildAvatar } from '@/components/ChildAvatar';
 import { useSubscription } from '@/hooks/use-subscription';
@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getChineseZodiac, getWesternZodiac } from '@/lib/zodiac';
+import { AvatarSvg, AVATAR_KEYS, AVATAR_LABELS } from '@/components/AvatarIcons';
 
 const ParentChildren = () => {
   const { user, logout } = useAuth();
@@ -52,6 +53,7 @@ const ParentChildren = () => {
   const [editEmoji, setEditEmoji] = useState('👶');
   const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
   const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
+  const [editPhotoError, setEditPhotoError] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
 
   // Delete child dialog
@@ -62,7 +64,7 @@ const ParentChildren = () => {
 
   // Show archived toggle
   const [showArchived, setShowArchived] = useState(false);
-  const editFileRef = useRef<HTMLInputElement>(null);
+  const editPhotoId = 'edit-child-photo-input';
 
   // Get assignments for all children
   const { data: allAssignments = [] } = useQuery({
@@ -304,6 +306,7 @@ const ParentChildren = () => {
     setEditNotes(child.notes || '');
     setEditEmoji(child.avatar_emoji || '👶');
     setEditPhotoPreview((child as any).photo_url || null);
+    setEditPhotoError(false);
     setEditPhotoFile(null);
     setEditOpen(true);
   };
@@ -312,6 +315,7 @@ const ParentChildren = () => {
     if (editPhotoPreview && !editPhotoPreview.startsWith('http')) URL.revokeObjectURL(editPhotoPreview);
     setEditPhotoFile(file);
     setEditPhotoPreview(URL.createObjectURL(file));
+    setEditPhotoError(false);
   };
   const handleEditSave = async () => {
     if (!editChild || !editName.trim() || !user) return;
@@ -605,10 +609,12 @@ const ParentChildren = () => {
             <DialogHeader><DialogTitle>Tambah Anak Baru</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label>Emoji Avatar</Label>
+                <Label>Avatar</Label>
                 <div className="flex gap-2">
-                  {['👶', '🧒', '👧', '👦', '🍼'].map(e => (
-                    <button key={e} onClick={() => setNewEmoji(e)} className={`text-2xl p-2 rounded-lg ${newEmoji === e ? 'bg-primary/20 ring-2 ring-primary' : 'bg-muted'}`}>{e}</button>
+                  {AVATAR_KEYS.map(key => (
+                    <button key={key} type="button" onClick={() => setNewEmoji(key)} className={`p-2 rounded-lg transition-all ${newEmoji === key ? 'bg-primary/20 ring-2 ring-primary scale-110' : 'bg-muted hover:bg-muted/80'}`} title={AVATAR_LABELS[key]}>
+                      <AvatarSvg emoji={key} size={28} />
+                    </button>
                   ))}
                 </div>
               </div>
@@ -684,15 +690,16 @@ const ParentChildren = () => {
             <DialogHeader><DialogTitle>Edit Data Anak</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div className="space-y-3">
-                <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) handleEditPhotoSelect(e.target.files[0]); e.target.value = ''; }} />
-                <div className="flex items-center gap-4 cursor-pointer group" onClick={() => editFileRef.current?.click()}>
+                <input id={editPhotoId} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) handleEditPhotoSelect(e.target.files[0]); e.target.value = ''; }} />
+                <label htmlFor={editPhotoId} className="flex items-center gap-4 cursor-pointer group">
                   <div className="relative shrink-0">
-                    {editPhotoPreview ? (
-                      <img src={editPhotoPreview} alt="Foto anak" className="h-20 w-20 rounded-2xl object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; if (e.currentTarget.nextElementSibling) (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'; }} />
-                    ) : null}
-                    <div style={{ display: editPhotoPreview ? 'none' : 'flex' }} className="h-20 w-20 items-center justify-center rounded-2xl bg-secondary text-3xl">
-                      {editEmoji}
-                    </div>
+                    {editPhotoPreview && !editPhotoError ? (
+                      <img src={editPhotoPreview} alt="Foto anak" className="h-20 w-20 rounded-2xl object-cover" onError={() => setEditPhotoError(true)} />
+                    ) : (
+                      <div className="h-20 w-20 flex items-center justify-center rounded-2xl bg-secondary">
+                        <AvatarSvg emoji={editEmoji} size={48} />
+                      </div>
+                    )}
                     <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full h-7 w-7 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                       <Camera className="h-4 w-4" />
                     </div>
@@ -702,12 +709,14 @@ const ParentChildren = () => {
                     <br />
                     <span className="text-xs">JPG, PNG maks 5MB</span>
                   </div>
-                </div>
+                </label>
                 <div className="space-y-1.5">
-                  <Label>Emoji Avatar</Label>
+                  <Label>Avatar</Label>
                   <div className="flex gap-2">
-                    {['👶', '🧒', '👧', '👦', '🍼'].map(e => (
-                      <button key={e} type="button" onClick={() => setEditEmoji(e)} className={`text-2xl p-2 rounded-lg ${editEmoji === e ? 'bg-primary/20 ring-2 ring-primary' : 'bg-muted'}`}>{e}</button>
+                    {AVATAR_KEYS.map(key => (
+                      <button key={key} type="button" onClick={() => setEditEmoji(key)} className={`p-2 rounded-lg transition-all ${editEmoji === key ? 'bg-primary/20 ring-2 ring-primary scale-110' : 'bg-muted hover:bg-muted/80'}`} title={AVATAR_LABELS[key]}>
+                        <AvatarSvg emoji={key} size={28} />
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -746,8 +755,8 @@ const ParentChildren = () => {
               <Card key={child.id} className="border-0 shadow-sm opacity-60">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-2xl">
-                      {child.avatar_emoji || '👶'}
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
+                      <AvatarSvg emoji={child.avatar_emoji || '👶'} size={36} />
                     </div>
                     <div className="flex-1">
                       <h3 className="font-bold text-base">{child.name}</h3>
