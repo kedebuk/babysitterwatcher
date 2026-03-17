@@ -1,4 +1,4 @@
-project_id = "nlgakvmxxuoocgkfdkxd"
+project_id = "jzfygztjmgtypijwwtwp"
 
 # All functions handle auth manually (admin role checks, RLS, getUser).
 # verify_jwt = false is required because functions need to handle CORS
