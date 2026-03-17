@@ -587,6 +587,52 @@ const ParentDashboard = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
+              {/* Sleep averages & status */}
+              {(() => {
+                const daysWithMalam = chartData.filter(d => d.tidurMalam > 0);
+                const daysWithSiang = chartData.filter(d => d.tidurSiang > 0);
+                const avgMalam = daysWithMalam.length > 0 ? daysWithMalam.reduce((s, d) => s + d.tidurMalam, 0) / daysWithMalam.length : 0;
+                const avgSiang = daysWithSiang.length > 0 ? daysWithSiang.reduce((s, d) => s + d.tidurSiang, 0) / daysWithSiang.length : 0;
+                const avgTotal = avgMalam + avgSiang;
+                // WHO & AAP guidelines: infant 4-12mo needs 12-16h, toddler 1-2y needs 11-14h
+                const malamOk = avgMalam >= 9 && avgMalam <= 12;
+                const siangOk = avgSiang >= 1 && avgSiang <= 3.5;
+                const totalOk = avgTotal >= 11 && avgTotal <= 16;
+                return (daysWithMalam.length > 0 || daysWithSiang.length > 0) ? (
+                  <div className="px-4 pb-3 pt-1 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Rata-rata Malam</span>
+                      <span className="font-semibold flex items-center gap-1.5">
+                        {avgMalam.toFixed(1)} jam
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${malamOk ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                          {malamOk ? '✓ Normal' : '⚠ Kurang'}
+                        </span>
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Rata-rata Siang</span>
+                      <span className="font-semibold flex items-center gap-1.5">
+                        {avgSiang.toFixed(1)} jam
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${siangOk ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                          {siangOk ? '✓ Normal' : '⚠ Kurang'}
+                        </span>
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs border-t pt-1.5">
+                      <span className="text-muted-foreground font-medium">Total rata-rata</span>
+                      <span className="font-bold flex items-center gap-1.5">
+                        {avgTotal.toFixed(1)} jam
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${totalOk ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                          {totalOk ? '✓ Normal' : '⚠ Perlu perhatian'}
+                        </span>
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-muted-foreground/70 pt-0.5">
+                      Standar WHO & AAP: bayi 4–12 bln butuh 12–16 jam, balita 1–2 thn butuh 11–14 jam total tidur/hari
+                    </p>
+                  </div>
+                ) : null;
+              })()}
             </Card>
 
             <div>
