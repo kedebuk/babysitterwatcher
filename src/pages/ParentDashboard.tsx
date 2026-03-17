@@ -442,7 +442,7 @@ const ParentDashboard = () => {
             <div className="grid grid-cols-3 gap-3">
               <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(210, 65%, 55%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-susu"><SusuIcon size={28} /></div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl activity-badge-susu"><SusuIcon size={32} /></div>
                   <span className="text-xs text-muted-foreground">Susu Diminum</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalSusu > 0 ? 'hsl(210, 65%, 55%)' : undefined }}>{totalSusu} <span className="text-sm font-normal text-muted-foreground">ml</span></p>
@@ -463,7 +463,7 @@ const ParentDashboard = () => {
                <Card className="border-0 shadow-sm border-l-[3px] cursor-pointer hover:shadow-md transition-shadow" style={{ borderLeftColor: 'hsl(24, 75%, 55%)' }} onClick={() => setExpandedCard(expandedCard === 'makan' ? null : 'makan')}>
                 <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-makan"><MpasiIcon size={28} /></div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl activity-badge-makan"><MpasiIcon size={32} /></div>
                   <span className="text-xs text-muted-foreground">Total Makan</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalMakan > 0 ? 'hsl(24, 75%, 55%)' : undefined }}>{totalMakan} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
@@ -482,7 +482,7 @@ const ParentDashboard = () => {
               </CardContent></Card>
               <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(145, 50%, 48%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-pup"><PupIcon size={28} /></div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl activity-badge-pup"><PupIcon size={32} /></div>
                   <span className="text-xs text-muted-foreground">BAB</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: pup > 0 ? 'hsl(145, 50%, 48%)' : undefined }}>{pup} <span className="text-sm font-normal text-muted-foreground">/ {pee}x</span></p>
@@ -490,7 +490,7 @@ const ParentDashboard = () => {
               </CardContent></Card>
               <Card className="border-0 shadow-sm border-l-[3px]" style={{ borderLeftColor: 'hsl(340, 55%, 55%)' }}><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-vitamin"><VitaminIcon size={28} /></div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl activity-badge-vitamin"><VitaminIcon size={32} /></div>
                   <span className="text-xs text-muted-foreground">Vitamin</span>
                 </div>
                 <p className={`text-lg font-bold ${vitaminEvent ? '' : 'text-muted-foreground/60'}`} style={vitaminEvent ? { color: 'hsl(340, 55%, 55%)' } : undefined}>{vitaminEvent ? `${vitaminEvent.time?.substring(0, 5)}` : 'Belum'}</p>
@@ -498,7 +498,7 @@ const ParentDashboard = () => {
                <Card className="border-0 shadow-sm border-l-[3px] cursor-pointer hover:shadow-md transition-shadow" style={{ borderLeftColor: 'hsl(45, 70%, 50%)' }} onClick={() => setExpandedCard(expandedCard === 'snack' ? null : 'snack')}>
                 <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-snack"><SnackIcon size={28} /></div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl activity-badge-snack"><SnackIcon size={32} /></div>
                   <span className="text-xs text-muted-foreground">Snack</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalSnack > 0 ? 'hsl(45, 70%, 50%)' : undefined }}>{totalSnack} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
@@ -517,7 +517,7 @@ const ParentDashboard = () => {
                <Card className="border-0 shadow-sm border-l-[3px] cursor-pointer hover:shadow-md transition-shadow" style={{ borderLeftColor: 'hsl(120, 55%, 45%)' }} onClick={() => setExpandedCard(expandedCard === 'buah' ? null : 'buah')}>
                 <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-buah"><BuahIcon size={28} /></div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl activity-badge-buah"><BuahIcon size={32} /></div>
                   <span className="text-xs text-muted-foreground">Buah</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: totalBuah > 0 ? 'hsl(120, 55%, 45%)' : undefined }}>{totalBuah} <span className="text-sm font-normal text-muted-foreground">gram</span></p>
@@ -538,7 +538,7 @@ const ParentDashboard = () => {
             {mandiEvents.length > 0 && (
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg activity-badge-mandi"><MandiIcon size={28} /></div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl activity-badge-mandi"><MandiIcon size={32} /></div>
                   <span className="text-sm font-semibold">Mandi / Lap Badan</span>
                 </div>
                 <p className="text-sm text-muted-foreground">{mandiEvents.map(e => `${e.time?.substring(0, 5)} ${e.type === 'mandi' ? 'Mandi' : 'Lap badan'}`).join(' • ')}</p>
@@ -643,10 +643,10 @@ const ParentDashboard = () => {
                 </Button>
               </div>
               {events.length > 0 && (
-                <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 no-scrollbar">
+                <div className="flex gap-2 mb-4 overflow-x-auto pb-1.5 no-scrollbar">
                   <button
                     onClick={() => setTimelineFilter(null)}
-                    className={cn('shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors', !timelineFilter ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80')}
+                    className={cn('shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm', !timelineFilter ? 'bg-primary text-primary-foreground shadow-md scale-105' : 'bg-white text-muted-foreground hover:bg-gray-50 border border-gray-200/60')}
                   >
                     Semua
                   </button>
@@ -654,9 +654,9 @@ const ParentDashboard = () => {
                     <button
                       key={type}
                       onClick={() => setTimelineFilter(timelineFilter === type ? null : type)}
-                      className={cn('shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors', timelineFilter === type ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80')}
+                      className={cn('shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm', timelineFilter === type ? 'bg-primary text-primary-foreground shadow-md scale-105' : 'bg-white text-muted-foreground hover:bg-gray-50 border border-gray-200/60')}
                     >
-                      <span className="inline-flex items-center gap-1"><ActivityIcon type={type} size={14} /> {ACTIVITY_LABELS[type as ActivityType] || type}</span>
+                      <span className="inline-flex items-center gap-1.5"><ActivityIcon type={type} size={16} /> {ACTIVITY_LABELS[type as ActivityType] || type}</span>
                     </button>
                   ))}
                 </div>
@@ -664,81 +664,110 @@ const ParentDashboard = () => {
               {events.length === 0 ? (
                 <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">Belum ada data untuk tanggal ini</CardContent></Card>
               ) : (
-                <div className="space-y-2">
-                  {events.filter(e => !timelineFilter || e.type === timelineFilter).map(event => {
+                <div className="relative pl-4">
+                  {/* Vertical timeline line */}
+                  <div className="absolute left-[39px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary/30 via-primary/15 to-primary/5 rounded-full" />
+
+                  <div className="space-y-3">
+                  {events.filter(e => !timelineFilter || e.type === timelineFilter).map((event, idx, arr) => {
                     const ping = findClosestPing(event.time);
+                    const badgeColorMap: Record<string, string> = {
+                      susu: 'border-l-blue-400 bg-blue-50/40',
+                      mpasi: 'border-l-orange-400 bg-orange-50/40',
+                      snack: 'border-l-yellow-400 bg-yellow-50/40',
+                      buah: 'border-l-emerald-400 bg-emerald-50/40',
+                      tidur: 'border-l-violet-400 bg-violet-50/40',
+                      bangun: 'border-l-purple-400 bg-purple-50/40',
+                      pup: 'border-l-green-400 bg-green-50/40',
+                      pee: 'border-l-teal-400 bg-teal-50/40',
+                      mandi: 'border-l-cyan-400 bg-cyan-50/40',
+                      vitamin: 'border-l-pink-400 bg-pink-50/40',
+                      lap_badan: 'border-l-sky-400 bg-sky-50/40',
+                      catatan: 'border-l-gray-400 bg-gray-50/40',
+                    };
+                    const dotColorMap: Record<string, string> = {
+                      susu: 'bg-blue-400 ring-blue-100',
+                      mpasi: 'bg-orange-400 ring-orange-100',
+                      snack: 'bg-yellow-400 ring-yellow-100',
+                      buah: 'bg-emerald-400 ring-emerald-100',
+                      tidur: 'bg-violet-400 ring-violet-100',
+                      bangun: 'bg-purple-400 ring-purple-100',
+                      pup: 'bg-green-400 ring-green-100',
+                      pee: 'bg-teal-400 ring-teal-100',
+                      mandi: 'bg-cyan-400 ring-cyan-100',
+                      vitamin: 'bg-pink-400 ring-pink-100',
+                      lap_badan: 'bg-sky-400 ring-sky-100',
+                      catatan: 'bg-gray-400 ring-gray-100',
+                    };
                     return (
-                    <Card key={event.id} className="border-0 shadow-sm animate-fade-in cursor-pointer hover:shadow-md transition-shadow" onClick={() => setDetailEvent(event)}>
-                      <CardContent className="p-3 flex items-start gap-3">
-                        <div className="text-center min-w-[44px]"><p className="text-xs font-bold text-muted-foreground">{event.time?.substring(0, 5)}</p></div>
-                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                          {event.type === 'catatan' ? <ActivityIconFromEmoji emoji={getSmartIcon(event.type, event.detail, ACTIVITY_ICONS[event.type as ActivityType])} size={22} /> : <ActivityIcon type={event.type} size={22} />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</p>
-                          {event.detail && <p className="text-xs text-muted-foreground truncate">{event.detail}</p>}
-                          {(event as any).created_by && profileNames[(event as any).created_by] && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5">oleh {profileNames[(event as any).created_by]}</p>
-                          )}
-                          {(event as any).photo_url && (
-                            <img src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-lg w-24 h-24 object-cover cursor-pointer" onClick={() => window.open((event as any).photo_url, '_blank')} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                          )}
-                          {((event as any).latitude && (event as any).longitude) ? (
-                            <a
-                              href={`https://www.google.com/maps?q=${(event as any).latitude},${(event as any).longitude}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-primary hover:underline"
-                            >
-                              <MapPin className="h-3 w-3" />
-                              📍 Lihat Lokasi
-                            </a>
-                          ) : ping && (
-                            <a
-                              href={`https://www.google.com/maps?q=${ping.latitude},${ping.longitude}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-primary hover:underline"
-                            >
-                              <MapPin className="h-3 w-3" />
-                              📍 Lihat Lokasi
-                            </a>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end shrink-0 gap-1">
-                          {event.amount && (
-                            <div className="text-right">
-                              <p className="text-sm font-bold">{event.amount}</p>
-                              <p className="text-xs text-muted-foreground">{event.unit}</p>
+                    <div key={event.id} className="relative flex items-start gap-3 animate-fade-in">
+                      {/* Timeline dot */}
+                      <div className="relative z-10 flex flex-col items-center pt-4">
+                        <div className={`h-3 w-3 rounded-full ring-4 ${dotColorMap[event.type] || 'bg-gray-400 ring-gray-100'}`} />
+                      </div>
+
+                      {/* Event card */}
+                      <div
+                        className={`flex-1 rounded-2xl border-l-4 shadow-sm cursor-pointer hover:shadow-md transition-all ${badgeColorMap[event.type] || 'border-l-gray-400 bg-gray-50/40'}`}
+                        onClick={() => setDetailEvent(event)}
+                      >
+                        <div className="p-3.5 flex items-start gap-3">
+                          {/* Time */}
+                          <div className="pt-0.5 min-w-[42px]">
+                            <span className="text-xs font-bold text-foreground/70 bg-white/80 px-1.5 py-0.5 rounded-md shadow-sm">
+                              {event.time?.substring(0, 5)}
+                            </span>
+                          </div>
+                          {/* Icon */}
+                          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
+                            {event.type === 'catatan' ? <ActivityIconFromEmoji emoji={getSmartIcon(event.type, event.detail, ACTIVITY_ICONS[event.type as ActivityType])} size={28} /> : <ActivityIcon type={event.type} size={28} />}
+                          </div>
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-foreground">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</p>
+                            {event.detail && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{event.detail}</p>}
+                            {(event as any).created_by && profileNames[(event as any).created_by] && (
+                              <p className="text-[10px] text-muted-foreground/70 mt-1 flex items-center gap-1">
+                                <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/40" />
+                                {profileNames[(event as any).created_by]}
+                              </p>
+                            )}
+                            {(event as any).photo_url && (
+                              <img src={(event as any).photo_url} alt="Foto aktivitas" className="mt-2 rounded-xl w-28 h-28 object-cover cursor-pointer shadow-sm" onClick={(e) => { e.stopPropagation(); window.open((event as any).photo_url, '_blank'); }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                            )}
+                            {((event as any).latitude && (event as any).longitude) ? (
+                              <a href={`https://www.google.com/maps?q=${(event as any).latitude},${(event as any).longitude}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+                                <MapPin className="h-3 w-3" /> Lihat Lokasi
+                              </a>
+                            ) : ping && (
+                              <a href={`https://www.google.com/maps?q=${ping.latitude},${ping.longitude}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+                                <MapPin className="h-3 w-3" /> Lihat Lokasi
+                              </a>
+                            )}
+                          </div>
+                          {/* Right side */}
+                          <div className="flex flex-col items-end shrink-0 gap-1.5">
+                            {event.amount && (
+                              <div className="text-right bg-white/80 px-2 py-1 rounded-lg shadow-sm">
+                                <p className="text-sm font-bold text-foreground">{event.amount}</p>
+                                <p className="text-[10px] text-muted-foreground">{event.unit}</p>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-0.5">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/60 hover:text-primary" onClick={(e) => { e.stopPropagation(); setEditEvent(event); }}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/60 hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: event.id, daily_log_id: event.daily_log_id, label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})` }); }}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
                             </div>
-                          )}
-                          <div className="flex items-center gap-0.5">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 text-muted-foreground hover:text-primary"
-                              onClick={() => setEditEvent(event)}
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                              onClick={() => setDeleteTarget({
-                                id: event.id,
-                                daily_log_id: event.daily_log_id,
-                                label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})`,
-                              })}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                     );
                   })}
+                  </div>
                 </div>
               )}
             </div>
