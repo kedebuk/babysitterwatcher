@@ -140,7 +140,7 @@ const SubscriptionStatus = () => {
               <Card className="border-0 shadow-sm">
                 <CardHeader className="pb-2 px-4 pt-4">
                   <h3 className="text-sm font-bold">Estimasi Total</h3>
-                  <p className="text-xs text-muted-foreground">Bayar per 3 bulan hemat tambahan 15%</p>
+                  <p className="text-xs text-muted-foreground">Bayar per 3 bulan hemat tambahan 20%</p>
                 </CardHeader>
                 <CardContent className="px-4 pb-4">
                   <div className="space-y-2">

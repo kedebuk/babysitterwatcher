@@ -149,7 +149,7 @@ export function calculatePrice(
   const monthlySavings = fullPrice - total;
 
   if (cycle === 'quarterly') {
-    const discounted = Math.round((total * 0.85) / 100) * 100;
+    const discounted = Math.round((total * 0.80) / 100) * 100;
     return { perMonth: discounted, perQuarter: discounted * 3, savings: (fullPrice - discounted) * 3 };
   }
 

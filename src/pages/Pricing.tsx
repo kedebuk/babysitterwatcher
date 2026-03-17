@@ -133,7 +133,7 @@ const Pricing = () => {
             className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all relative ${billingCycle === 'quarterly' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
           >
             Per 3 Bulan
-            <span className="absolute -top-2 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">-15%</span>
+            <span className="absolute -top-2 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">-20%</span>
           </button>
         </div>
 
@@ -168,7 +168,7 @@ const Pricing = () => {
           </div>
           {billingCycle === 'quarterly' && (
             <p className="text-xs text-emerald-600 font-medium mt-1">
-              Rp{Math.round(69000 * 0.85 * 3 / 1000)}rb / 3 bulan (hemat 15%)
+              Rp{Math.round(69000 * 0.80 * 3 / 1000)}rb / 3 bulan (hemat 20%)
             </p>
           )}
         </button>
