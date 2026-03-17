@@ -125,39 +125,39 @@
     font-family: 'Playfair Display', serif;
   }
   .activity-badge-susu {
-    background-color: hsl(var(--activity-susu) / 0.15);
-    color: hsl(var(--activity-susu));
+    background: linear-gradient(135deg, hsl(210 80% 96%) 0%, hsl(210 60% 92%) 100%);
+    box-shadow: 0 1px 3px hsl(210 65% 55% / 0.12);
   }
   .activity-badge-makan {
-    background-color: hsl(var(--activity-makan) / 0.15);
-    color: hsl(var(--activity-makan));
+    background: linear-gradient(135deg, hsl(30 100% 96%) 0%, hsl(24 80% 92%) 100%);
+    box-shadow: 0 1px 3px hsl(24 75% 55% / 0.12);
   }
   .activity-badge-tidur {
-    background-color: hsl(var(--activity-tidur) / 0.15);
-    color: hsl(var(--activity-tidur));
+    background: linear-gradient(135deg, hsl(260 60% 96%) 0%, hsl(260 50% 92%) 100%);
+    box-shadow: 0 1px 3px hsl(260 45% 60% / 0.12);
   }
   .activity-badge-pup {
-    background-color: hsl(var(--activity-pup) / 0.15);
-    color: hsl(var(--activity-pup));
+    background: linear-gradient(135deg, hsl(35 50% 96%) 0%, hsl(35 40% 91%) 100%);
+    box-shadow: 0 1px 3px hsl(35 40% 50% / 0.12);
   }
   .activity-badge-mandi {
-    background-color: hsl(var(--activity-mandi) / 0.15);
-    color: hsl(var(--activity-mandi));
+    background: linear-gradient(135deg, hsl(175 50% 96%) 0%, hsl(175 45% 91%) 100%);
+    box-shadow: 0 1px 3px hsl(175 50% 45% / 0.12);
   }
   .activity-badge-vitamin {
-    background-color: hsl(var(--activity-vitamin) / 0.15);
-    color: hsl(var(--activity-vitamin));
+    background: linear-gradient(135deg, hsl(340 70% 97%) 0%, hsl(340 55% 93%) 100%);
+    box-shadow: 0 1px 3px hsl(340 55% 55% / 0.12);
   }
   .activity-badge-snack {
-    background-color: hsl(var(--activity-snack) / 0.15);
-    color: hsl(var(--activity-snack));
+    background: linear-gradient(135deg, hsl(45 90% 96%) 0%, hsl(45 70% 91%) 100%);
+    box-shadow: 0 1px 3px hsl(45 70% 50% / 0.12);
   }
   .activity-badge-buah {
-    background-color: hsl(var(--activity-buah) / 0.15);
-    color: hsl(var(--activity-buah));
+    background: linear-gradient(135deg, hsl(120 50% 96%) 0%, hsl(120 45% 91%) 100%);
+    box-shadow: 0 1px 3px hsl(120 55% 45% / 0.12);
   }
   .activity-badge-other {
-    background-color: hsl(var(--activity-other) / 0.15);
-    color: hsl(var(--activity-other));
+    background: linear-gradient(135deg, hsl(220 15% 96%) 0%, hsl(220 10% 92%) 100%);
+    box-shadow: 0 1px 3px hsl(220 15% 55% / 0.12);
   }
 }
