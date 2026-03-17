@@ -649,151 +649,88 @@ const ParentDashboard = () => {
               </div>
             )}
 
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="font-bold text-sm flex items-center gap-1.5"><TimelineIcon size={18} /> Timeline Harian</h2>
-                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleCopyWhatsApp}>
-                  <Copy className="h-3.5 w-3.5 mr-1" /> Copy WhatsApp
-                </Button>
-              </div>
-
-              {/* Timeline Summary Infographic */}
-              {events.length > 0 && (() => {
-                const typeCounts: Record<string, number> = {};
-                events.forEach(e => { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
-                const uniqueTypes = Object.keys(typeCounts);
-                const firstTime = events[0]?.time?.substring(0, 5) || '--:--';
-                const lastTime = events[events.length - 1]?.time?.substring(0, 5) || '--:--';
-                return (
-                  <Card className="border-0 shadow-sm mb-3">
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between mb-2.5">
-                        <span className="text-xs text-muted-foreground">{events.length} aktivitas</span>
-                        <span className="text-[10px] text-muted-foreground">{firstTime} — {lastTime}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {uniqueTypes.map(type => (
-                          <button
-                            key={type}
-                            onClick={() => { setTimelineFilter(timelineFilter === type ? null : type); setShowTimeline(true); }}
-                            className={cn(
-                              'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all',
-                              timelineFilter === type
-                                ? 'bg-primary text-primary-foreground shadow-md scale-105'
-                                : 'bg-muted/60 text-foreground hover:bg-muted'
-                            )}
-                          >
-                            <ActivityIcon type={type} size={16} />
-                            <span>{typeCounts[type]}</span>
-                          </button>
-                        ))}
-                      </div>
-                      {/* Mini visual bar — proportion of each activity */}
-                      <div className="flex h-2 rounded-full overflow-hidden mt-3 gap-px">
-                        {uniqueTypes.map(type => {
-                          const barColorMap: Record<string, string> = {
-                            susu: 'bg-blue-400', mpasi: 'bg-orange-400', snack: 'bg-yellow-400', buah: 'bg-emerald-400',
-                            tidur: 'bg-violet-400', bangun: 'bg-purple-400', pup: 'bg-green-400', pee: 'bg-teal-400',
-                            mandi: 'bg-cyan-400', vitamin: 'bg-pink-400', lap_badan: 'bg-sky-400', catatan: 'bg-gray-400',
-                          };
-                          return (
-                            <div
-                              key={type}
-                              className={`h-full rounded-full ${barColorMap[type] || 'bg-gray-400'}`}
-                              style={{ flex: typeCounts[type] }}
-                              title={`${ACTIVITY_LABELS[type as ActivityType] || type}: ${typeCounts[type]}x`}
-                            />
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })()}
-
-              {/* Collapsible timeline detail */}
-              {events.length > 0 && (
-                <button
-                  onClick={() => setShowTimeline(!showTimeline)}
-                  className="w-full flex items-center justify-between bg-card rounded-xl px-4 py-2.5 shadow-sm hover:shadow-md transition-all mb-2"
-                >
-                  <span className="text-xs font-semibold text-muted-foreground">
-                    {showTimeline ? 'Sembunyikan detail' : 'Lihat detail timeline'}
-                  </span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showTimeline ? 'rotate-180' : ''}`} />
-                </button>
-              )}
-
-              {events.length === 0 ? (
-                <Card className="border-0 shadow-sm"><CardContent className="p-6 text-center text-muted-foreground">Belum ada data untuk tanggal ini</CardContent></Card>
-              ) : showTimeline && (
-                <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                  {/* Filter buttons */}
-                  <div className="flex gap-2 mb-3 overflow-x-auto pb-1.5 no-scrollbar">
-                    <button
-                      onClick={() => setTimelineFilter(null)}
-                      className={cn('shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm', !timelineFilter ? 'bg-primary text-primary-foreground shadow-md' : 'bg-white text-muted-foreground hover:bg-gray-50 border border-gray-200/60')}
-                    >
-                      Semua
-                    </button>
-                    {Array.from(new Set(events.map(e => e.type))).map(type => (
-                      <button
-                        key={type}
-                        onClick={() => setTimelineFilter(timelineFilter === type ? null : type)}
-                        className={cn('shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm', timelineFilter === type ? 'bg-primary text-primary-foreground shadow-md' : 'bg-white text-muted-foreground hover:bg-gray-50 border border-gray-200/60')}
-                      >
-                        <span className="inline-flex items-center gap-1.5"><ActivityIcon type={type} size={14} /> {ACTIVITY_LABELS[type as ActivityType] || type}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Timeline list */}
-                  <div className="relative">
-                    <div className="absolute left-[23px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-border via-border/60 to-border/20 rounded-full" />
-                    <div className="space-y-0.5">
-                    {events.filter(e => !timelineFilter || e.type === timelineFilter).map((event) => {
-                      const dotColorMap: Record<string, string> = {
-                        susu: 'bg-blue-400', mpasi: 'bg-orange-400', snack: 'bg-yellow-400', buah: 'bg-emerald-400',
-                        tidur: 'bg-violet-400', bangun: 'bg-purple-400', pup: 'bg-green-400', pee: 'bg-teal-400',
-                        mandi: 'bg-cyan-400', vitamin: 'bg-pink-400', lap_badan: 'bg-sky-400', catatan: 'bg-gray-400',
-                      };
-                      return (
-                      <div
-                        key={event.id}
-                        className="relative flex items-center gap-2.5 py-2.5 px-2 rounded-xl cursor-pointer hover:bg-muted/50 transition-colors animate-fade-in group"
-                        onClick={() => setDetailEvent(event)}
-                      >
-                        <div className="relative z-10 shrink-0 w-[14px] flex justify-center">
-                          <div className={`h-2.5 w-2.5 rounded-full ring-2 ring-background ${dotColorMap[event.type] || 'bg-gray-400'}`} />
-                        </div>
-                        <span className="text-[11px] font-semibold text-muted-foreground tabular-nums w-[38px] shrink-0">{event.time?.substring(0, 5)}</span>
-                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
-                          {event.type === 'catatan' ? <ActivityIconFromEmoji emoji={getSmartIcon(event.type, event.detail, ACTIVITY_ICONS[event.type as ActivityType])} size={22} /> : <ActivityIcon type={event.type} size={22} />}
-                        </div>
-                        <span className="flex-1 text-sm font-semibold text-foreground truncate">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</span>
-                        {event.amount ? (
-                          <span className="text-xs font-bold text-muted-foreground tabular-nums shrink-0">{event.amount} <span className="font-normal text-[10px]">{event.unit}</span></span>
-                        ) : null}
-                        <div className="flex items-center gap-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/50 hover:text-primary" onClick={(e) => { e.stopPropagation(); setEditEvent(event); }}>
-                            <Pencil className="h-3 w-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/50 hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: event.id, daily_log_id: event.daily_log_id, label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})` }); }}>
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                      );
-                    })}
-                    </div>
-                  </div>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-0">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 pt-3 pb-2">
+                  <h2 className="font-bold text-sm flex items-center gap-1.5"><TimelineIcon size={18} /> Timeline Harian</h2>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={handleCopyWhatsApp}>
+                    <Copy className="h-3 w-3 mr-1" /> WhatsApp
+                  </Button>
                 </div>
-              )}
-            </div>
+
+                {events.length === 0 ? (
+                  <div className="px-4 pb-4 text-center text-sm text-muted-foreground">Belum ada data untuk tanggal ini</div>
+                ) : (
+                  <>
+                    {/* Filter chips - small, horizontal scroll */}
+                    <div className="flex gap-1.5 px-4 pb-3 overflow-x-auto no-scrollbar">
+                      <button
+                        onClick={() => setTimelineFilter(null)}
+                        className={cn('shrink-0 px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors', !timelineFilter ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted')}
+                      >
+                        Semua
+                      </button>
+                      {Array.from(new Set(events.map(e => e.type))).map(type => (
+                        <button
+                          key={type}
+                          onClick={() => setTimelineFilter(timelineFilter === type ? null : type)}
+                          className={cn('shrink-0 px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors inline-flex items-center gap-1', timelineFilter === type ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted')}
+                        >
+                          <ActivityIcon type={type} size={12} /> {ACTIVITY_LABELS[type as ActivityType]?.split('/')[0] || type}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Timeline rows */}
+                    <div className="divide-y divide-border/50">
+                      {events.filter(e => !timelineFilter || e.type === timelineFilter).map((event) => (
+                        <div
+                          key={event.id}
+                          className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors group"
+                          onClick={() => setDetailEvent(event)}
+                        >
+                          {/* Time */}
+                          <span className="text-[11px] font-mono font-medium text-muted-foreground w-[36px] shrink-0">
+                            {event.time?.substring(0, 5)}
+                          </span>
+
+                          {/* Icon */}
+                          <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${ACTIVITY_BADGE_CLASS[event.type as ActivityType] || 'activity-badge-other'}`}>
+                            {event.type === 'catatan' ? <ActivityIconFromEmoji emoji={getSmartIcon(event.type, event.detail, ACTIVITY_ICONS[event.type as ActivityType])} size={18} /> : <ActivityIcon type={event.type} size={18} />}
+                          </div>
+
+                          {/* Label + detail preview */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-semibold text-foreground leading-tight">{ACTIVITY_LABELS[event.type as ActivityType] || event.type}</p>
+                            {event.detail && <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">{event.detail}</p>}
+                          </div>
+
+                          {/* Amount */}
+                          {event.amount ? (
+                            <span className="text-xs font-bold tabular-nums shrink-0">{event.amount}<span className="font-normal text-muted-foreground ml-0.5">{event.unit}</span></span>
+                          ) : null}
+
+                          {/* Edit/Delete on hover */}
+                          <div className="flex shrink-0 opacity-0 group-hover:opacity-100 transition-opacity -mr-1">
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground/40 hover:text-primary" onClick={(e) => { e.stopPropagation(); setEditEvent(event); }}>
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground/40 hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: event.id, daily_log_id: event.daily_log_id, label: `${ACTIVITY_LABELS[event.type as ActivityType] || event.type} (${event.time?.substring(0, 5)})` }); }}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
 
             {log?.notes && (
               <Card className="border-0 shadow-sm"><CardContent className="p-3">
-                <p className="text-xs font-semibold text-muted-foreground mb-1">📝 Catatan Harian</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-1">Catatan Harian</p>
                 <p className="text-sm">{log.notes}</p>
               </CardContent></Card>
             )}
