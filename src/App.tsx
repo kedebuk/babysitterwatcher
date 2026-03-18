@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, Component } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,39 +10,85 @@ import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import { MetaPixelProvider } from "@/components/MetaPixelProvider";
 import { BrandProvider } from "@/contexts/BrandContext";
 
+// Auto-reload on chunk load failure (stale cache after deploy)
+function lazyWithRetry(factory: () => Promise<{ default: React.ComponentType<any> }>) {
+  return lazy(() =>
+    factory().catch(() => {
+      const key = "chunk_reload";
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "1");
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      sessionStorage.removeItem(key);
+      throw new Error("Chunk load failed after retry");
+    })
+  );
+}
+
+// Fallback UI when chunk loading fails even after reload
+class ChunkErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4 text-center">
+          <p className="text-lg font-medium">Terjadi kesalahan saat memuat halaman.</p>
+          <button
+            onClick={() => {
+              sessionStorage.removeItem("chunk_reload");
+              window.location.reload();
+            }}
+            className="rounded-lg bg-orange-500 px-6 py-2 text-white hover:bg-orange-600"
+          >
+            Muat Ulang
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // Lazy load all pages
-const Login = lazy(() => import("./pages/Login"));
-const AdminSetup = lazy(() => import("./pages/AdminSetup"));
-const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
-const ParentChildren = lazy(() => import("./pages/ParentChildren"));
-const ParentInput = lazy(() => import("./pages/ParentInput"));
-const BabysitterToday = lazy(() => import("./pages/BabysitterToday"));
-const BabysitterDashboard = lazy(() => import("./pages/BabysitterDashboard"));
-const BabysitterHistory = lazy(() => import("./pages/BabysitterHistory"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const AdminUsers = lazy(() => import("./pages/AdminUsers"));
-const AdminChildren = lazy(() => import("./pages/AdminChildren"));
-const AdminChildDetail = lazy(() => import("./pages/AdminChildDetail"));
-const AdminLogs = lazy(() => import("./pages/AdminLogs"));
-const AdminSettings = lazy(() => import("./pages/AdminSettings"));
-const SelectRole = lazy(() => import("./pages/SelectRole"));
-const CompleteProfile = lazy(() => import("./pages/CompleteProfile"));
-const ChooseRole = lazy(() => import("./pages/ChooseRole"));
-const Chat = lazy(() => import("./pages/Chat"));
-const Insights = lazy(() => import("./pages/Insights"));
-const LocationPage = lazy(() => import("./pages/LocationPage"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const OnboardingChildren = lazy(() => import("./pages/OnboardingChildren"));
-const OnboardingInvite = lazy(() => import("./pages/OnboardingInvite"));
-const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const SubscriptionStatus = lazy(() => import("./pages/SubscriptionStatus"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const CompletePhone = lazy(() => import("./pages/CompletePhone"));
-const InventoryPage = lazy(() => import("./pages/InventoryPage"));
-const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
-const ViewerDashboard = lazy(() => import("./pages/ViewerDashboard"));
-const LandingPage = lazy(() => import("./pages/LandingPage"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+const Login = lazyWithRetry(() => import("./pages/Login"));
+const AdminSetup = lazyWithRetry(() => import("./pages/AdminSetup"));
+const ParentDashboard = lazyWithRetry(() => import("./pages/ParentDashboard"));
+const ParentChildren = lazyWithRetry(() => import("./pages/ParentChildren"));
+const ParentInput = lazyWithRetry(() => import("./pages/ParentInput"));
+const BabysitterToday = lazyWithRetry(() => import("./pages/BabysitterToday"));
+const BabysitterDashboard = lazyWithRetry(() => import("./pages/BabysitterDashboard"));
+const BabysitterHistory = lazyWithRetry(() => import("./pages/BabysitterHistory"));
+const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
+const AdminUsers = lazyWithRetry(() => import("./pages/AdminUsers"));
+const AdminChildren = lazyWithRetry(() => import("./pages/AdminChildren"));
+const AdminChildDetail = lazyWithRetry(() => import("./pages/AdminChildDetail"));
+const AdminLogs = lazyWithRetry(() => import("./pages/AdminLogs"));
+const AdminSettings = lazyWithRetry(() => import("./pages/AdminSettings"));
+const SelectRole = lazyWithRetry(() => import("./pages/SelectRole"));
+const CompleteProfile = lazyWithRetry(() => import("./pages/CompleteProfile"));
+const ChooseRole = lazyWithRetry(() => import("./pages/ChooseRole"));
+const Chat = lazyWithRetry(() => import("./pages/Chat"));
+const Insights = lazyWithRetry(() => import("./pages/Insights"));
+const LocationPage = lazyWithRetry(() => import("./pages/LocationPage"));
+const Pricing = lazyWithRetry(() => import("./pages/Pricing"));
+const OnboardingChildren = lazyWithRetry(() => import("./pages/OnboardingChildren"));
+const OnboardingInvite = lazyWithRetry(() => import("./pages/OnboardingInvite"));
+const ProfilePage = lazyWithRetry(() => import("./pages/ProfilePage"));
+const SubscriptionStatus = lazyWithRetry(() => import("./pages/SubscriptionStatus"));
+const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
+const CompletePhone = lazyWithRetry(() => import("./pages/CompletePhone"));
+const InventoryPage = lazyWithRetry(() => import("./pages/InventoryPage"));
+const NotificationsPage = lazyWithRetry(() => import("./pages/NotificationsPage"));
+const ViewerDashboard = lazyWithRetry(() => import("./pages/ViewerDashboard"));
+const LandingPage = lazyWithRetry(() => import("./pages/LandingPage"));
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,6 +156,7 @@ const App = () => (
           <MetaPixelProvider>
           <BrandProvider>
           <BrowserRouter>
+          <ChunkErrorBoundary>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
@@ -147,6 +194,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          </ChunkErrorBoundary>
           </BrowserRouter>
           </BrandProvider>
           </MetaPixelProvider>
