@@ -15,3 +15,21 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
     autoRefreshToken: true,
   }
 });
+
+// Gracefully handle WebSocket failures (e.g., "The operation is insecure"
+// on browsers that block WebSocket in certain contexts).
+// Wraps .channel().subscribe() so errors don't crash the app.
+const originalChannel = supabase.channel.bind(supabase);
+supabase.channel = (...args: Parameters<typeof supabase.channel>) => {
+  const channel = originalChannel(...args);
+  const originalSubscribe = channel.subscribe.bind(channel);
+  channel.subscribe = (...subArgs: any[]) => {
+    try {
+      return originalSubscribe(...subArgs);
+    } catch (e) {
+      console.warn('[Supabase] Realtime subscription failed (WebSocket unavailable):', e);
+      return channel;
+    }
+  };
+  return channel;
+};
