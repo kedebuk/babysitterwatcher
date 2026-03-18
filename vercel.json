@@ -5,7 +5,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' connect.facebook.net cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: blob: storage.googleapis.com cdnjs.cloudflare.com jzfygztjmgtypijwwtwp.supabase.co; connect-src 'self' jzfygztjmgtypijwwtwp.supabase.co nominatim.openstreetmap.org connect.facebook.net wa.me; frame-src 'none'; object-src 'none'; base-uri 'self'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' connect.facebook.net cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: blob: storage.googleapis.com cdnjs.cloudflare.com jzfygztjmgtypijwwtwp.supabase.co; connect-src 'self' https://jzfygztjmgtypijwwtwp.supabase.co wss://jzfygztjmgtypijwwtwp.supabase.co nominatim.openstreetmap.org connect.facebook.net wa.me; frame-src 'none'; object-src 'none'; base-uri 'self'"
         },
         {
           "key": "X-Content-Type-Options",
