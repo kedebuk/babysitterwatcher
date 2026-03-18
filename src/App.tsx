@@ -13,37 +13,45 @@ import { BrandProvider } from "@/contexts/BrandContext";
 // Auto-reload on chunk load failure (stale cache after deploy)
 function lazyWithRetry(factory: () => Promise<{ default: React.ComponentType<any> }>) {
   return lazy(() =>
-    factory().catch(() => {
+    factory().catch((error) => {
       const key = "chunk_reload";
       if (!sessionStorage.getItem(key)) {
         sessionStorage.setItem(key, "1");
-        window.location.reload();
+        // Force hard reload by adding cache-busting param
+        const url = new URL(window.location.href);
+        url.searchParams.set("_r", Date.now().toString());
+        window.location.href = url.toString();
         return new Promise(() => {});
       }
       sessionStorage.removeItem(key);
-      throw new Error("Chunk load failed after retry");
+      throw error;
     })
   );
 }
 
-// Fallback UI when chunk loading fails even after reload
+// Fallback UI when any error occurs during rendering
 class ChunkErrorBoundary extends Component<
   { children: React.ReactNode },
-  { hasError: boolean }
+  { hasError: boolean; error: Error | null }
 > {
-  state = { hasError: false };
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  state = { hasError: false, error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
   }
   render() {
     if (this.state.hasError) {
+      const msg = this.state.error?.message || "Unknown error";
       return (
         <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4 text-center">
           <p className="text-lg font-medium">Terjadi kesalahan saat memuat halaman.</p>
+          <p className="max-w-md text-sm text-gray-500 break-all">{msg}</p>
           <button
             onClick={() => {
               sessionStorage.removeItem("chunk_reload");
-              window.location.reload();
+              // Hard reload bypassing cache
+              const url = new URL(window.location.href);
+              url.searchParams.delete("_r");
+              window.location.href = url.toString();
             }}
             className="rounded-lg bg-orange-500 px-6 py-2 text-white hover:bg-orange-600"
           >
